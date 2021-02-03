@@ -15,16 +15,16 @@ import (
 // APIFeature contains the information needed to test REST API requests
 type APIFeature struct {
 	ErrorFeature
-	httpServer        *http.Server
+	Handler           http.Handler
 	httpResponse      *http.Response
 	BeforeRequestHook func() error
 	requestHeaders    map[string]string
 }
 
 // NewAPIFeature returns a new APIFeature
-func NewAPIFeature(httpServer *http.Server) *APIFeature {
+func NewAPIFeature(handler http.Handler) *APIFeature {
 	return &APIFeature{
-		httpServer:     httpServer,
+		Handler:        handler,
 		requestHeaders: make(map[string]string),
 	}
 }
@@ -40,7 +40,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I am authorised$`, f.IAmAuthorised)
 	ctx.Step(`^I am not authorised$`, f.IAmNotAuthorised)
 	ctx.Step(`^I GET "([^"]*)"$`, f.IGet)
-	ctx.Step(`^I POST to "([^"]*)" with body:$`, f.IPostToWithBody)
+	ctx.Step(`^I POST "([^"]*)"$`, f.IPostToWithBody)
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
 	ctx.Step(`^I should receive the following response:$`, f.IShouldReceiveTheFollowingResponse)
@@ -82,13 +82,13 @@ func (f *APIFeature) makeRequest(method, path string, data []byte) error {
 			return err
 		}
 	}
-	req := httptest.NewRequest(method, "http://"+f.httpServer.Addr+path, bytes.NewReader(data))
+	req := httptest.NewRequest(method, "http://foo"+path, bytes.NewReader(data))
 	for key, value := range f.requestHeaders {
 		req.Header.Set(key, value)
 	}
 
 	w := httptest.NewRecorder()
-	f.httpServer.Handler.ServeHTTP(w, req)
+	f.Handler.ServeHTTP(w, req)
 
 	f.httpResponse = w.Result()
 	return nil

@@ -26,14 +26,15 @@ func ExampleHandler2(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "403 - Forbidden")
 }
 
-func HandleRequests(router *mux.Router) {
-	router.HandleFunc("/example1", ExampleHandler1)
-	router.HandleFunc("/example2", ExampleHandler2)
+func NewRouter() http.Handler {
+	router := mux.NewRouter().StrictSlash(true)
+
+	router.HandleFunc("/example1", ExampleHandler1).Methods("GET")
+	router.HandleFunc("/example2", ExampleHandler2).Methods("POST")
+
+	return router
 }
 
 func main() {
-	router := mux.NewRouter().StrictSlash(true)
-	HandleRequests(router)
-
-	log.Fatal(http.ListenAndServe(":10000", router))
+	log.Fatal(http.ListenAndServe(":10000", NewRouter()))
 }
