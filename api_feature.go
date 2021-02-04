@@ -12,21 +12,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type ServiceInitialiser func() (http.Handler, error)
+
+func StaticHandler(handler http.Handler) ServiceInitialiser {
+	return func() (http.Handler, error) {
+		return handler, nil
+	}
+}
+
 // APIFeature contains the information needed to test REST API requests
 type APIFeature struct {
 	ErrorFeature
-	Handler           http.Handler
+	Initialiser       ServiceInitialiser
 	httpResponse      *http.Response
 	BeforeRequestHook func() error
 	requestHeaders    map[string]string
 }
 
-// NewAPIFeature returns a new APIFeature
-func NewAPIFeature(handler http.Handler) *APIFeature {
+// NewAPIFeature returns a new APIFeature, takes a function to retrieve the bound handler just before a request is made
+func NewAPIFeature(initialiser ServiceInitialiser) *APIFeature {
 	return &APIFeature{
-		Handler:        handler,
+		Initialiser:    initialiser,
 		requestHeaders: make(map[string]string),
 	}
+}
+
+// NewAPIFeatureWithHandler create a new APIFeature with a handler already bound with your endpoints
+func NewAPIFeatureWithHandler(handler http.Handler) *APIFeature {
+	return NewAPIFeature(StaticHandler(handler))
 }
 
 // Reset the request headers
@@ -77,10 +90,9 @@ func (f *APIFeature) IPostToWithBody(path string, body *godog.DocString) error {
 }
 
 func (f *APIFeature) makeRequest(method, path string, data []byte) error {
-	if f.BeforeRequestHook != nil {
-		if err := f.BeforeRequestHook(); err != nil {
-			return err
-		}
+	handler, err := f.Initialiser()
+	if err != nil {
+		return err
 	}
 	req := httptest.NewRequest(method, "http://foo"+path, bytes.NewReader(data))
 	for key, value := range f.requestHeaders {
@@ -88,7 +100,7 @@ func (f *APIFeature) makeRequest(method, path string, data []byte) error {
 	}
 
 	w := httptest.NewRecorder()
-	f.Handler.ServeHTTP(w, req)
+	handler.ServeHTTP(w, req)
 
 	f.httpResponse = w.Result()
 	return nil

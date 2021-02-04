@@ -7,7 +7,7 @@ import (
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	myAppFeature := NewMyAppFeature()
-	apiFeature := featuretest.NewAPIFeature(myAppFeature.Handler)
+	apiFeature := featuretest.NewAPIFeatureWithHandler(myAppFeature.Handler)
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		apiFeature.Reset()
