@@ -1,7 +1,6 @@
 package featuretest
 
 import (
-	"strconv"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -31,17 +30,7 @@ func (f *AuthorizationFeature) iAmIdentifiedAs(username string) error {
 	return nil
 }
 
-func (f *AuthorizationFeature) PostingToTheEndpointReturnsStatusWithBody(postBody, postEndpoint, responseStatus string, responseBody *godog.DocString) error {
-	responseStatusCode, err := strconv.Atoi(responseStatus)
-	if err != nil {
-		return err
-	}
-	f.FakeAuthService.NewHandler().Post(postEndpoint).AssertBody([]byte(postBody)).Reply(responseStatusCode).BodyString(responseBody.Content)
-	return nil
-}
-
 func (f *AuthorizationFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I am not identified$`, f.iAmNotIdentified)
 	ctx.Step(`^I am identified as "([^"]*)"$`, f.iAmIdentifiedAs)
-	ctx.Step(`^POSTING '(.*)' to the endpoint "([^"]*)" returns status "([^"]*)" with body:$`, f.PostingToTheEndpointReturnsStatusWithBody)
 }

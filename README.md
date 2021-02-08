@@ -30,7 +30,8 @@ go get github.com/cucumber/godog/cmd/godog@v0.11.0
 
 To set up and run tests using Godog, [it is best to follow the instructions found here](https://github.com/cucumber/godog)
 
-To run Godog tests you will need to create a features_test.go file in the root of your project containing the below code:
+To run Godog tests with the API testing features in this library all you need to do is update your root level test file to pass
+the http handler of your application to our NewAPIFeature, register the steps and add the reset function to the BeforeScenario function.
 
 ```go
 package main
@@ -58,5 +59,3 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	})
 }
 ```
-
-

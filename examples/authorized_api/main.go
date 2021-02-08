@@ -5,9 +5,20 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 )
+
+type Config struct {
+	authorizationServiceUrl string
+}
+
+func NewConfig() *Config {
+	return &Config{
+		authorizationServiceUrl: os.Getenv("AUTH_URL"),
+	}
+}
 
 func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
 	data := struct {
@@ -21,27 +32,21 @@ func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(resp))
 }
 
-func ExampleHandler2(w http.ResponseWriter, r *http.Request) {
+func ExampleHandler3(w http.ResponseWriter, r *http.Request) {
+
 	w.WriteHeader(403)
 	fmt.Fprintf(w, "403 - Forbidden")
 }
 
-func newRouter() http.Handler {
+func NewRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/example1", ExampleHandler1).Methods("GET")
-	router.HandleFunc("/example2", ExampleHandler2).Methods("POST")
+	router.HandleFunc("/example1", ExampleHandler1).Methods(http.MethodGet)
+	router.HandleFunc("/example3", MustAuthorize(ExampleHandler3)).Methods(http.MethodPost)
 
 	return router
 }
 
-func NewServer() *http.Server {
-	return &http.Server{
-		Handler: newRouter(),
-	}
-}
-
 func main() {
-	server := NewServer()
-	log.Fatal(http.ListenAndServe(":10000", server.Handler))
+	log.Fatal(http.ListenAndServe(":10000", NewRouter()))
 }

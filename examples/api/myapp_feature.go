@@ -8,9 +8,9 @@ type MyAppFeature struct {
 	Handler http.Handler
 }
 
-func NewMyAppFeature() *MyAppFeature {
+func NewMyAppFeature(handler http.Handler) *MyAppFeature {
 
 	return &MyAppFeature{
-		Handler: NewRouter(),
+		Handler: handler,
 	}
 }
