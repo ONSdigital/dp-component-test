@@ -1,7 +1,8 @@
 package main
 
 import (
-	goflag "flag"
+	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -9,13 +10,14 @@ import (
 	featuretest "github.com/armakuni/dp-go-featuretest"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	flag "github.com/spf13/pflag"
 )
 
 type FeatureTestSuite struct {
 	Mongo *featuretest.MongoCapability
-	T     *testing.T
 }
+
+var componentFlag = flag.Bool("component", false, "perform component tests")
+var allFlag = flag.Bool("all", false, "perform all tests")
 
 func (m *MyAppFeature) initialiser(h http.Handler) featuretest.ServiceInitialiser {
 	return func() (http.Handler, error) {
@@ -42,45 +44,49 @@ func (t *FeatureTestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 
 }
 
-var componentFlag = false
-
-func init() {
-	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-	flag.BoolVar(&componentFlag, "component", false, "set this flag to run the component tests")
-	flag.Parse()
-}
-
 func (t *FeatureTestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
+	ctx.BeforeSuite(func() {
+		mongoOptions := featuretest.MongoOptions{
+			Port:         27017,
+			MongoVersion: "4.0.5",
+			DatabaseName: "testing",
+		}
+		t.Mongo = featuretest.NewMongoCapability(mongoOptions)
+	})
 
-	mongoOptions := featuretest.MongoOptions{
-		Port:         27017,
-		MongoVersion: "4.0.5",
-		DatabaseName: "testing",
-	}
-	mongoFeature, err := featuretest.NewMongoCapability(mongoOptions)
-	if err != nil {
-		panic(err)
-	}
-	t.Mongo = mongoFeature
 	ctx.AfterSuite(func() {
-		mongoFeature.Close()
+		t.Mongo.Close()
 	})
 }
 
-func TestFeatures(t *testing.T) {
-	if componentFlag == true {
+func TestMain(m *testing.M) {
+	flag.Parse()
+	status := 0
+	if *componentFlag || *allFlag {
 		var opts = godog.Options{
 			Output: colors.Colored(os.Stdout),
 			Format: "pretty",
 		}
 
-		ts := &FeatureTestSuite{T: t}
+		ts := &FeatureTestSuite{}
 
-		godog.TestSuite{
+		status = godog.TestSuite{
 			Name:                 "feature_tests",
-			TestSuiteInitializer: ts.InitializeTestSuite,
 			ScenarioInitializer:  ts.InitializeScenario,
+			TestSuiteInitializer: ts.InitializeTestSuite,
 			Options:              &opts,
 		}.Run()
 	}
+
+	if !*componentFlag || *allFlag {
+		if st := m.Run(); st > status {
+			status = st
+		}
+	}
+
+	if *componentFlag {
+		fmt.Printf("coverage: %.1f%s\n", testing.Coverage()*100, "% of all statements")
+	}
+
+	os.Exit(status)
 }

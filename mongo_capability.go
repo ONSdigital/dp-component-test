@@ -27,18 +27,17 @@ type MongoOptions struct {
 }
 
 // NewMongoCapability creates a new in-memory mongo database using the supplied options
-func NewMongoCapability(mongoOptions MongoOptions) (*MongoCapability, error) {
+func NewMongoCapability(mongoOptions MongoOptions) *MongoCapability {
 
 	opts := memongo.Options{
 		Port:           mongoOptions.Port,
 		MongoVersion:   mongoOptions.MongoVersion,
 		StartupTimeout: time.Second * 10,
-		// Logger:         mongoOptions.Logger,
 	}
 
 	mongoServer, err := memongo.StartWithOptions(&opts)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -46,7 +45,7 @@ func NewMongoCapability(mongoOptions MongoOptions) (*MongoCapability, error) {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoServer.URI()))
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	database := client.Database(mongoOptions.DatabaseName)
@@ -55,7 +54,7 @@ func NewMongoCapability(mongoOptions MongoOptions) (*MongoCapability, error) {
 		Server:   mongoServer,
 		Client:   *client,
 		Database: database,
-	}, nil
+	}
 }
 
 // Reset is currently not implemented

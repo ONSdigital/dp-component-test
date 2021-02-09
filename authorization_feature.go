@@ -1,15 +1,13 @@
 package featuretest
 
 import (
-	"testing"
-
 	"github.com/cucumber/godog"
 	"github.com/maxcnunes/httpfake"
 )
 
-func NewAuthorizationFeature(t *testing.T) *AuthorizationFeature {
+func NewAuthorizationFeature() *AuthorizationFeature {
 	f := &AuthorizationFeature{
-		FakeAuthService: httpfake.New(httpfake.WithTesting(t)),
+		FakeAuthService: httpfake.New(),
 	}
 
 	return f
