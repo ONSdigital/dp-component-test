@@ -18,6 +18,14 @@ type AuthorizationFeature struct {
 	FakeAuthService *httpfake.HTTPFake
 }
 
+func (f *AuthorizationFeature) Reset() {
+	f.FakeAuthService.Reset()
+}
+
+func (f *AuthorizationFeature) Close() {
+	f.FakeAuthService.Close()
+}
+
 func (f *AuthorizationFeature) iAmNotIdentified() error {
 	f.FakeAuthService.NewHandler().Get("/identity").Reply(401)
 	return nil
