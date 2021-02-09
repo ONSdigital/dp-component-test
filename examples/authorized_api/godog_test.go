@@ -21,6 +21,11 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		apiFeature.Reset()
+		authorizationFeature.Reset()
+	})
+
+	ctx.AfterScenario(func(*godog.Scenario, error) {
+		authorizationFeature.Close()
 	})
 
 	apiFeature.RegisterSteps(ctx)
