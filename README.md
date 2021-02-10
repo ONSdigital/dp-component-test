@@ -66,5 +66,4 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 The features that can be used all exist on the root level of the project.
 
 The examples folder contains three different examples of how to use this library, each using different
-
 features and having a slightly different way of setting up.
