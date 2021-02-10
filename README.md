@@ -3,7 +3,7 @@ Library to help write feature-level tests against a REST api / microservice
 
 ## Background
 
-The intention of this library is to help when writing feature tests for a new or existing REST API.
+The intention of this library is to help when writing feature / component tests for a new or existing REST API.
 The library contains a set of useful helper feature steps to make writing new gherkin tests easy.
 
 The steps in api_feature have been written as to be easily reusable when setting up tests against a REST API, and
