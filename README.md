@@ -1,4 +1,5 @@
 # dp-go-featuretest
+
 Library to help write feature-level tests against a REST api / microservice
 
 ## Background
@@ -7,7 +8,7 @@ The intention of this library is to help when writing feature tests for a new or
 The library contains a set of useful helper feature steps to make writing new gherkin tests easy.
 
 The steps in api_feature have been written as to be easily reusable when setting up tests against a REST API, and
-there are other additional parts of this library which can be plugged in to help test outputs of the tests e.g. setting 
+there are other additional parts of this library which can be plugged in to help test outputs of the tests e.g. setting
 up an in memory mongo to assert against changes to the database.
 
 ## Installation
@@ -59,3 +60,10 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	})
 }
 ```
+
+## Repository structure
+
+The features that can be used all exist on the root level of the project.
+
+The examples folder contains three different examples of how to use this library, each using different
+features and having a slightly different way of setting up.
