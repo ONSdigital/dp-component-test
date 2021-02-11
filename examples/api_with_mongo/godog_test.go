@@ -13,7 +13,7 @@ import (
 )
 
 type FeatureTestSuite struct {
-	Mongo *featuretest.MongoCapability
+	Mongo *featuretest.MongoFeature
 }
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
@@ -51,7 +51,7 @@ func (t *FeatureTestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
 			MongoVersion: "4.0.5",
 			DatabaseName: "testing",
 		}
-		t.Mongo = featuretest.NewMongoCapability(mongoOptions)
+		t.Mongo = featuretest.NewMongoFeature(mongoOptions)
 	})
 
 	ctx.AfterSuite(func() {

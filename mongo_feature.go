@@ -11,14 +11,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// MongoCapability is a struct containing an in-memory mongo database
-type MongoCapability struct {
+// MongoFeature is a struct containing an in-memory mongo database
+type MongoFeature struct {
 	Server   *memongo.Server
 	Client   mongo.Client
 	Database *mongo.Database
 }
 
-// MongoOptions contains a set of options required to create a new MongoCapability
+// MongoOptions contains a set of options required to create a new MongoFeature
 type MongoOptions struct {
 	Port         int
 	MongoVersion string
@@ -26,8 +26,8 @@ type MongoOptions struct {
 	DatabaseName string
 }
 
-// NewMongoCapability creates a new in-memory mongo database using the supplied options
-func NewMongoCapability(mongoOptions MongoOptions) *MongoCapability {
+// NewMongoFeature creates a new in-memory mongo database using the supplied options
+func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 
 	opts := memongo.Options{
 		Port:           mongoOptions.Port,
@@ -50,7 +50,7 @@ func NewMongoCapability(mongoOptions MongoOptions) *MongoCapability {
 
 	database := client.Database(mongoOptions.DatabaseName)
 
-	return &MongoCapability{
+	return &MongoFeature{
 		Server:   mongoServer,
 		Client:   *client,
 		Database: database,
@@ -58,7 +58,7 @@ func NewMongoCapability(mongoOptions MongoOptions) *MongoCapability {
 }
 
 // Reset is currently not implemented
-func (m *MongoCapability) Reset() error {
+func (m *MongoFeature) Reset() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	m.Database.Drop(ctx)
@@ -66,28 +66,28 @@ func (m *MongoCapability) Reset() error {
 }
 
 // Close stops the in-memory mongo database
-func (m *MongoCapability) Close() error {
+func (m *MongoFeature) Close() error {
 	m.Server.Stop()
 	return nil
 }
 
-func (m *MongoCapability) RegisterSteps(ctx *godog.ScenarioContext) {
+func (m *MongoFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the following document exists in the "([^"]*)" collection:$`, m.TheFollowingDocumentExistsInTheCollection)
 }
 
-func (m *MongoCapability) TheFollowingDocumentExistsInTheCollection(collectionName string, document *godog.DocString) error {
+func (m *MongoFeature) TheFollowingDocumentExistsInTheCollection(collectionName string, document *godog.DocString) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	collection := m.Database.Collection(collectionName)
 
-	var documentJson map[string]interface{}
+	var documentJSON map[string]interface{}
 
-	if err := json.Unmarshal([]byte(document.Content), &documentJson); err != nil {
+	if err := json.Unmarshal([]byte(document.Content), &documentJSON); err != nil {
 		return err
 	}
-	if _, err := collection.InsertOne(ctx, documentJson); err != nil {
+	if _, err := collection.InsertOne(ctx, documentJSON); err != nil {
 		return err
 	}
 	return nil
