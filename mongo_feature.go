@@ -32,7 +32,7 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	opts := memongo.Options{
 		Port:           mongoOptions.Port,
 		MongoVersion:   mongoOptions.MongoVersion,
-		StartupTimeout: time.Second * 10,
+		StartupTimeout: time.Minute,
 	}
 
 	mongoServer, err := memongo.StartWithOptions(&opts)
