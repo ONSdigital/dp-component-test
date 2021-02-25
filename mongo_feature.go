@@ -24,6 +24,7 @@ type MongoOptions struct {
 	MongoVersion string
 	// Logger       *log.Logger
 	DatabaseName string
+	DownloadURL  string
 }
 
 // NewMongoFeature creates a new in-memory mongo database using the supplied options
@@ -33,6 +34,7 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 		Port:           mongoOptions.Port,
 		MongoVersion:   mongoOptions.MongoVersion,
 		StartupTimeout: 10 * time.Minute,
+		DownloadURL:    mongoOptions.DownloadURL,
 	}
 
 	mongoServer, err := memongo.StartWithOptions(&opts)
