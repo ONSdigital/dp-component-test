@@ -22,19 +22,25 @@ type MongoFeature struct {
 type MongoOptions struct {
 	Port         int
 	MongoVersion string
-	// Logger       *log.Logger
-	DatabaseName string
-	DownloadURL  string
+	// Logger         *log.Logger
+	DatabaseName   string
+	DownloadURL    string
+	StartupTimeout time.Duration
 }
 
 // NewMongoFeature creates a new in-memory mongo database using the supplied options
 func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 
+	timeout := mongoOptions.StartupTimeout
+	if timeout == 0 {
+		timeout = 2 * time.Minute
+	}
+
 	opts := memongo.Options{
 		Port:           mongoOptions.Port,
 		MongoVersion:   mongoOptions.MongoVersion,
-		StartupTimeout: 2 * time.Minute,
 		DownloadURL:    mongoOptions.DownloadURL,
+		StartupTimeout: timeout,
 	}
 
 	mongoServer, err := memongo.StartWithOptions(&opts)
