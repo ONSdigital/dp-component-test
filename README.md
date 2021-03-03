@@ -4,7 +4,7 @@ Library to help write feature-level tests against a REST api / microservice
 
 ## Background
 
-The intention of this library is to help when writing feature tests for a new or existing REST API.
+The intention of this library is to help when writing feature tests for a new or existing component (microservice).
 The library contains a set of useful helper feature steps to make writing new gherkin tests easy.
 
 The steps in api_feature have been written as to be easily reusable when setting up tests against a REST API, and
@@ -19,15 +19,10 @@ To install this package in your project simply run:
 go get github.com/ONSdigital/dp-component-test
 ```
 
-This package works alongside the Godog BDD framework, to install this run:
-
-```bash
-go get github.com/cucumber/godog/cmd/godog@v0.11.0
-```
-
 ## Running tests
 
-To set up and run tests using Godog, [it is best to follow the instructions found here](https://github.com/cucumber/godog)
+This package uses the Godog BDD framework. 
+For instructions on writing Godog tests [it is best to follow the instructions found here](https://github.com/cucumber/godog)
 
 To run Godog tests with the API testing features in this library all you need to do is update your root level test file to pass
 the http handler of your application to our NewAPIFeature, register the steps and add the reset function to the BeforeScenario function.
@@ -37,7 +32,6 @@ package main
 
 import (
 	componenttest "github.com/ONSdigital/dp-component-test"
-	"github.com/cucumber/godog"
 )
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
