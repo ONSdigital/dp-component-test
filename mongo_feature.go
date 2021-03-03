@@ -3,6 +3,7 @@ package componenttest
 import (
 	"context"
 	"encoding/json"
+	"github.com/benweissmann/memongo/memongolog"
 	"time"
 
 	"github.com/benweissmann/memongo"
@@ -21,7 +22,6 @@ type MongoFeature struct {
 // MongoOptions contains a set of options required to create a new MongoFeature
 type MongoOptions struct {
 	MongoVersion string
-	// Logger         *log.Logger
 	DatabaseName   string
 	DownloadURL    string
 	StartupTimeout time.Duration
@@ -37,8 +37,8 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 
 	opts := memongo.Options{
 		MongoVersion:   mongoOptions.MongoVersion,
-		DownloadURL:    mongoOptions.DownloadURL,
 		StartupTimeout: timeout,
+		LogLevel:       memongolog.LogLevelDebug,
 	}
 
 	mongoServer, err := memongo.StartWithOptions(&opts)
