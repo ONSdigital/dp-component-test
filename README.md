@@ -21,10 +21,12 @@ go get github.com/ONSdigital/dp-component-test
 
 ## Running tests
 
+`go test -component -v`
+
 This package uses the Godog BDD framework. 
 For instructions on writing Godog tests [it is best to follow the instructions found here](https://github.com/cucumber/godog)
 
-To run Godog tests with the API testing features in this library all you need to do is update your root level test file to pass
+To integrate your component tests with this library all you need to do is update your root level test file to pass
 the http handler of your application to our NewAPIFeature, register the steps and add the reset function to the BeforeScenario function.
 
 ```go
@@ -51,6 +53,32 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	ctx.BeforeSuite(func() {
 	})
 }
+
+func TestMain(t *testing.T) {
+	if *componentFlag {
+		var opts = godog.Options{
+			Output: colors.Colored(os.Stdout),
+			Format: "pretty",
+			Paths:  flag.Args(),
+		}
+
+		f := &ComponentTest{}
+
+		status := godog.TestSuite{
+			Name:                 "component_tests",
+			ScenarioInitializer:  f.InitializeScenario,
+			TestSuiteInitializer: f.InitializeTestSuite,
+			Options:              &opts,
+		}.Run()
+
+		if status > 0 {
+			t.Fail()
+        }
+	} else {
+		t.Skip("component flag required to run component tests")
+	}
+}
+
 ```
 
 ## Repository structure
