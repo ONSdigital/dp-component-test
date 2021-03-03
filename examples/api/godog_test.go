@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	featuretest "github.com/armakuni/dp-go-featuretest"
+	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 )
@@ -15,7 +15,7 @@ import (
 var componentFlag = flag.Bool("component", false, "perform component tests")
 var allFlag = flag.Bool("all", false, "perform all tests")
 
-func (m *MyAppFeature) initialiser(h http.Handler) featuretest.ServiceInitialiser {
+func (m *MyAppFeature) initialiser(h http.Handler) componenttest.ServiceInitialiser {
 	return func() (http.Handler, error) {
 		m.Handler = h
 		return h, nil
@@ -26,7 +26,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	server := NewServer()
 	feature := NewMyAppFeature(server.Handler)
 
-	apiFeature := featuretest.NewAPIFeature(feature.initialiser(server.Handler))
+	apiFeature := componenttest.NewAPIFeature(feature.initialiser(server.Handler))
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		apiFeature.Reset()

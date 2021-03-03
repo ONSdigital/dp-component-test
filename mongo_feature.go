@@ -1,4 +1,4 @@
-package featuretest
+package componenttest
 
 import (
 	"context"
@@ -20,7 +20,6 @@ type MongoFeature struct {
 
 // MongoOptions contains a set of options required to create a new MongoFeature
 type MongoOptions struct {
-	Port         int
 	MongoVersion string
 	// Logger         *log.Logger
 	DatabaseName   string
@@ -37,7 +36,6 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	}
 
 	opts := memongo.Options{
-		Port:           mongoOptions.Port,
 		MongoVersion:   mongoOptions.MongoVersion,
 		DownloadURL:    mongoOptions.DownloadURL,
 		StartupTimeout: timeout,

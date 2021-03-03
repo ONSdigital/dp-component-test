@@ -1,4 +1,4 @@
-package featuretest
+package componenttest
 
 import (
 	"bytes"

@@ -7,30 +7,30 @@ import (
 	"os"
 	"testing"
 
-	featuretest "github.com/armakuni/dp-go-featuretest"
+	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 )
 
-type FeatureTestSuite struct {
-	Mongo *featuretest.MongoFeature
+type componenttestSuite struct {
+	Mongo *componenttest.MongoFeature
 }
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
 var allFlag = flag.Bool("all", false, "perform all tests")
 
-func (m *MyAppFeature) initialiser(h http.Handler) featuretest.ServiceInitialiser {
+func (m *MyAppFeature) initialiser(h http.Handler) componenttest.ServiceInitialiser {
 	return func() (http.Handler, error) {
 		m.Handler = h
 		return h, nil
 	}
 }
 
-func (t *FeatureTestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
+func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 	server := NewServer()
 
 	feature := NewMyAppFeature(server.Handler, t.Mongo.Server.URI())
-	apiFeature := featuretest.NewAPIFeature(feature.initialiser(server.Handler))
+	apiFeature := componenttest.NewAPIFeature(feature.initialiser(server.Handler))
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		t.Mongo.Reset()
@@ -44,14 +44,13 @@ func (t *FeatureTestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 
 }
 
-func (t *FeatureTestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
+func (t *componenttestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	ctx.BeforeSuite(func() {
-		mongoOptions := featuretest.MongoOptions{
-			Port:         27017,
-			MongoVersion: "4.0.5",
+		mongoOptions := componenttest.MongoOptions{
+			MongoVersion: "4.0.23",
 			DatabaseName: "testing",
 		}
-		t.Mongo = featuretest.NewMongoFeature(mongoOptions)
+		t.Mongo = componenttest.NewMongoFeature(mongoOptions)
 	})
 
 	ctx.AfterSuite(func() {
@@ -68,7 +67,7 @@ func TestMain(m *testing.M) {
 			Format: "pretty",
 		}
 
-		ts := &FeatureTestSuite{}
+		ts := &componenttestSuite{}
 
 		status = godog.TestSuite{
 			Name:                 "feature_tests",

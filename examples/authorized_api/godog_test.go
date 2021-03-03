@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	featuretest "github.com/armakuni/dp-go-featuretest"
+	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 )
@@ -15,9 +15,9 @@ var componentFlag = flag.Bool("component", false, "perform component tests")
 var allFlag = flag.Bool("all", false, "perform all tests")
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	authorizationFeature := featuretest.NewAuthorizationFeature()
+	authorizationFeature := componenttest.NewAuthorizationFeature()
 	myAppFeature := NewMyAppFeature(authorizationFeature.FakeAuthService.ResolveURL(""))
-	apiFeature := featuretest.NewAPIFeatureWithHandler(myAppFeature.Handler)
+	apiFeature := componenttest.NewAPIFeatureWithHandler(myAppFeature.Handler)
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		apiFeature.Reset()

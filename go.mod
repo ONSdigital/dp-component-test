@@ -1,4 +1,4 @@
-module github.com/armakuni/dp-go-featuretest
+module github.com/ONSdigital/dp-component-test
 
 go 1.15
 

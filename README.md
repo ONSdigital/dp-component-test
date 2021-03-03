@@ -1,4 +1,4 @@
-# dp-go-featuretest
+# dp-component-test
 
 Library to help write feature-level tests against a REST api / microservice
 
@@ -16,7 +16,7 @@ up an in memory mongo to assert against changes to the database.
 To install this package in your project simply run:
 
 ```bash
-go get github.com/armakuni/dp-go-featuretest
+go get github.com/ONSdigital/dp-component-test
 ```
 
 This package works alongside the Godog BDD framework, to install this run:
@@ -24,8 +24,6 @@ This package works alongside the Godog BDD framework, to install this run:
 ```bash
 go get github.com/cucumber/godog/cmd/godog@v0.11.0
 ```
-
-**NOTE: this library will eventually change ownership**
 
 ## Running tests
 
@@ -38,13 +36,13 @@ the http handler of your application to our NewAPIFeature, register the steps an
 package main
 
 import (
-	featuretest "github.com/armakuni/dp-go-featuretest"
+	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/cucumber/godog"
 )
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	myAppFeature := NewMyAppFeature() // This is the part that YOU will implement
-	apiFeature := featuretest.NewAPIFeature(myAppFeature.Handler)
+	apiFeature := componenttest.NewAPIFeature(myAppFeature.Handler)
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		apiFeature.Reset()
