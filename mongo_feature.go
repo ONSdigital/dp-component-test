@@ -3,8 +3,9 @@ package componenttest
 import (
 	"context"
 	"encoding/json"
-	"github.com/benweissmann/memongo/memongolog"
 	"time"
+
+	"github.com/benweissmann/memongo/memongolog"
 
 	"github.com/benweissmann/memongo"
 	"github.com/cucumber/godog"
@@ -21,7 +22,7 @@ type MongoFeature struct {
 
 // MongoOptions contains a set of options required to create a new MongoFeature
 type MongoOptions struct {
-	MongoVersion string
+	MongoVersion   string
 	DatabaseName   string
 	DownloadURL    string
 	StartupTimeout time.Duration
