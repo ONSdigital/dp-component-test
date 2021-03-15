@@ -5,15 +5,15 @@ import (
 	"os"
 )
 
-type MyAppFeature struct {
+type MyAppComponent struct {
 	Handler http.Handler
 }
 
-func NewMyAppFeature(auth_url string) *MyAppFeature {
+func NewMyAppComponent(auth_url string) *MyAppComponent {
 
 	os.Setenv("AUTH_URL", auth_url)
 
-	return &MyAppFeature{
+	return &MyAppComponent{
 		Handler: NewRouter(),
 	}
 }

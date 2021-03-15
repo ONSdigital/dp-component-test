@@ -4,8 +4,8 @@ Library to help write feature-level tests against a REST api / microservice
 
 ## Background
 
-The intention of this library is to help when writing feature tests for a new or existing component (microservice).
-The library contains a set of useful helper feature steps to make writing new gherkin tests easy.
+The intention of this library is to help when writing component tests for a new or existing component (microservice).
+The library contains a set of useful helper steps to make writing new gherkin tests easy.
 
 The steps in api_feature have been written as to be easily reusable when setting up tests against a REST API, and
 there are other additional parts of this library which can be plugged in to help test outputs of the tests e.g. setting
@@ -37,8 +37,8 @@ import (
 )
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	myAppFeature := NewMyAppFeature() // This is the part that YOU will implement
-	apiFeature := componenttest.NewAPIFeature(myAppFeature.Handler)
+	myAppComponent := NewMyAppComponent() // This is the part that YOU will implement
+	apiFeature := componenttest.NewAPIFeature(myAppComponent.Handler)
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		apiFeature.Reset()

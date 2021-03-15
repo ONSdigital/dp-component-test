@@ -16,7 +16,7 @@ var allFlag = flag.Bool("all", false, "perform all tests")
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	authorizationFeature := componenttest.NewAuthorizationFeature()
-	myAppFeature := NewMyAppFeature(authorizationFeature.FakeAuthService.ResolveURL(""))
+	myAppFeature := NewMyAppComponent(authorizationFeature.FakeAuthService.ResolveURL(""))
 	apiFeature := componenttest.NewAPIFeatureWithHandler(myAppFeature.Handler)
 
 	ctx.BeforeScenario(func(*godog.Scenario) {

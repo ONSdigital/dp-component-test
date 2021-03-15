@@ -5,16 +5,16 @@ import (
 	"os"
 )
 
-type MyAppFeature struct {
+type MyAppComponent struct {
 	Handler http.Handler
 }
 
-func NewMyAppFeature(handler http.Handler, mongoUrl string) *MyAppFeature {
+func NewMyAppComponent(handler http.Handler, mongoUrl string) *MyAppComponent {
 
 	os.Setenv("MONGO_URL", mongoUrl)
 	os.Setenv("DATABASE_NAME", "testing")
 
-	return &MyAppFeature{
+	return &MyAppComponent{
 		Handler: handler,
 	}
 }

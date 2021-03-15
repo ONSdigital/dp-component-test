@@ -12,27 +12,50 @@ import (
 	"github.com/cucumber/godog/colors"
 )
 
+type componenttestSuite struct {
+	Mongo *componenttest.MongoFeature
+}
+
 var componentFlag = flag.Bool("component", false, "perform component tests")
 var allFlag = flag.Bool("all", false, "perform all tests")
 
-func (m *MyAppFeature) initialiser(h http.Handler) componenttest.ServiceInitialiser {
+func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitialiser {
 	return func() (http.Handler, error) {
 		m.Handler = h
 		return h, nil
 	}
 }
 
-func InitializeScenario(ctx *godog.ScenarioContext) {
+func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 	server := NewServer()
-	feature := NewMyAppFeature(server.Handler)
 
+	feature := NewMyAppComponent(server.Handler, t.Mongo.Server.URI())
 	apiFeature := componenttest.NewAPIFeature(feature.initialiser(server.Handler))
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
+		t.Mongo.Reset()
 		apiFeature.Reset()
 	})
 
+	ctx.AfterScenario(func(*godog.Scenario, error) {})
+
 	apiFeature.RegisterSteps(ctx)
+	t.Mongo.RegisterSteps(ctx)
+
+}
+
+func (t *componenttestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
+	ctx.BeforeSuite(func() {
+		mongoOptions := componenttest.MongoOptions{
+			MongoVersion: "4.0.23",
+			DatabaseName: "testing",
+		}
+		t.Mongo = componenttest.NewMongoFeature(mongoOptions)
+	})
+
+	ctx.AfterSuite(func() {
+		t.Mongo.Close()
+	})
 }
 
 func TestMain(m *testing.M) {
@@ -44,10 +67,13 @@ func TestMain(m *testing.M) {
 			Format: "pretty",
 		}
 
+		ts := &componenttestSuite{}
+
 		status = godog.TestSuite{
-			Name:                "feature_tests",
-			ScenarioInitializer: InitializeScenario,
-			Options:             &opts,
+			Name:                 "feature_tests",
+			ScenarioInitializer:  ts.InitializeScenario,
+			TestSuiteInitializer: ts.InitializeTestSuite,
+			Options:              &opts,
 		}.Run()
 	}
 
