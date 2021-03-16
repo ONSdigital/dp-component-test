@@ -47,7 +47,7 @@ func (f *APIFeature) Reset() {
 	f.requestHeaders = make(map[string]string)
 }
 
-// RegisterSteps binds the APIFeature steps to the godog context to enable usage in the feature tests
+// RegisterSteps binds the APIFeature steps to the godog context to enable usage in the component tests
 func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I set the "([^"]*)" header to "([^"]*)"$`, f.ISetTheHeaderTo)
 	ctx.Step(`^I am authorised$`, f.IAmAuthorised)

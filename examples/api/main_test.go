@@ -24,9 +24,9 @@ func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitia
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	server := NewServer()
-	feature := NewMyAppComponent(server.Handler)
+	component := NewMyAppComponent(server.Handler)
 
-	apiFeature := componenttest.NewAPIFeature(feature.initialiser(server.Handler))
+	apiFeature := componenttest.NewAPIFeature(component.initialiser(server.Handler))
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		apiFeature.Reset()
@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 		}
 
 		status = godog.TestSuite{
-			Name:                "feature_tests",
+			Name:                "component_tests",
 			ScenarioInitializer: InitializeScenario,
 			Options:             &opts,
 		}.Run()

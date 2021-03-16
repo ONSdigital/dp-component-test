@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 		}
 
 		godog.TestSuite{
-			Name:                "feature_tests",
+			Name:                "component_tests",
 			ScenarioInitializer: InitializeScenario,
 			Options:             &opts,
 		}.Run()
