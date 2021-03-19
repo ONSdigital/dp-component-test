@@ -9,4 +9,5 @@ require (
 	github.com/maxcnunes/httpfake v1.2.1
 	github.com/stretchr/testify v1.6.1
 	go.mongodb.org/mongo-driver v1.4.6
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 )

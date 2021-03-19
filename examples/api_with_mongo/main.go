@@ -33,7 +33,7 @@ func ExampleHandler(w http.ResponseWriter, r *http.Request) {
 	collection := client.Database(config.DatabaseName).Collection("datasets")
 	var result map[string]interface{}
 
-	err := collection.FindOne(context.Background(), bson.D{{"id", post["id"]}}).Decode(&result)
+	err := collection.FindOne(context.Background(), bson.M{"id": post["id"]}).Decode(&result)
 	if err != nil {
 		w.WriteHeader(404)
 		return
@@ -48,9 +48,25 @@ func ExampleHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(resultBody)
 }
 
+func ExampleDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	post := mux.Vars(r)
+	config := NewConfig()
+	client, _ := NewMongoClient(config.MongoUrl)
+	collection := client.Database(config.DatabaseName).Collection("datasets")
+
+	_, err := collection.DeleteOne(context.Background(), bson.M{"id": post["id"]})
+	if err != nil {
+		w.WriteHeader(404)
+		return
+	}
+
+	w.WriteHeader(204)
+}
+
 func newRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/datasets/{id}", ExampleHandler).Methods("GET")
+	router.HandleFunc("/datasets/{id}", ExampleDeleteHandler).Methods("DELETE")
 	return router
 }
 

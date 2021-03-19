@@ -37,7 +37,10 @@ func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 		apiFeature.Reset()
 	})
 
-	ctx.AfterScenario(func(*godog.Scenario, error) {})
+	ctx.AfterScenario(func(*godog.Scenario, error) {
+		t.Mongo.Reset()
+		apiFeature.Reset()
+	})
 
 	apiFeature.RegisterSteps(ctx)
 	t.Mongo.RegisterSteps(ctx)

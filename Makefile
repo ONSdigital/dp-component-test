@@ -10,7 +10,7 @@ LDFLAGS=-ldflags "-X main.BuildTime=$(BUILD_TIME) -X main.GitCommit=$(GIT_COMMIT
 
 .PHONY: test
 test:
-	go test -race -cover ./... --component
+	go test -race -cover ./... -component
 
 .PHONY: build
 build:

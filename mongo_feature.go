@@ -3,9 +3,12 @@ package componenttest
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/benweissmann/memongo/memongolog"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/benweissmann/memongo"
 	"github.com/cucumber/godog"
@@ -80,6 +83,7 @@ func (m *MongoFeature) Close() error {
 
 func (m *MongoFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the following document exists in the "([^"]*)" collection:$`, m.TheFollowingDocumentExistsInTheCollection)
+	ctx.Step(`^the document with "([^"]*)" set to "([^"]*)" does not exist in the "([^"]*)" collection$`, m.theDocumentWithSetToDoesNotExistInTheCollection)
 }
 
 func (m *MongoFeature) TheFollowingDocumentExistsInTheCollection(collectionName string, document *godog.DocString) error {
@@ -98,4 +102,24 @@ func (m *MongoFeature) TheFollowingDocumentExistsInTheCollection(collectionName 
 		return err
 	}
 	return nil
+}
+
+func (m *MongoFeature) theDocumentWithSetToDoesNotExistInTheCollection(key, value, collectionName string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := m.Database.Collection(collectionName)
+	var documentJSON interface{}
+
+	err := collection.FindOne(ctx, bson.M{key: value}).Decode(&documentJSON)
+
+	if err == mongo.ErrNoDocuments {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return errors.New(fmt.Sprintf("Document with property %s: %s was found in the collection", key, value))
 }

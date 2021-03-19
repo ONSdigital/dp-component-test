@@ -2,7 +2,7 @@ Feature: Example feature
 
     Scenario: Return the dataset when it exists in collection
         Given the following document exists in the "datasets" collection:
-	        """
+            """
             {
                 "_id": "6021403f3a21177b2837d12f",
                 "id": "a1b2c3",
@@ -30,3 +30,15 @@ Feature: Example feature
             """
         When I GET "/datasets/a1b2c12345678"
         Then the HTTP status code should be "404"
+
+    Scenario: data removed from db if dataset has been deleted
+        Given the following document exists in the "datasets" collection:
+            """
+            {
+                "id": "a1b2c3",
+                "exampleData": "some data"
+            }
+            """
+        When I DELETE "/datasets/a1b2c3"
+        Then the HTTP status code should be "204"
+        And the document with "id" set to "a1b2c3" does not exist in the "datasets" collection
