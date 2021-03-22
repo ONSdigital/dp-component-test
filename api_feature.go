@@ -24,7 +24,7 @@ func StaticHandler(handler http.Handler) ServiceInitialiser {
 type APIFeature struct {
 	ErrorFeature
 	Initialiser       ServiceInitialiser
-	httpResponse      *http.Response
+	HttpResponse      *http.Response
 	BeforeRequestHook func() error
 	requestHeaders    map[string]string
 }
@@ -112,13 +112,13 @@ func (f *APIFeature) makeRequest(method, path string, data []byte) error {
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
-	f.httpResponse = w.Result()
+	f.HttpResponse = w.Result()
 	return nil
 }
 
 // IShouldReceiveTheFollowingResponse asserts the response body and expected response body are equal
 func (f *APIFeature) IShouldReceiveTheFollowingResponse(expectedAPIResponse *godog.DocString) error {
-	responseBody := f.httpResponse.Body
+	responseBody := f.HttpResponse.Body
 	body, _ := ioutil.ReadAll(responseBody)
 
 	assert.Equal(f, strings.TrimSpace(expectedAPIResponse.Content), strings.TrimSpace(string(body)))
@@ -128,7 +128,7 @@ func (f *APIFeature) IShouldReceiveTheFollowingResponse(expectedAPIResponse *god
 
 // IShouldReceiveTheFollowingJSONResponse asserts that the response body and expected response body are equal
 func (f *APIFeature) IShouldReceiveTheFollowingJSONResponse(expectedAPIResponse *godog.DocString) error {
-	responseBody := f.httpResponse.Body
+	responseBody := f.HttpResponse.Body
 	body, _ := ioutil.ReadAll(responseBody)
 
 	assert.JSONEq(f, expectedAPIResponse.Content, string(body))
@@ -142,13 +142,13 @@ func (f *APIFeature) TheHTTPStatusCodeShouldBe(expectedCodeStr string) error {
 	if err != nil {
 		return err
 	}
-	assert.Equal(f, expectedCode, f.httpResponse.StatusCode)
+	assert.Equal(f, expectedCode, f.HttpResponse.StatusCode)
 	return f.StepError()
 }
 
 // TheResponseHeaderShouldBe asserts the response header matches the expectation
 func (f *APIFeature) TheResponseHeaderShouldBe(headerName, expectedValue string) error {
-	assert.Equal(f, expectedValue, f.httpResponse.Header.Get(headerName))
+	assert.Equal(f, expectedValue, f.HttpResponse.Header.Get(headerName))
 	return f.StepError()
 }
 
