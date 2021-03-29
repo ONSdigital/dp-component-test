@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -17,7 +16,6 @@ type componenttestSuite struct {
 }
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
-var allFlag = flag.Bool("all", false, "perform all tests")
 
 func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitialiser {
 	return func() (http.Handler, error) {
@@ -78,13 +76,11 @@ func TestMain(t *testing.T) {
 			Options:              &opts,
 		}.Run()
 
-		fmt.Printf("coverage: %.1f%s\n", testing.Coverage()*100, "% of all statements")
-
 		if status > 0 {
 			t.Fail()
 		}
+
 	} else {
 		t.Skip()
 	}
-
 }

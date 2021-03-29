@@ -11,7 +11,6 @@ import (
 )
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
-var allFlag = flag.Bool("all", false, "perform all tests")
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	authorizationFeature := componenttest.NewAuthorizationFeature()
@@ -48,8 +47,8 @@ func TestMain(t *testing.T) {
 		if status > 0 {
 			t.Fail()
 		}
+
 	} else {
 		t.Skip()
 	}
-
 }

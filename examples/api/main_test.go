@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -13,7 +12,6 @@ import (
 )
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
-var allFlag = flag.Bool("all", false, "perform all tests")
 
 func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitialiser {
 	return func() (http.Handler, error) {
@@ -35,31 +33,25 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	apiFeature.RegisterSteps(ctx)
 }
 
-func TestMain(m *testing.M) {
-	flag.Parse()
-	status := 0
-	if *componentFlag || *allFlag {
+func TestMain(t *testing.T) {
+	if *componentFlag {
 		var opts = godog.Options{
 			Output: colors.Colored(os.Stdout),
+			Paths:  flag.Args(),
 			Format: "pretty",
 		}
 
-		status = godog.TestSuite{
+		status := godog.TestSuite{
 			Name:                "component_tests",
 			ScenarioInitializer: InitializeScenario,
 			Options:             &opts,
 		}.Run()
-	}
 
-	if !*componentFlag || *allFlag {
-		if st := m.Run(); st > status {
-			status = st
+		if status > 0 {
+			t.Fail()
 		}
-	}
 
-	if *componentFlag {
-		fmt.Printf("coverage: %.1f%s\n", testing.Coverage()*100, "% of all statements")
+	} else {
+		t.Skip()
 	}
-
-	os.Exit(status)
 }
