@@ -61,34 +61,30 @@ func (t *componenttestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	})
 }
 
-func TestMain(m *testing.M) {
-	flag.Parse()
-	status := 0
-	if *componentFlag || *allFlag {
+func TestMain(t *testing.T) {
+	if *componentFlag {
 		var opts = godog.Options{
 			Output: colors.Colored(os.Stdout),
+			Paths:  flag.Args(),
 			Format: "pretty",
 		}
 
 		ts := &componenttestSuite{}
 
-		status = godog.TestSuite{
+		status := godog.TestSuite{
 			Name:                 "component_tests",
 			ScenarioInitializer:  ts.InitializeScenario,
 			TestSuiteInitializer: ts.InitializeTestSuite,
 			Options:              &opts,
 		}.Run()
-	}
 
-	if !*componentFlag || *allFlag {
-		if st := m.Run(); st > status {
-			status = st
-		}
-	}
-
-	if *componentFlag {
 		fmt.Printf("coverage: %.1f%s\n", testing.Coverage()*100, "% of all statements")
+
+		if status > 0 {
+			t.Fail()
+		}
+	} else {
+		t.Skip()
 	}
 
-	os.Exit(status)
 }

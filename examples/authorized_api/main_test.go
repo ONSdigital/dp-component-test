@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"testing"
 
@@ -32,31 +31,25 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	authorizationFeature.RegisterSteps(ctx)
 }
 
-func TestMain(m *testing.M) {
-	flag.Parse()
-	status := 0
-	if *componentFlag || *allFlag {
+func TestMain(t *testing.T) {
+	if *componentFlag {
 		var opts = godog.Options{
 			Output: colors.Colored(os.Stdout),
+			Paths:  flag.Args(),
 			Format: "pretty",
 		}
 
-		godog.TestSuite{
+		status := godog.TestSuite{
 			Name:                "component_tests",
 			ScenarioInitializer: InitializeScenario,
 			Options:             &opts,
 		}.Run()
-	}
 
-	if !*componentFlag || *allFlag {
-		if st := m.Run(); st > status {
-			status = st
+		if status > 0 {
+			t.Fail()
 		}
+	} else {
+		t.Skip()
 	}
 
-	if *componentFlag {
-		fmt.Printf("coverage: %.1f%s\n", testing.Coverage()*100, "% of all statements")
-	}
-
-	os.Exit(status)
 }

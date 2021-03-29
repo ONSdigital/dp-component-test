@@ -32,17 +32,17 @@ func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(resp))
 }
 
-func ExampleHandler3(w http.ResponseWriter, r *http.Request) {
-
-	w.WriteHeader(403)
-	fmt.Fprintf(w, "403 - Forbidden")
+func ExampleHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(201)
+	fmt.Fprintf(w, "accepted")
 }
 
 func NewRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/example1", ExampleHandler1).Methods(http.MethodGet)
-	router.HandleFunc("/example3", MustAuthorize(ExampleHandler3)).Methods(http.MethodPost)
+	router.HandleFunc("/example3", MustAuthorize(ExampleHandler)).Methods(http.MethodPost)
+	router.HandleFunc("/example4", MustBeIdentified(ExampleHandler)).Methods(http.MethodPost)
 
 	return router
 }

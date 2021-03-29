@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +20,12 @@ type Config struct {
 	DatabaseName string
 }
 
+type Data struct {
+	MongoId     string `bson:"_id" json:"_id"`
+	ID          string `bson:"id" json:"id"`
+	ExampleData string `bson:"example_data" json:"example_data"`
+}
+
 func NewConfig() *Config {
 	return &Config{
 		MongoUrl:     os.Getenv("MONGO_URL"),
@@ -31,21 +38,28 @@ func ExampleHandler(w http.ResponseWriter, r *http.Request) {
 	config := NewConfig()
 	client, _ := NewMongoClient(config.MongoUrl)
 	collection := client.Database(config.DatabaseName).Collection("datasets")
-	var result map[string]interface{}
+	var result Data
 
 	err := collection.FindOne(context.Background(), bson.M{"id": post["id"]}).Decode(&result)
 	if err != nil {
 		w.WriteHeader(404)
+		fmt.Println(err.Error())
 		return
 	}
-	w.Header().Add("Content-Type", "application/json")
-
 	resultBody, err := json.Marshal(result)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	w.Write(resultBody)
+	if r.Header.Get("Accept") != "text/html" {
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(resultBody)
+
+	} else {
+		w.Header().Add("Content-Type", "text/html")
+		response := fmt.Sprintf(`<value id="_id">%s</value><value id="id">%s</value><value id="example_data">%s</value>`, result.MongoId, result.ID, result.ExampleData)
+		w.Write([]byte(response))
+	}
 }
 
 func ExampleDeleteHandler(w http.ResponseWriter, r *http.Request) {

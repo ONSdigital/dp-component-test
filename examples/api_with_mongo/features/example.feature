@@ -6,7 +6,7 @@ Feature: Example feature
             {
                 "_id": "6021403f3a21177b2837d12f",
                 "id": "a1b2c3",
-                "exampleData": "some data"
+                "example_data": "some data"
             }
             """
         When I GET "/datasets/a1b2c3"
@@ -15,8 +15,25 @@ Feature: Example feature
             {
                 "_id": "6021403f3a21177b2837d12f",
                 "id": "a1b2c3",
-                "exampleData": "some data"
+                "example_data": "some data"
             }
+            """
+
+    Scenario: Return the dataset in text when accept header set to text/html
+        Given the following document exists in the "datasets" collection:
+            """
+            {
+                "_id": "6021403f3a21177b2837d12f",
+                "id": "a1b2c3",
+                "example_data": "some data"
+            }
+            """
+        When I set the "Accept" header to "text/html"
+        And I GET "/datasets/a1b2c3"
+        Then the response header "Content-Type" should be "text/html"
+        And I should receive the following response:
+            """
+            <value id="_id">6021403f3a21177b2837d12f</value><value id="id">a1b2c3</value><value id="example_data">some data</value>
             """
 
     Scenario: get 404 if dataset does not exist
@@ -25,7 +42,7 @@ Feature: Example feature
             {
                 "_id": "6021403f3a21177b2837d12f",
                 "id": "a1b2c3",
-                "exampleData": "some data"
+                "example_data": "some data"
             }
             """
         When I GET "/datasets/a1b2c12345678"
@@ -36,7 +53,7 @@ Feature: Example feature
             """
             {
                 "id": "a1b2c3",
-                "exampleData": "some data"
+                "example_data": "some data"
             }
             """
         When I DELETE "/datasets/a1b2c3"
