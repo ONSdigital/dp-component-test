@@ -23,7 +23,7 @@ go get github.com/ONSdigital/dp-component-test
 
 `go test -component -v`
 
-This package uses the Godog BDD framework. 
+This package uses the Godog BDD framework.
 For instructions on writing Godog tests [it is best to follow the instructions found here](https://github.com/cucumber/godog)
 
 To integrate your component tests with this library all you need to do is update your root level test file to pass
@@ -35,6 +35,8 @@ package main
 import (
 	componenttest "github.com/ONSdigital/dp-component-test"
 )
+
+var componentFlag = flag.Bool("component", false, "perform component tests")
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	myAppComponent := NewMyAppComponent() // This is the part that YOU will implement
