@@ -59,3 +59,14 @@ Feature: Example feature
         When I DELETE "/datasets/a1b2c3"
         Then the HTTP status code should be "204"
         And the document with "id" set to "a1b2c3" does not exist in the "datasets" collection
+
+    Scenario: document stored in database after a PUT
+        When I PUT "/datasets/1"
+            """
+            {
+                "_id": "somevalue",
+                "id": "1",
+                "example_data": "some data"
+            }
+            """
+        Then the HTTP status code should be "200"

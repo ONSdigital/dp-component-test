@@ -77,10 +77,15 @@ func ExampleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
+func ExamplePutHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+}
+
 func newRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/datasets/{id}", ExampleHandler).Methods("GET")
 	router.HandleFunc("/datasets/{id}", ExampleDeleteHandler).Methods("DELETE")
+	router.HandleFunc("/datasets/{id}", ExamplePutHandler).Methods("PUT")
 	return router
 }
 
