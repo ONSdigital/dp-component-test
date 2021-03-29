@@ -21,7 +21,7 @@ go get github.com/ONSdigital/dp-component-test
 
 ## Running tests
 
-`go test -component -v`
+`go test -component`
 
 This package uses the Godog BDD framework.
 For instructions on writing Godog tests [it is best to follow the instructions found here](https://github.com/cucumber/godog)
