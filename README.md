@@ -2,6 +2,10 @@
 
 Library to help write feature-level tests against a REST api / microservice
 
+The steps available to use from this library are described in [STEP_DEFINITIONS.md](STEP_DEFINITIONS.md).
+
+For help and examples of using this library please see [USAGE.md](USAGE.md).
+
 ## Background
 
 The intention of this library is to help when writing component tests for a new or existing component (microservice).
