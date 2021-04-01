@@ -93,3 +93,12 @@ The features that can be used all exist on the root level of the project.
 
 The examples folder contains three different examples of how to use this library, each using different
 features and having a slightly different way of setting up.
+
+## Adding new component test features
+
+If you feel like there are handy common steps missing from this library which you would like to add, please do!
+
+The mechanism by which the tests and steps are validated (testing the test library) is through feature tests in the examples which get exercised in the CI pipeline.
+If you add any new steps, make sure you also add sufficient feature tests to exercise them in appropriate examples in the examples folder.
+
+If you are adding a new testing feature entirely, it might be worth adding a new example service which exercises the steps of any new feature you add.

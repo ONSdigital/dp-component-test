@@ -6,6 +6,8 @@ This file serves to provide directions to repositories which have currently impl
 
 [In this repository](https://github.com/ONSdigital/dp-topic-api) a [walkthrough document](https://github.com/ONSdigital/dp-topic-api/blob/develop/Adding%20Component%20Testing%20-%20HOWTO.md) has been created which details how component testing was added to this repository. This documentation details the process of adding component testing to dp-topic-api and should be very transferrable, although each project will have its own nuances.
 
+This repository also details the mechanism by which component testing is added to the CI pipeline of an application.
+
 ## dp-dataset-api
 
 [In this repository](https://github.com/ONSdigital/dp-dataset-api) component testing has been implemented for a service using auth, identity and mongo database. This should provide useful example implementation as, like the topic API, the project structure was generated from the same repository generation tool and therefore should have the same kind of structure as any new service.
