@@ -29,4 +29,3 @@ func (t *ErrorFeature) Helper() {}
 func (t *ErrorFeature) Name() string {
 	return "Component Test"
 }
-

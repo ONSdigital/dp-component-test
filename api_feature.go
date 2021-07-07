@@ -54,8 +54,8 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I am not authorised$`, f.IAmNotAuthorised)
 	ctx.Step(`^I GET "([^"]*)"$`, f.IGet)
 	ctx.Step(`^I POST "([^"]*)"$`, f.IPostToWithBody)
-	ctx.Step(`^I PUT "([^"]*)"$`, f.iPUT)
-	ctx.Step(`^I DELETE "([^"]*)"`, f.iDELETE)
+	ctx.Step(`^I PUT "([^"]*)"$`, f.IPut)
+	ctx.Step(`^I DELETE "([^"]*)"`, f.IDelete)
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
 	ctx.Step(`^I should receive the following response:$`, f.IShouldReceiveTheFollowingResponse)
@@ -91,11 +91,11 @@ func (f *APIFeature) IPostToWithBody(path string, body *godog.DocString) error {
 	return f.makeRequest("POST", path, []byte(body.Content))
 }
 
-func (f *APIFeature) iPUT(path string, body *godog.DocString) error {
+func (f *APIFeature) IPut(path string, body *godog.DocString) error {
 	return f.makeRequest("PUT", path, []byte(body.Content))
 }
 
-func (f *APIFeature) iDELETE(path string) error {
+func (f *APIFeature) IDelete(path string) error {
 	return f.makeRequest("DELETE", path, nil)
 }
 
