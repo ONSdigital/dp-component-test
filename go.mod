@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-component-test
 
-go 1.15
+go 1.16
 
 require (
 	github.com/benweissmann/memongo v0.1.1
