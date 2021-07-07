@@ -91,10 +91,12 @@ func (f *APIFeature) IPostToWithBody(path string, body *godog.DocString) error {
 	return f.makeRequest("POST", path, []byte(body.Content))
 }
 
+// IPut makes a PUT request to the provided path with the current headers and the body provided
 func (f *APIFeature) IPut(path string, body *godog.DocString) error {
 	return f.makeRequest("PUT", path, []byte(body.Content))
 }
 
+// IDelete makes a DELETE request to the provided path with the current headers
 func (f *APIFeature) IDelete(path string) error {
 	return f.makeRequest("DELETE", path, nil)
 }
