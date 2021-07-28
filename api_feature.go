@@ -55,6 +55,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I GET "([^"]*)"$`, f.IGet)
 	ctx.Step(`^I POST "([^"]*)"$`, f.IPostToWithBody)
 	ctx.Step(`^I PUT "([^"]*)"$`, f.IPut)
+	ctx.Step(`^I PUT "([^"]*)"$`, f.IPatch)
 	ctx.Step(`^I DELETE "([^"]*)"`, f.IDelete)
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
@@ -94,6 +95,11 @@ func (f *APIFeature) IPostToWithBody(path string, body *godog.DocString) error {
 // IPut makes a PUT request to the provided path with the current headers and the body provided
 func (f *APIFeature) IPut(path string, body *godog.DocString) error {
 	return f.makeRequest("PUT", path, []byte(body.Content))
+}
+
+// IPatch makes a PATCH request to the provided path with the current headers and the body provided
+func (f *APIFeature) IPatch(path string, body *godog.DocString) error {
+	return f.makeRequest("PATCH", path, []byte(body.Content))
 }
 
 // IDelete makes a DELETE request to the provided path with the current headers

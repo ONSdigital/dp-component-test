@@ -23,6 +23,7 @@ This library provides these generic steps that should be useable across a variet
 | I GET "URL"                                                                          | make a GET request to the provided URL                                               | When              |
 | I DELETE "URL"                                                                       | make a DELETE request to the provided URL                                            | When              |
 | I PUT "URL" "BODY"                                                                   | make a PUT request to the provided URL with the given body                           | When              |
+| I PATCH "URL" "BODY"                                                                 | make a PATCH request to the provided URL with the given body                         | When              |
 | I POST "URL" "BODY"                                                                  | make a POST request to the provided URL with the given body                          | When              |
 | the HTTP status code should be "CODE"                                                | Assert that the response code from the request is CODE                               | Then              |
 | the response header "KEY" should be "VALUE"                                          | Assert that the response header KEY has value VALUE                                  | Then              |
