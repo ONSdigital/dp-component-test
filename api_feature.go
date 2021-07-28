@@ -55,7 +55,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I GET "([^"]*)"$`, f.IGet)
 	ctx.Step(`^I POST "([^"]*)"$`, f.IPostToWithBody)
 	ctx.Step(`^I PUT "([^"]*)"$`, f.IPut)
-	ctx.Step(`^I PUT "([^"]*)"$`, f.IPatch)
+	ctx.Step(`^I PATCH "([^"]*)"$`, f.IPatch)
 	ctx.Step(`^I DELETE "([^"]*)"`, f.IDelete)
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
