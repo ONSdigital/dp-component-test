@@ -7,10 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/benweissmann/memongo/memongolog"
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/benweissmann/memongo"
+	mim "github.com/ONSdigital/dp-mongodb-in-memory"
 	"github.com/cucumber/godog"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -18,34 +17,21 @@ import (
 
 // MongoFeature is a struct containing an in-memory mongo database
 type MongoFeature struct {
-	Server   *memongo.Server
+	Server   *mim.Server
 	Client   mongo.Client
 	Database *mongo.Database
 }
 
 // MongoOptions contains a set of options required to create a new MongoFeature
 type MongoOptions struct {
-	MongoVersion   string
-	DatabaseName   string
-	DownloadURL    string
-	StartupTimeout time.Duration
+	MongoVersion string
+	DatabaseName string
 }
 
 // NewMongoFeature creates a new in-memory mongo database using the supplied options
 func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 
-	timeout := mongoOptions.StartupTimeout
-	if timeout == 0 {
-		timeout = 2 * time.Minute
-	}
-
-	opts := memongo.Options{
-		MongoVersion:   mongoOptions.MongoVersion,
-		StartupTimeout: timeout,
-		LogLevel:       memongolog.LogLevelDebug,
-	}
-
-	mongoServer, err := memongo.StartWithOptions(&opts)
+	mongoServer, err := mim.Start(mongoOptions.MongoVersion)
 	if err != nil {
 		panic(err)
 	}

@@ -48,7 +48,7 @@ func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 func (t *componenttestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	ctx.BeforeSuite(func() {
 		mongoOptions := componenttest.MongoOptions{
-			MongoVersion: "4.0.23",
+			MongoVersion: "4.4.8",
 			DatabaseName: "testing",
 		}
 		t.Mongo = componenttest.NewMongoFeature(mongoOptions)
