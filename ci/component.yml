@@ -1,0 +1,16 @@
+---
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.15
+
+inputs:
+  - name: dp-component-test
+    path: dp-component-test
+
+run:
+  path: dp-component-test/ci/scripts/component.sh
