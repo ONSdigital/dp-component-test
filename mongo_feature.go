@@ -7,10 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
-
 	mim "github.com/ONSdigital/dp-mongodb-in-memory"
 	"github.com/cucumber/godog"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
