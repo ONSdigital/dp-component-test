@@ -43,6 +43,7 @@ func NewRouter() http.Handler {
 	router.HandleFunc("/example1", ExampleHandler1).Methods(http.MethodGet)
 	router.HandleFunc("/example3", MustAuthorize(ExampleHandler)).Methods(http.MethodPost)
 	router.HandleFunc("/example4", MustBeIdentified(ExampleHandler)).Methods(http.MethodPost)
+	router.HandleFunc("/example5", ZebedeeMustAuthorize(ExampleHandler)).Methods(http.MethodPost)
 
 	return router
 }

@@ -58,3 +58,15 @@ Feature: Example feature
             """
             User has not been identified as an admin
             """
+
+    Scenario: accessing zebedee endpoint without authorization
+        Given I use an invalid service auth token
+        When I POST "/example5"
+            """
+            foo bar
+            """
+        Then the HTTP status code should be "401"
+        And I should receive the following response:
+            """
+            CMD permissions request denied: service account not found
+            """

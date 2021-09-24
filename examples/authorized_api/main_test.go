@@ -30,7 +30,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	authorizationFeature.RegisterSteps(ctx)
 }
 
-func TestMain(t *testing.T) {
+func TestComponent(t *testing.T) {
 	if *componentFlag {
 		var opts = godog.Options{
 			Output: colors.Colored(os.Stdout),
