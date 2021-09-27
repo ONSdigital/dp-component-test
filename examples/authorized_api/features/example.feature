@@ -59,7 +59,7 @@ Feature: Example feature
             User has not been identified as an admin
             """
 
-    Scenario: accessing zebedee endpoint without authorization
+    Scenario: accessing zebedee endpoint without service authorization
         Given I use an invalid service auth token
         When I POST "/example5"
             """
@@ -70,3 +70,15 @@ Feature: Example feature
             """
             CMD permissions request denied: service account not found
             """
+
+#    Scenario: accessing zebedee endpoint with service authorization
+#        Given I use valid service auth token "abcdefg"
+#        When I POST "/example5"
+#            """
+#            foo bar
+#            """
+#        Then the HTTP status code should be "200"
+#        And I should receive the following response:
+#            """
+#            ["DELETE", "READ", "CREATE", "UPDATE"]
+#            """
