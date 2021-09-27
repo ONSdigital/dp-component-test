@@ -28,6 +28,8 @@ func ZebedeeMustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
+		} else {
+			w.WriteHeader(200)
 		}
 		handler(w, r)
 	}

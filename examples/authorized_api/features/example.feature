@@ -71,14 +71,15 @@ Feature: Example feature
             CMD permissions request denied: service account not found
             """
 
-#    Scenario: accessing zebedee endpoint with service authorization
-#        Given I use valid service auth token "abcdefg"
-#        When I POST "/example5"
-#            """
-#            foo bar
-#            """
-#        Then the HTTP status code should be "200"
-#        And I should receive the following response:
-#            """
-#            ["DELETE", "READ", "CREATE", "UPDATE"]
-#            """
+    Scenario: accessing zebedee endpoint with service authorization
+        Given I use a valid service auth token "abcdefg"
+        And zebedee recognises the service auth token as valid
+        When I POST "/example5"
+            """
+            foo bar
+            """
+        Then the HTTP status code should be "200"
+        And I should receive the following response:
+            """
+            accepted
+            """

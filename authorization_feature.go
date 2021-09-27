@@ -41,8 +41,14 @@ func (f *AuthorizationFeature) iUseAnInvalidServiceAuthToken() error {
 	return nil
 }
 
+func (f *AuthorizationFeature) zebedeeRecognisesTheServiceAuthTokenAsValid() error {
+	f.FakeAuthService.NewHandler().Get("/serviceInstancePermissions").Reply(200).BodyString(`{ "permissions": ["DELETE", "READ", "CREATE", "UPDATE"]}`)
+	return nil
+}
+
 func (f *AuthorizationFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I am not identified$`, f.iAmNotIdentified)
 	ctx.Step(`^I am identified as "([^"]*)"$`, f.iAmIdentifiedAs)
 	ctx.Step(`^I use an invalid service auth token$`, f.iUseAnInvalidServiceAuthToken)
+	ctx.Step(`^zebedee recognises the service auth token as valid$`, f.zebedeeRecognisesTheServiceAuthTokenAsValid)
 }

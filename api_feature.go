@@ -62,6 +62,12 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I should receive the following response:$`, f.IShouldReceiveTheFollowingResponse)
 	ctx.Step(`^I should receive the following JSON response:$`, f.IShouldReceiveTheFollowingJSONResponse)
 	ctx.Step(`^I should receive the following JSON response with status "([^"]*)":$`, f.IShouldReceiveTheFollowingJSONResponseWithStatus)
+	ctx.Step(`^I use a valid service auth token "([^"]*)"$`, f.iUseAValidServiceAuthToken)
+}
+
+func (f *APIFeature) iUseAValidServiceAuthToken(validServiceAuthToken string) error {
+	f.ISetTheHeaderTo("Authorization", validServiceAuthToken)
+	return nil
 }
 
 // ISetTheHeaderTo is a default step used to set a header and associated value for the next request
