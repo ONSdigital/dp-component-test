@@ -36,31 +36,31 @@ func ZebedeeMustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
 }
 
 func zebedeeValidateAuth(token string) (string, error) {
-	if token == "" {
-		type Permissions struct {
-			Permissions string `bson:"message" json:"message"`
-		}
-		var permissions Permissions
-		config := NewConfig()
-		response, err := http.Get(config.authorizationServiceUrl + "/serviceInstancePermissions")
-		status := response.Status
-		if err != nil {
-			return status, err
-		}
-		body, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return status, err
-		}
-		if len(body) == 0 {
-			return status, errors.New("user has not been authorised by zebedee")
-		}
-		err = json.Unmarshal(body, &permissions)
-		if err != nil {
-			return status, err
-		}
+	type Permissions struct {
+		Permissions string `bson:"message" json:"message"`
+	}
+	var permissions Permissions
+	config := NewConfig()
+	response, err := http.Get(config.authorizationServiceUrl + "/serviceInstancePermissions")
+	status := response.Status
+	if err != nil {
+		return status, err
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return status, err
+	}
+	if len(body) == 0 {
+		return status, errors.New("user has not been authorised by zebedee")
+	}
+	err = json.Unmarshal(body, &permissions)
+	if err != nil {
+		return status, err
+	}
+	if status == "401 Unauthorized" {
 		return status, errors.New(permissions.Permissions)
 	}
-	return "", nil
+	return status, nil
 }
 
 func validateAuth(token string) error {

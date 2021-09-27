@@ -36,7 +36,7 @@ func (f *AuthorizationFeature) iAmIdentifiedAs(username string) error {
 	return nil
 }
 
-func (f *AuthorizationFeature) iUseAnInvalidServiceAuthToken() error {
+func (f *AuthorizationFeature) zebedeeRecognisesTheServiceAuthTokenAsInvalid() error {
 	f.FakeAuthService.NewHandler().Get("/serviceInstancePermissions").Reply(401).BodyString(`{ "message": "CMD permissions request denied: service account not found"}`)
 	return nil
 }
@@ -49,6 +49,6 @@ func (f *AuthorizationFeature) zebedeeRecognisesTheServiceAuthTokenAsValid() err
 func (f *AuthorizationFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I am not identified$`, f.iAmNotIdentified)
 	ctx.Step(`^I am identified as "([^"]*)"$`, f.iAmIdentifiedAs)
-	ctx.Step(`^I use an invalid service auth token$`, f.iUseAnInvalidServiceAuthToken)
+	ctx.Step(`^zebedee recognises the service auth token as invalid$`, f.zebedeeRecognisesTheServiceAuthTokenAsInvalid)
 	ctx.Step(`^zebedee recognises the service auth token as valid$`, f.zebedeeRecognisesTheServiceAuthTokenAsValid)
 }

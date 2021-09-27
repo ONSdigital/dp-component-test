@@ -60,7 +60,8 @@ Feature: Example feature
             """
 
     Scenario: accessing zebedee endpoint without service authorization
-        Given I use an invalid service auth token
+        Given I use a service auth token "invalidServiceAuthToken"
+        And zebedee recognises the service auth token as invalid
         When I POST "/example5"
             """
             foo bar
@@ -72,7 +73,7 @@ Feature: Example feature
             """
 
     Scenario: accessing zebedee endpoint with service authorization
-        Given I use a valid service auth token "abcdefg"
+        Given I use a service auth token "validServiceAuthToken"
         And zebedee recognises the service auth token as valid
         When I POST "/example5"
             """
