@@ -63,10 +63,16 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I should receive the following JSON response:$`, f.IShouldReceiveTheFollowingJSONResponse)
 	ctx.Step(`^I should receive the following JSON response with status "([^"]*)":$`, f.IShouldReceiveTheFollowingJSONResponseWithStatus)
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
+	ctx.Step(`^I use an X Florence user token "([^"]*)"$`, f.IUseAnXFlorenceUserToken)
 }
 
 func (f *APIFeature) IUseAServiceAuthToken(serviceAuthToken string) error {
 	f.ISetTheHeaderTo("Authorization", serviceAuthToken)
+	return nil
+}
+
+func (f *APIFeature) IUseAnXFlorenceUserToken(xFlorenceToken string) error {
+	f.ISetTheHeaderTo("X-Florence-Token", xFlorenceToken)
 	return nil
 }
 

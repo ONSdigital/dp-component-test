@@ -7,20 +7,9 @@ import (
 	"net/http"
 )
 
-func MustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
+func ZebedeeMustPermitUser(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := validateAuth(r.Header.Get("Authorization"))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		handler(w, r)
-	}
-}
-
-func ZebedeeMustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		status, err := zebedeeValidateAuth(r.Header.Get("Authorization"))
+		status, err := zebedeeValidateUser()
 		if err != nil {
 			if status == "401 Unauthorized" {
 				http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -35,7 +24,63 @@ func ZebedeeMustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func zebedeeValidateAuth(token string) (string, error) {
+func zebedeeValidateUser() (string, error) {
+	type Permissions struct {
+		Permissions string `bson:"message" json:"message"`
+	}
+	var permissions Permissions
+	config := NewConfig()
+	response, err := http.Get(config.authorizationServiceUrl + "/userInstancePermissions")
+	status := response.Status
+	if err != nil {
+		return status, err
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return status, err
+	}
+	if len(body) == 0 {
+		return status, errors.New("user has not been authorised by zebedee")
+	}
+	err = json.Unmarshal(body, &permissions)
+	if err != nil {
+		return status, err
+	}
+	if status == "401 Unauthorized" {
+		return status, errors.New(permissions.Permissions)
+	}
+	return status, nil
+}
+
+func MustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := validateAuth(r.Header.Get("Authorization"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		handler(w, r)
+	}
+}
+
+func ZebedeeMustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		status, err := zebedeeValidateAuth()
+		if err != nil {
+			if status == "401 Unauthorized" {
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		} else {
+			w.WriteHeader(200)
+		}
+		handler(w, r)
+	}
+}
+
+func zebedeeValidateAuth() (string, error) {
 	type Permissions struct {
 		Permissions string `bson:"message" json:"message"`
 	}
@@ -51,7 +96,7 @@ func zebedeeValidateAuth(token string) (string, error) {
 		return status, err
 	}
 	if len(body) == 0 {
-		return status, errors.New("user has not been authorised by zebedee")
+		return status, errors.New("service has not been authorised by zebedee")
 	}
 	err = json.Unmarshal(body, &permissions)
 	if err != nil {

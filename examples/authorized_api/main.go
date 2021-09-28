@@ -20,6 +20,10 @@ func NewConfig() *Config {
 	}
 }
 
+func ExampleHandler2(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(500)
+}
+
 func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		ExampleType int `json:"example_type"`
@@ -44,6 +48,7 @@ func NewRouter() http.Handler {
 	router.HandleFunc("/example3", MustAuthorize(ExampleHandler)).Methods(http.MethodPost)
 	router.HandleFunc("/example4", MustBeIdentified(ExampleHandler)).Methods(http.MethodPost)
 	router.HandleFunc("/example5", ZebedeeMustAuthorize(ExampleHandler)).Methods(http.MethodPost)
+	router.HandleFunc("/example6", ZebedeeMustPermitUser(ExampleHandler2)).Methods(http.MethodPost)
 
 	return router
 }

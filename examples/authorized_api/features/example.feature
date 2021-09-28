@@ -84,3 +84,14 @@ Feature: Example feature
             """
             accepted
             """
+
+    Scenario: accessing zebedee endpoint with X Florence user authorization
+
+        Given I use an X Florence user token "validXFlorenceToken"
+        And I am identified as "someone@somewhere.com"
+        And zebedee recognises the user token as valid
+        When I POST "/example6"
+            """
+            foo bar
+            """
+        Then the HTTP status code should be "200"
