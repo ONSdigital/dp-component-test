@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -19,6 +20,8 @@ func ZebedeeMustPermitUser(handler http.HandlerFunc) http.HandlerFunc {
 			return
 		} else {
 			w.WriteHeader(200)
+			message := "[\"DELETE\", \"READ\", \"CREATE\", \"UPDATE\"]"
+			fmt.Fprintf(w, message)
 		}
 		handler(w, r)
 	}
@@ -75,6 +78,8 @@ func ZebedeeMustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
 			return
 		} else {
 			w.WriteHeader(200)
+			message := "[\"DELETE\", \"READ\", \"CREATE\", \"UPDATE\"]"
+			fmt.Fprintf(w, message)
 		}
 		handler(w, r)
 	}
@@ -102,8 +107,9 @@ func zebedeeValidateAuth() (string, error) {
 	if err != nil {
 		return status, err
 	}
+	permMsg := permissions.Permissions
 	if status == "401 Unauthorized" {
-		return status, errors.New(permissions.Permissions)
+		return status, errors.New(permMsg)
 	}
 	return status, nil
 }

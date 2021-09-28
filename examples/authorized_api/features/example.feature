@@ -82,7 +82,7 @@ Feature: Example feature
         Then the HTTP status code should be "200"
         And I should receive the following response:
             """
-            accepted
+            ["DELETE", "READ", "CREATE", "UPDATE"]
             """
 
     Scenario: accessing zebedee endpoint with X Florence user authorization
@@ -95,3 +95,7 @@ Feature: Example feature
             foo bar
             """
         Then the HTTP status code should be "200"
+        And I should receive the following response:
+            """
+            ["DELETE", "READ", "CREATE", "UPDATE"]
+            """
