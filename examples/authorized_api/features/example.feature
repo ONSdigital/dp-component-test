@@ -61,7 +61,7 @@ Feature: Example feature
 
     Scenario: accessing zebedee endpoint without service authorization
         Given I use a service auth token "invalidServiceAuthToken"
-        And zebedee recognises the service auth token as invalid
+        And zebedee does not recognise the service auth token
         When I POST "/example5"
             """
             foo bar
@@ -89,7 +89,7 @@ Feature: Example feature
 
         Given I use an X Florence user token "invalidXFlorenceToken"
         And I am not identified
-        And zebedee recognises the user token as invalid
+        And zebedee does not recognise the user token
         When I POST "/example6"
             """
             foo bar

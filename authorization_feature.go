@@ -36,7 +36,7 @@ func (f *AuthorizationFeature) iAmIdentifiedAs(username string) error {
 	return nil
 }
 
-func (f *AuthorizationFeature) zebedeeRecognisesTheServiceAuthTokenAsInvalid() error {
+func (f *AuthorizationFeature) zebedeeDoesNotRecogniseTheServiceAuthToken() error {
 	f.FakeAuthService.NewHandler().Get("/serviceInstancePermissions").Reply(401).BodyString(`{ "message": "CMD permissions request denied: service account not found"}`)
 	return nil
 }
@@ -46,12 +46,14 @@ func (f *AuthorizationFeature) zebedeeRecognisesTheServiceAuthTokenAsValid() err
 	return nil
 }
 
-func (f *AuthorizationFeature) zebedeeRecognisesTheUserTokenAsInvalid() error {
+func (f *AuthorizationFeature) zebedeeDoesNotRecogniseTheUserToken() error {
 	f.FakeAuthService.NewHandler().Get("/userInstancePermissions").Reply(401).BodyString(`{ "message": "CMD permissions request denied: session not found"}`)
 	return nil
 }
 
 func (f *AuthorizationFeature) zebedeeRecognisesTheUserTokenAsValid() error {
+	//NB. These permissions are what would be returned for an Admin or Publisher user.
+	//A viewer would get empty or just "READ" if they were assigned to a team with preview access to a collection/dataset.
 	f.FakeAuthService.NewHandler().Get("/userInstancePermissions").Reply(200).BodyString(`{ "permissions": ["DELETE", "READ", "CREATE", "UPDATE"]}`)
 	return nil
 }
@@ -59,8 +61,8 @@ func (f *AuthorizationFeature) zebedeeRecognisesTheUserTokenAsValid() error {
 func (f *AuthorizationFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I am not identified$`, f.iAmNotIdentified)
 	ctx.Step(`^I am identified as "([^"]*)"$`, f.iAmIdentifiedAs)
-	ctx.Step(`^zebedee recognises the service auth token as invalid$`, f.zebedeeRecognisesTheServiceAuthTokenAsInvalid)
 	ctx.Step(`^zebedee recognises the service auth token as valid$`, f.zebedeeRecognisesTheServiceAuthTokenAsValid)
 	ctx.Step(`^zebedee recognises the user token as valid$`, f.zebedeeRecognisesTheUserTokenAsValid)
-	ctx.Step(`^zebedee recognises the user token as invalid$`, f.zebedeeRecognisesTheUserTokenAsInvalid)
+	ctx.Step(`^zebedee does not recognise the service auth token$`, f.zebedeeDoesNotRecogniseTheServiceAuthToken)
+	ctx.Step(`^zebedee does not recognise the user token$`, f.zebedeeDoesNotRecogniseTheUserToken)
 }

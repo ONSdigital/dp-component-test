@@ -39,6 +39,7 @@ func zebedeeValidateUser() (string, error) {
 		return status, err
 	}
 	body, err := ioutil.ReadAll(response.Body)
+	defer response.Body.Close()
 	if err != nil {
 		return status, err
 	}
