@@ -85,7 +85,22 @@ Feature: Example feature
             ["DELETE", "READ", "CREATE", "UPDATE"]
             """
 
-    Scenario: accessing zebedee endpoint with X Florence user authorization
+    Scenario: accessing zebedee endpoint without X Florence user permissions
+
+        Given I use an X Florence user token "invalidXFlorenceToken"
+        And I am not identified
+        And zebedee recognises the user token as invalid
+        When I POST "/example6"
+            """
+            foo bar
+            """
+        Then the HTTP status code should be "401"
+        And I should receive the following response:
+            """
+            CMD permissions request denied: session not found
+            """
+
+    Scenario: accessing zebedee endpoint with X Florence user permissions
 
         Given I use an X Florence user token "validXFlorenceToken"
         And I am identified as "someone@somewhere.com"
