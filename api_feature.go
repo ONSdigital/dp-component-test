@@ -67,7 +67,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (f *APIFeature) IUseAServiceAuthToken(serviceAuthToken string) error {
-	f.ISetTheHeaderTo("Authorization", serviceAuthToken)
+	f.ISetTheHeaderTo("Authorization", "Bearer "+serviceAuthToken)
 	return nil
 }
 

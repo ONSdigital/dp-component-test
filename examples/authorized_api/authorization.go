@@ -29,7 +29,7 @@ func ZebedeeMustPermitUser(handler http.HandlerFunc) http.HandlerFunc {
 
 func zebedeeValidateUser() (string, error) {
 	type Permissions struct {
-		Permissions string `bson:"message" json:"message"`
+		PermissionsMsg string `bson:"message" json:"message"`
 	}
 	var permissions Permissions
 	config := NewConfig()
@@ -38,20 +38,20 @@ func zebedeeValidateUser() (string, error) {
 	if err != nil {
 		return status, err
 	}
-	body, err := ioutil.ReadAll(response.Body)
-	defer response.Body.Close()
-	if err != nil {
-		return status, err
-	}
-	if len(body) == 0 {
-		return status, errors.New("user has not been authorised by zebedee")
-	}
-	err = json.Unmarshal(body, &permissions)
-	if err != nil {
-		return status, err
-	}
 	if status == "401 Unauthorized" {
-		return status, errors.New(permissions.Permissions)
+		body, err := ioutil.ReadAll(response.Body)
+		defer response.Body.Close()
+		if err != nil {
+			return status, err
+		}
+		if len(body) == 0 {
+			return status, errors.New("user has not been authorised by zebedee")
+		}
+		err = json.Unmarshal(body, &permissions)
+		if err != nil {
+			return status, err
+		}
+		return status, errors.New(permissions.PermissionsMsg)
 	}
 	return status, nil
 }
