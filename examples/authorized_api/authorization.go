@@ -12,33 +12,32 @@ func ZebedeeMustPermitUser(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := zebedeeValidateUser()
 		if err != nil {
-			if status == "401 Unauthorized" {
+			if status == 401 {
 				http.Error(w, err.Error(), http.StatusUnauthorized)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
-		} else {
-			w.WriteHeader(200)
-			message := "[\"DELETE\", \"READ\", \"CREATE\", \"UPDATE\"]"
-			fmt.Fprintf(w, message)
 		}
+		w.WriteHeader(status)
+		message := "[\"DELETE\", \"READ\", \"CREATE\", \"UPDATE\"]"
+		fmt.Fprintf(w, message)
 		handler(w, r)
 	}
 }
 
-func zebedeeValidateUser() (string, error) {
+func zebedeeValidateUser() (int, error) {
 	type Permissions struct {
 		PermissionsMsg string `bson:"message" json:"message"`
 	}
 	var permissions Permissions
 	config := NewConfig()
 	response, err := http.Get(config.authorizationServiceUrl + "/userInstancePermissions")
-	status := response.Status
 	if err != nil {
-		return status, err
+		return 500, err
 	}
-	if status == "401 Unauthorized" {
+	status := response.StatusCode
+	if status == 401 {
 		body, err := ioutil.ReadAll(response.Body)
 		defer response.Body.Close()
 		if err != nil {
@@ -71,33 +70,32 @@ func ZebedeeMustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := zebedeeValidateAuth()
 		if err != nil {
-			if status == "401 Unauthorized" {
+			if status == 401 {
 				http.Error(w, err.Error(), http.StatusUnauthorized)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
-		} else {
-			w.WriteHeader(200)
-			message := "[\"DELETE\", \"READ\", \"CREATE\", \"UPDATE\"]"
-			fmt.Fprintf(w, message)
 		}
+		w.WriteHeader(status)
+		message := "[\"DELETE\", \"READ\", \"CREATE\", \"UPDATE\"]"
+		fmt.Fprintf(w, message)
 		handler(w, r)
 	}
 }
 
-func zebedeeValidateAuth() (string, error) {
+func zebedeeValidateAuth() (int, error) {
 	type Permissions struct {
 		PermissionsMsg string `bson:"message" json:"message"`
 	}
 	var permissions Permissions
 	config := NewConfig()
 	response, err := http.Get(config.authorizationServiceUrl + "/serviceInstancePermissions")
-	status := response.Status
 	if err != nil {
-		return status, err
+		return 500, err
 	}
-	if status == "401 Unauthorized" {
+	status := response.StatusCode
+	if status == 401 {
 		body, err := ioutil.ReadAll(response.Body)
 		defer response.Body.Close()
 		if err != nil {
