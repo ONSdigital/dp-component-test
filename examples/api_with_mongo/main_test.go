@@ -59,7 +59,7 @@ func (t *componenttestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	})
 }
 
-func TestMain(t *testing.T) {
+func TestComponent(t *testing.T) {
 	if *componentFlag {
 		var opts = godog.Options{
 			Output: colors.Colored(os.Stdout),

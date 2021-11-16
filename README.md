@@ -67,13 +67,11 @@ func TestMain(t *testing.T) {
 			Format: "pretty",
 			Paths:  flag.Args(),
 		}
-
-		f := &ComponentTest{}
-
+		
 		status := godog.TestSuite{
 			Name:                 "component_tests",
-			ScenarioInitializer:  f.InitializeScenario,
-			TestSuiteInitializer: f.InitializeTestSuite,
+			ScenarioInitializer:  InitializeScenario,
+			TestSuiteInitializer: InitializeTestSuite,
 			Options:              &opts,
 		}.Run()
 
