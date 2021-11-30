@@ -3,7 +3,7 @@ module github.com/ONSdigital/dp-component-test
 go 1.17
 
 require (
-	github.com/ONSdigital/dp-mongodb-in-memory v1.0.0
+	github.com/ONSdigital/dp-mongodb-in-memory v1.0.1
 	github.com/cucumber/godog v0.10.0
 	github.com/gorilla/mux v1.8.0
 	github.com/maxcnunes/httpfake v1.2.1
