@@ -30,13 +30,13 @@ type MongoOptions struct {
 // NewMongoFeature creates a new in-memory mongo database using the supplied options
 func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 
-	mongoServer, err := mim.Start(mongoOptions.MongoVersion)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	mongoServer, err := mim.Start(ctx, mongoOptions.MongoVersion)
 	if err != nil {
 		panic(err)
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoServer.URI()))
 	if err != nil {
@@ -62,7 +62,10 @@ func (m *MongoFeature) Reset() error {
 
 // Close stops the in-memory mongo database
 func (m *MongoFeature) Close() error {
-	m.Server.Stop()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	m.Server.Stop(ctx)
 	return nil
 }
 
