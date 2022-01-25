@@ -3,7 +3,7 @@ module github.com/ONSdigital/dp-component-test
 go 1.17
 
 require (
-	github.com/ONSdigital/dp-mongodb-in-memory v1.1.0
+	github.com/ONSdigital/dp-mongodb-in-memory v1.2.0
 	github.com/cucumber/godog v0.10.0
 	github.com/gorilla/mux v1.8.0
 	github.com/maxcnunes/httpfake v1.2.4
@@ -34,7 +34,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
-	github.com/spf13/afero v1.6.0 // indirect
+	github.com/spf13/afero v1.8.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.0.2 // indirect
 	github.com/xdg-go/stringprep v1.0.2 // indirect
