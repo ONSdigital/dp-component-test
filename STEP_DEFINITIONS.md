@@ -31,6 +31,11 @@ This library provides these generic steps that should be useable across a variet
 | I should receive the following JSON response: \_BODY\_                               | Assert that the response body is JSON and that ir matches BODY                       | Then              |
 | I should receive the following JSON response with status "CODE": \_BODY\_            | Assert that the response code is CODE and the body is json which matches BODY        | Then              |
 | the document with "KEY" set to "VALUE" does not exist in the "COLLECTION" collection | Assert that a document with KEY set to VALUE does not exist in COLLECTION collection | Then              |
+| I navigate to "URL"                                                                  | Navigate to URL in Chrome | When              |
+| element "SELECTOR" should be visible                                                 | Assert that a HTML element on the web page matches SELECTOR | Then              |
+| the page should have the following content \_CONTENT\_                               | Assert that a HTML element on the web page matches CONTENT selector and value (CONTENT selector must include a HTML id or class - an element type alone will not work!) | Then              |
+| the beta phase banner should be visible                                              | Assert that the beta phase banner exists on the web page | Then              |
+| the improve this page banner should be visible                                       | Assert that the improve this page banner exists on the web page | Then              |
 
 ---
 
