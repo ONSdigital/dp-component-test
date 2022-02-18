@@ -12,6 +12,8 @@ This library provides these generic steps that should be useable across a variet
 
 \_DOC_STRING\_ : a value that is provided on a new line underneath the step in a set of three quotation marks - an example is provided at the bottom of this file.
 
+[LIST] : represents a list of strings e.g `"item1,item2..."`.
+
 | Step                                                                                 | What it does                                                                         | Scenario Position |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ----------------- |
 | I am authorised                                                                      | set the request Authorization header to a random token                               | Given             |
@@ -36,7 +38,7 @@ This library provides these generic steps that should be useable across a variet
 | the page should have the following content \_CONTENT\_                               | Assert that a HTML element on the web page matches CONTENT selector and value (CONTENT selector must include a HTML id or class - an element type alone will not work!) | Then              |
 | the beta phase banner should be visible                                              | Assert that the beta phase banner exists on the web page | Then              |
 | the improve this page banner should be visible                                       | Assert that the improve this page banner exists on the web page | Then              |
-
+| the page should contain "KEY" with list element text [LIST] at INT depth             | Assert that the expected breadcrumbs siblings are present | Then
 ---
 
 ## Example
