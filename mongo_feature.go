@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	mim "github.com/ONSdigital/dp-mongodb-in-memory"
@@ -76,10 +77,7 @@ func (m *MongoFeature) Reset() error {
 
 // ResetDatabase removes all data in all collections within database
 func (m *MongoFeature) ResetDatabase(ctx context.Context, databaseName string) (*MongoDeletedDocs, error) {
-	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	collectionNames, err := m.Client.Database(databaseName).ListCollectionNames(dbCtx, bson.D{})
+	collectionNames, err := m.Client.Database(databaseName).ListCollectionNames(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
@@ -94,9 +92,6 @@ func (m *MongoFeature) ResetDatabase(ctx context.Context, databaseName string) (
 
 // ResetCollections removes all data in all collections specified within database
 func (m *MongoFeature) ResetCollections(ctx context.Context, databaseName string, collectionNames []string) (*MongoDeletedDocs, error) {
-	collCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
 	deletedDocs := &MongoDeletedDocs{
 		Database: databaseName,
 	}
@@ -104,7 +99,7 @@ func (m *MongoFeature) ResetCollections(ctx context.Context, databaseName string
 	for _, collectionName := range collectionNames {
 		collection := m.Client.Database(databaseName).Collection(collectionName)
 
-		deleteOp, err := collection.DeleteMany(collCtx, bson.D{})
+		deleteOp, err := collection.DeleteMany(ctx, bson.D{})
 		if err != nil {
 			return deletedDocs, err
 		}
@@ -132,38 +127,47 @@ func (m *MongoFeature) Close() error {
 }
 
 func (m *MongoFeature) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^remove all documents from database: "([^"]*)"`, m.RemoveAllDataFromDatabase)
-	ctx.Step(`^remove all documents in the "([^"]*)" collection from the "([^"]*)" database`, m.RemoveAllDataFromCollection)
+	ctx.Step(`^remove all documents from the database`, m.RemoveAllDataFromDatabase)
+	ctx.Step(`^remove all documents in the "([^"]*)" collection`, m.RemoveAllDataFromCollections)
+	ctx.Step(`^remove all documents in the following collections: "([^"]*)"`, m.RemoveAllDataFromCollections)
 	ctx.Step(`^the following document exists in the "([^"]*)" collection:$`, m.TheFollowingDocumentExistsInTheCollection)
 	ctx.Step(`^the document with "([^"]*)" set to "([^"]*)" does not exist in the "([^"]*)" collection$`, m.theDocumentWithSetToDoesNotExistInTheCollection)
 }
 
-func (m *MongoFeature) RemoveAllDataFromDatabase(databaseName string) error {
-	deletedDocs, err := m.ResetDatabase(context.Background(), databaseName)
+func (m *MongoFeature) RemoveAllDataFromDatabase() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	deletedDocs, err := m.ResetDatabase(ctx, m.Database.Name())
 	if err != nil {
 		return err
 	}
 
 	if deletedDocs.Count == 0 {
-		return fmt.Errorf("no documents were deleted in database: %s", databaseName)
+		return fmt.Errorf("no documents were deleted in database: %s", m.Database.Name())
 	}
 
 	return nil
 }
 
-func (m *MongoFeature) RemoveAllDataFromCollection(collectionName, databaseName string) error {
-	deletedDocs, err := m.ResetCollections(context.Background(), databaseName, []string{collectionName})
+func (m *MongoFeature) RemoveAllDataFromCollections(collectionNames string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	sliceCollNames := strings.Split(strings.ReplaceAll(collectionNames, " ", ""), ",")
+
+	deletedDocs, err := m.ResetCollections(ctx, m.Database.Name(), sliceCollNames)
 	if err != nil {
 		return err
 	}
 
 	if deletedDocs.Count == 0 {
-		return fmt.Errorf("no documents were deleted in database: %s", databaseName)
+		return fmt.Errorf("no documents were deleted in database: %s", m.Database.Name())
 	}
 
 	for i := range deletedDocs.Collections {
 		if deletedDocs.Collections[i].Count == 0 {
-			return fmt.Errorf("no documents were deleted for collection: %s in database: %s", collectionName, databaseName)
+			return fmt.Errorf("no documents were deleted for collection: %s in database: %s", deletedDocs.Collections[i].Name, m.Database.Name())
 		}
 	}
 
