@@ -27,6 +27,19 @@ type MongoOptions struct {
 	DatabaseName string
 }
 
+// MongoDeletedDocs contains a list of counts for all deleted documents
+// against a given collection of a mongo database
+type MongoDeletedDocs struct {
+	Database    string
+	Collections []MongoCollectionDeletedDocs
+}
+
+// MongoCollectionDeletedDocs contains the number of document deleted from collection
+type MongoCollectionDeletedDocs struct {
+	Name  string
+	Count *mongo.DeleteResult
+}
+
 // NewMongoFeature creates a new in-memory mongo database using the supplied options
 func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 
@@ -60,6 +73,50 @@ func (m *MongoFeature) Reset() error {
 	return nil
 }
 
+// ResetDatabase removes all data in all collections within database
+func (m *MongoFeature) ResetDatabase(ctx context.Context, database string) (*MongoDeletedDocs, error) {
+	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	collectionNames, err := m.Client.Database(database).ListCollectionNames(dbCtx, bson.D{})
+	if err != nil {
+		return nil, err
+	}
+
+	deletedDocs, err := m.ResetCollections(ctx, database, collectionNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return deletedDocs, nil
+}
+
+// ResetCollections removes all data in all collections specified within database
+func (m *MongoFeature) ResetCollections(ctx context.Context, database string, collectionNames []string) (*MongoDeletedDocs, error) {
+	collCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	deletedDocs := &MongoDeletedDocs{
+		Database: database,
+	}
+
+	for _, collectionName := range collectionNames {
+		collection := m.Client.Database(database).Collection(collectionName)
+
+		count, err := collection.DeleteMany(collCtx, bson.D{})
+		if err != nil {
+			return deletedDocs, err
+		}
+
+		deletedDocs.Collections = append(deletedDocs.Collections, MongoCollectionDeletedDocs{
+			Name:  collectionName,
+			Count: count,
+		})
+	}
+
+	return deletedDocs, nil
+}
+
 // Close stops the in-memory mongo database
 func (m *MongoFeature) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -89,6 +146,7 @@ func (m *MongoFeature) TheFollowingDocumentExistsInTheCollection(collectionName 
 	if _, err := collection.InsertOne(ctx, documentJSON); err != nil {
 		return err
 	}
+
 	return nil
 }
 
