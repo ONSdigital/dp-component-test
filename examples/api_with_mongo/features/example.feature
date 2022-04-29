@@ -70,3 +70,48 @@ Feature: Example feature
             }
             """
         Then the HTTP status code should be "200"
+
+    Scenario: Check removal of data from the database
+        Given the following document exists in the "datasets" collection:
+            """
+            {
+                "_id": "6021403f3a21177b2837d12f",
+                "id": "a1b2c3",
+                "example_data": "some data"
+            }
+            """
+        Then remove all documents from the database
+        When I GET "/datasets/a1b2c3"
+        Then the HTTP status code should be "404"
+
+    Scenario: Check removal of data from the datasets collection
+        Given the following document exists in the "datasets" collection:
+            """
+            {
+                "_id": "6021403f3a21177b2837d12f",
+                "id": "a1b2c3",
+                "example_data": "some data"
+            }
+            """
+        Then remove all documents in the "datasets" collection
+        When I GET "/datasets/a1b2c3"
+        Then the HTTP status code should be "404"
+
+    Scenario: Check removal of data from multiple collections
+        Given the following document exists in the "datasets" collection:
+            """
+            {
+                "_id": "6021403f3a21177b2837d12f",
+                "id": "a1b2c3",
+                "example_data": "some data"
+            }
+            """
+        And the following document exists in the "editions" collection:
+            """
+            {
+                "_id": "6021403f3a21177b2837d12f",
+                "id": "i1j2k3",
+                "example_data": "some data"
+            }
+            """
+        Then remove all documents in the following collections: "datasets, editions"
