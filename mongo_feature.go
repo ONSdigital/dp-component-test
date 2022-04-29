@@ -82,16 +82,15 @@ func (m *MongoFeature) ResetDatabase(ctx context.Context, databaseName string) (
 		return nil, err
 	}
 
-	deletedDocs, err := m.ResetCollections(ctx, databaseName, collectionNames)
-	if err != nil {
-		return nil, err
-	}
-
-	return deletedDocs, nil
+	return m.ResetCollections(ctx, databaseName, collectionNames)
 }
 
 // ResetCollections removes all data in all collections specified within database
 func (m *MongoFeature) ResetCollections(ctx context.Context, databaseName string, collectionNames []string) (*MongoDeletedDocs, error) {
+	if databaseName == "" || len(collectionNames) == 0 {
+		return nil, fmt.Errorf("missing database name or at least one name of a collection")
+	}
+
 	deletedDocs := &MongoDeletedDocs{
 		Database: databaseName,
 	}
@@ -143,7 +142,7 @@ func (m *MongoFeature) RemoveAllDataFromDatabase() error {
 		return err
 	}
 
-	if deletedDocs.Count == 0 {
+	if deletedDocs == nil || deletedDocs.Count == 0 {
 		return fmt.Errorf("no documents were deleted in database: %s", m.Database.Name())
 	}
 
@@ -154,6 +153,10 @@ func (m *MongoFeature) RemoveAllDataFromCollections(collectionNames string) erro
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	if collectionNames == "" {
+		return fmt.Errorf("comma separated list of collection names is empty")
+	}
+
 	sliceCollNames := strings.Split(strings.ReplaceAll(collectionNames, " ", ""), ",")
 
 	deletedDocs, err := m.ResetCollections(ctx, m.Database.Name(), sliceCollNames)
@@ -161,7 +164,7 @@ func (m *MongoFeature) RemoveAllDataFromCollections(collectionNames string) erro
 		return err
 	}
 
-	if deletedDocs.Count == 0 {
+	if deletedDocs == nil || deletedDocs.Count == 0 {
 		return fmt.Errorf("no documents were deleted in database: %s", m.Database.Name())
 	}
 
@@ -175,7 +178,6 @@ func (m *MongoFeature) RemoveAllDataFromCollections(collectionNames string) erro
 }
 
 func (m *MongoFeature) TheFollowingDocumentExistsInTheCollection(collectionName string, document *godog.DocString) error {
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
