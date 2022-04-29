@@ -31,13 +31,14 @@ type MongoOptions struct {
 // against a given collection of a mongo database
 type MongoDeletedDocs struct {
 	Database    string
+	Count       int64
 	Collections []MongoCollectionDeletedDocs
 }
 
 // MongoCollectionDeletedDocs contains the number of document deleted from collection
 type MongoCollectionDeletedDocs struct {
 	Name  string
-	Count *mongo.DeleteResult
+	Count int64
 }
 
 // NewMongoFeature creates a new in-memory mongo database using the supplied options
@@ -74,16 +75,16 @@ func (m *MongoFeature) Reset() error {
 }
 
 // ResetDatabase removes all data in all collections within database
-func (m *MongoFeature) ResetDatabase(ctx context.Context, database string) (*MongoDeletedDocs, error) {
+func (m *MongoFeature) ResetDatabase(ctx context.Context, databaseName string) (*MongoDeletedDocs, error) {
 	dbCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	collectionNames, err := m.Client.Database(database).ListCollectionNames(dbCtx, bson.D{})
+	collectionNames, err := m.Client.Database(databaseName).ListCollectionNames(dbCtx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
 
-	deletedDocs, err := m.ResetCollections(ctx, database, collectionNames)
+	deletedDocs, err := m.ResetCollections(ctx, databaseName, collectionNames)
 	if err != nil {
 		return nil, err
 	}
@@ -92,26 +93,30 @@ func (m *MongoFeature) ResetDatabase(ctx context.Context, database string) (*Mon
 }
 
 // ResetCollections removes all data in all collections specified within database
-func (m *MongoFeature) ResetCollections(ctx context.Context, database string, collectionNames []string) (*MongoDeletedDocs, error) {
+func (m *MongoFeature) ResetCollections(ctx context.Context, databaseName string, collectionNames []string) (*MongoDeletedDocs, error) {
 	collCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	deletedDocs := &MongoDeletedDocs{
-		Database: database,
+		Database: databaseName,
 	}
 
 	for _, collectionName := range collectionNames {
-		collection := m.Client.Database(database).Collection(collectionName)
+		collection := m.Client.Database(databaseName).Collection(collectionName)
 
-		count, err := collection.DeleteMany(collCtx, bson.D{})
+		deleteOp, err := collection.DeleteMany(collCtx, bson.D{})
 		if err != nil {
 			return deletedDocs, err
 		}
+
+		count := deleteOp.DeletedCount
 
 		deletedDocs.Collections = append(deletedDocs.Collections, MongoCollectionDeletedDocs{
 			Name:  collectionName,
 			Count: count,
 		})
+
+		deletedDocs.Count = deletedDocs.Count + count
 	}
 
 	return deletedDocs, nil
@@ -127,8 +132,42 @@ func (m *MongoFeature) Close() error {
 }
 
 func (m *MongoFeature) RegisterSteps(ctx *godog.ScenarioContext) {
+	ctx.Step(`^remove all documents from database: "([^"]*)"`, m.RemoveAllDataFromDatabase)
+	ctx.Step(`^remove all documents in the "([^"]*)" collection from the "([^"]*)" database`, m.RemoveAllDataFromCollection)
 	ctx.Step(`^the following document exists in the "([^"]*)" collection:$`, m.TheFollowingDocumentExistsInTheCollection)
 	ctx.Step(`^the document with "([^"]*)" set to "([^"]*)" does not exist in the "([^"]*)" collection$`, m.theDocumentWithSetToDoesNotExistInTheCollection)
+}
+
+func (m *MongoFeature) RemoveAllDataFromDatabase(databaseName string) error {
+	deletedDocs, err := m.ResetDatabase(context.Background(), databaseName)
+	if err != nil {
+		return err
+	}
+
+	if deletedDocs.Count == 0 {
+		return fmt.Errorf("no documents were deleted in database: %s", databaseName)
+	}
+
+	return nil
+}
+
+func (m *MongoFeature) RemoveAllDataFromCollection(collectionName, databaseName string) error {
+	deletedDocs, err := m.ResetCollections(context.Background(), databaseName, []string{collectionName})
+	if err != nil {
+		return err
+	}
+
+	if deletedDocs.Count == 0 {
+		return fmt.Errorf("no documents were deleted in database: %s", databaseName)
+	}
+
+	for i := range deletedDocs.Collections {
+		if deletedDocs.Collections[i].Count == 0 {
+			return fmt.Errorf("no documents were deleted for collection: %s in database: %s", collectionName, databaseName)
+		}
+	}
+
+	return nil
 }
 
 func (m *MongoFeature) TheFollowingDocumentExistsInTheCollection(collectionName string, document *godog.DocString) error {
