@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-component-test
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ONSdigital/dp-mongodb-in-memory v1.2.0
