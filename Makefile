@@ -22,7 +22,7 @@ build:
 
 .PHONY: audit
 audit:
-	go list -json -m all | nancy sleuth
+	set -o pipefail; go list -json -m all | nancy sleuth
 
 .PHONY: lint
 lint:
