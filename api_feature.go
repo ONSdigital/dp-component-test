@@ -44,6 +44,7 @@ func NewAPIFeatureWithHandler(handler http.Handler) *APIFeature {
 
 // Reset the request headers
 func (f *APIFeature) Reset() {
+	f.ErrorFeature.Reset()
 	f.requestHeaders = make(map[string]string)
 }
 

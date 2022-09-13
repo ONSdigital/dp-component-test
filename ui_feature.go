@@ -57,6 +57,7 @@ func (f *UIFeature) setChromeContext() {
 
 // Reset the chrome context
 func (f *UIFeature) Reset() {
+	f.ErrorFeature.Reset()
 	f.setChromeContext()
 }
 

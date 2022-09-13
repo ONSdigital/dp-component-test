@@ -19,6 +19,7 @@ type AuthorizationFeature struct {
 }
 
 func (f *AuthorizationFeature) Reset() {
+	f.ErrorFeature.Reset()
 	f.FakeAuthService.Reset()
 }
 

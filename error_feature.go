@@ -25,6 +25,11 @@ func (t *ErrorFeature) Errorf(format string, args ...interface{}) {
 func (t *ErrorFeature) StepError() error {
 	return t.err
 }
+
+func (t *ErrorFeature) Reset() {
+	t.err = nil
+}
+
 func (t *ErrorFeature) Helper() {}
 func (t *ErrorFeature) Name() string {
 	return "Component Test"
