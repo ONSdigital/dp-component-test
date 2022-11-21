@@ -24,8 +24,9 @@ type MongoFeature struct {
 
 // MongoOptions contains a set of options required to create a new MongoFeature
 type MongoOptions struct {
-	MongoVersion string
-	DatabaseName string
+	MongoVersion   string
+	DatabaseName   string
+	ReplicaSetName string
 }
 
 // MongoDeletedDocs contains a list of counts for all deleted documents
@@ -44,11 +45,18 @@ type MongoCollectionDeletedDocs struct {
 
 // NewMongoFeature creates a new in-memory mongo database using the supplied options
 func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	mongoServer, err := mim.Start(ctx, mongoOptions.MongoVersion)
+	var (
+		mongoServer *mim.Server
+		err         error
+	)
+	if mongoOptions.ReplicaSetName == "" {
+		mongoServer, err = mim.Start(ctx, mongoOptions.MongoVersion)
+	} else {
+		mongoServer, err = mim.StartWithReplicaSet(ctx, mongoOptions.MongoVersion, mongoOptions.ReplicaSetName)
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -118,7 +126,7 @@ func (m *MongoFeature) ResetCollections(ctx context.Context, databaseName string
 
 // Close stops the in-memory mongo database
 func (m *MongoFeature) Close() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	m.Server.Stop(ctx)
