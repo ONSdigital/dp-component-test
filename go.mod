@@ -3,23 +3,21 @@ module github.com/ONSdigital/dp-component-test
 go 1.19
 
 require (
-	github.com/ONSdigital/dp-mongodb-in-memory v1.5.0
-	github.com/ONSdigital/log.go/v2 v2.3.0
-	github.com/chromedp/cdproto v0.0.0-20230413093208-7497fc11fc57
+	github.com/ONSdigital/dp-mongodb-in-memory v1.6.0
+	github.com/ONSdigital/log.go/v2 v2.4.1
+	github.com/chromedp/cdproto v0.0.0-20230419194459-b5ff65bc57a3
 	github.com/chromedp/chromedp v0.9.1
 	github.com/cucumber/godog v0.12.6
 	github.com/gorilla/mux v1.8.0
 	github.com/maxcnunes/httpfake v1.2.4
-	github.com/smartystreets/goconvey v1.7.2
+	github.com/smartystreets/goconvey v1.8.0
 	github.com/stretchr/testify v1.8.2
 	go.mongodb.org/mongo-driver v1.11.4
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.251.0 // indirect
-	github.com/ONSdigital/dp-net v1.5.0 // indirect
-	github.com/ONSdigital/dp-net/v2 v2.8.1 // indirect
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.252.0 // indirect
+	github.com/ONSdigital/dp-net/v2 v2.9.1 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
 	github.com/cucumber/messages-go/v16 v16.0.1 // indirect
@@ -38,13 +36,14 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/montanaflynn/stats v0.7.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/smartystreets/assertions v1.13.0 // indirect
+	github.com/smartystreets/assertions v1.13.1 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
