@@ -93,7 +93,7 @@ func (m *MongoFeature) ResetDatabase(ctx context.Context, databaseName string) (
 	return m.ResetCollections(ctx, databaseName, collectionNames)
 }
 
-// ResetCollections removes all data in all collections specified within database
+// ResetCollections  removes all data in all collections specified within database
 func (m *MongoFeature) ResetCollections(ctx context.Context, databaseName string, collectionNames []string) (*MongoDeletedDocs, error) {
 	if databaseName == "" || len(collectionNames) == 0 {
 		return nil, fmt.Errorf("missing database name or at least one name of a collection")
