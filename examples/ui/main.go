@@ -8,8 +8,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
-	htmlPage := "<!doctype html><html lang=en><head><meta charset=utf-8><title>blah</title></head><body><p class='example-paragraph'>Example web page</p></body></html>"
+func ExampleHandler1(w http.ResponseWriter, _ *http.Request) {
+	htmlPage := `
+		<!doctype html>
+		<html lang=en>
+			<head>
+				<meta charset=utf-8>
+				<title>blah</title>
+			</head>
+			<body>
+				<p class='example-paragraph'>Example web page</p>
+				<input class='example-input' value='test value'>
+			</body>
+		</html>`
 	fmt.Fprint(w, htmlPage)
 }
 

@@ -6,3 +6,4 @@ Feature: Example feature
         """
             {"p.example-paragraph" : "Example web page"}
         """
+        And input element ".example-input" has value "test value"
