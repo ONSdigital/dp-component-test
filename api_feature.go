@@ -2,7 +2,7 @@ package componenttest
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -24,7 +24,7 @@ func StaticHandler(handler http.Handler) ServiceInitialiser {
 type APIFeature struct {
 	ErrorFeature
 	Initialiser       ServiceInitialiser
-	HttpResponse      *http.Response
+	HTTPResponse      *http.Response
 	BeforeRequestHook func() error
 	requestHeaders    map[string]string
 }
@@ -68,13 +68,13 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (f *APIFeature) IUseAServiceAuthToken(serviceAuthToken string) error {
-	f.ISetTheHeaderTo("Authorization", "Bearer "+serviceAuthToken)
-	return nil
+	err := f.ISetTheHeaderTo("Authorization", "Bearer "+serviceAuthToken)
+	return err
 }
 
 func (f *APIFeature) IUseAnXFlorenceUserToken(xFlorenceToken string) error {
-	f.ISetTheHeaderTo("X-Florence-Token", xFlorenceToken)
-	return nil
+	err := f.ISetTheHeaderTo("X-Florence-Token", xFlorenceToken)
+	return err
 }
 
 // ISetTheHeaderTo is a default step used to set a header and associated value for the next request
@@ -85,8 +85,8 @@ func (f *APIFeature) ISetTheHeaderTo(header, value string) error {
 
 // IAmAuthorised sets the Authorization header to a bogus token
 func (f *APIFeature) IAmAuthorised() error {
-	f.ISetTheHeaderTo("Authorization", "bearer SomeFakeToken")
-	return nil
+	err := f.ISetTheHeaderTo("Authorization", "bearer SomeFakeToken")
+	return err
 }
 
 // IAmNotAuthorised removes any Authorization header set in the request headers
@@ -133,14 +133,14 @@ func (f *APIFeature) makeRequest(method, path string, data []byte) error {
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
-	f.HttpResponse = w.Result()
+	f.HTTPResponse = w.Result()
 	return nil
 }
 
 // IShouldReceiveTheFollowingResponse asserts the response body and expected response body are equal
 func (f *APIFeature) IShouldReceiveTheFollowingResponse(expectedAPIResponse *godog.DocString) error {
-	responseBody := f.HttpResponse.Body
-	body, _ := ioutil.ReadAll(responseBody)
+	responseBody := f.HTTPResponse.Body
+	body, _ := io.ReadAll(responseBody)
 
 	assert.Equal(f, strings.TrimSpace(expectedAPIResponse.Content), strings.TrimSpace(string(body)))
 
@@ -149,8 +149,8 @@ func (f *APIFeature) IShouldReceiveTheFollowingResponse(expectedAPIResponse *god
 
 // IShouldReceiveTheFollowingJSONResponse asserts that the response body and expected response body are equal
 func (f *APIFeature) IShouldReceiveTheFollowingJSONResponse(expectedAPIResponse *godog.DocString) error {
-	responseBody := f.HttpResponse.Body
-	body, _ := ioutil.ReadAll(responseBody)
+	responseBody := f.HTTPResponse.Body
+	body, _ := io.ReadAll(responseBody)
 
 	assert.JSONEq(f, expectedAPIResponse.Content, string(body))
 
@@ -163,13 +163,13 @@ func (f *APIFeature) TheHTTPStatusCodeShouldBe(expectedCodeStr string) error {
 	if err != nil {
 		return err
 	}
-	assert.Equal(f, expectedCode, f.HttpResponse.StatusCode)
+	assert.Equal(f, expectedCode, f.HTTPResponse.StatusCode)
 	return f.StepError()
 }
 
 // TheResponseHeaderShouldBe asserts the response header matches the expectation
 func (f *APIFeature) TheResponseHeaderShouldBe(headerName, expectedValue string) error {
-	assert.Equal(f, expectedValue, f.HttpResponse.Header.Get(headerName))
+	assert.Equal(f, expectedValue, f.HTTPResponse.Header.Get(headerName))
 	return f.StepError()
 }
 

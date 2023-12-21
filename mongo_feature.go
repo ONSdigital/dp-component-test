@@ -3,7 +3,6 @@ package componenttest
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -79,6 +78,8 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 func (m *MongoFeature) Reset() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	//nolint:errcheck //Check if this works
 	m.Database.Drop(ctx)
 	return nil
 }
@@ -118,7 +119,7 @@ func (m *MongoFeature) ResetCollections(ctx context.Context, databaseName string
 			Count: count,
 		})
 
-		deletedDocs.Count = deletedDocs.Count + count
+		deletedDocs.Count += count
 	}
 
 	return deletedDocs, nil
@@ -220,5 +221,5 @@ func (m *MongoFeature) theDocumentWithSetToDoesNotExistInTheCollection(key, valu
 		return err
 	}
 
-	return errors.New(fmt.Sprintf("Document with property %s: %s was found in the collection", key, value))
+	return fmt.Errorf("document with property %s: %s was found in the collection", key, value)
 }

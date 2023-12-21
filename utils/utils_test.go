@@ -4,6 +4,7 @@ import (
 	"flag"
 	"testing"
 
+	//nolint:revive //dot imports acceptable in test file
 	. "github.com/smartystreets/goconvey/convey"
 )
 

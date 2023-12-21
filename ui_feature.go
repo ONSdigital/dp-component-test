@@ -31,10 +31,10 @@ type UIFeature struct {
 	WaitTimeOut time.Duration
 }
 
-// NewUIFeature returns a new UIFeature configured with baseUrl
-func NewUIFeature(baseUrl string) *UIFeature {
+// NewUIFeature returns a new UIFeature configured with baseURL
+func NewUIFeature(baseURL string) *UIFeature {
 	f := &UIFeature{
-		BaseURL:     baseUrl,
+		BaseURL:     baseURL,
 		WaitTimeOut: 10 * time.Second,
 	}
 
@@ -100,8 +100,7 @@ func (f *UIFeature) ElementShouldBeVisible(elementSelector string) error {
 	return f.StepError()
 }
 
-func (f *UIFeature) inputElementHasValue(elementSelector string, expectedValue string) error {
-
+func (f *UIFeature) inputElementHasValue(elementSelector, expectedValue string) error {
 	var actualValue string
 
 	err := chromedp.Run(f.Chrome.Ctx,
@@ -119,7 +118,7 @@ func (f *UIFeature) inputElementHasValue(elementSelector string, expectedValue s
 	return f.StepError()
 }
 
-func (f *UIFeature) innerListElementsShouldHaveText(dataAttr string, textList string, depth int) (err error) {
+func (f *UIFeature) innerListElementsShouldHaveText(dataAttr, textList string, depth int) (err error) {
 	var (
 		elementSelector = fmt.Sprintf("[data-test='%s']", dataAttr)
 		nodes           []*cdp.Node
@@ -134,7 +133,7 @@ func (f *UIFeature) innerListElementsShouldHaveText(dataAttr string, textList st
 				return dom.RequestChildNodes(nodes[0].NodeID).WithDepth(int64(entireSubtree)).Do(c)
 			}),
 			chromedp.Sleep(time.Second),
-			chromedp.ActionFunc(func(c context.Context) error {
+			chromedp.ActionFunc(func(_ context.Context) error {
 				// All examples use depth = 3
 				// Home - nodes[0].Children[0].Children[0].Children[0].Children[0].Children[0].NodeValue
 				// Areas - nodes[0].Children[0].Children[0].Children[1].Children[0].Children[0].NodeValue

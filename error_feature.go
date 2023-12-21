@@ -11,7 +11,8 @@ type ErrorFeature struct {
 	err error
 }
 
-func (t *ErrorFeature) Log(args ...interface{}) {
+func (t *ErrorFeature) Log(_ ...interface{}) {
+	// stub to mimic testing.T
 }
 
 func (t *ErrorFeature) Logf(format string, args ...interface{}) {
@@ -30,7 +31,10 @@ func (t *ErrorFeature) Reset() {
 	t.err = nil
 }
 
-func (t *ErrorFeature) Helper() {}
+func (t *ErrorFeature) Helper() {
+	// stub to mimic testing.T
+}
+
 func (t *ErrorFeature) Name() string {
 	return "Component Test"
 }

@@ -53,8 +53,8 @@ func (f *AuthorizationFeature) zebedeeDoesNotRecogniseTheUserToken() error {
 }
 
 func (f *AuthorizationFeature) zebedeeRecognisesTheUserTokenAsValid() error {
-	//NB. These permissions are what would be returned for an Admin or Publisher user.
-	//A viewer would get empty or just "READ" if they were assigned to a team with preview access to a collection/dataset.
+	// NB. These permissions are what would be returned for an Admin or Publisher user.
+	// A viewer would get empty or just "READ" if they were assigned to a team with preview access to a collection/dataset.
 	f.FakeAuthService.NewHandler().Get("/userInstancePermissions").Reply(200).BodyString(`{ "permissions": ["DELETE", "READ", "CREATE", "UPDATE"]}`)
 	return nil
 }
