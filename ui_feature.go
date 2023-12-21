@@ -71,6 +71,7 @@ func (f *UIFeature) Close() {
 func (f *UIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I navigate to "([^"]*)"`, f.iNavigateTo)
 	ctx.Step(`^element "([^"]*)" should be visible$`, f.ElementShouldBeVisible)
+	ctx.Step(`^input element "([^"]*)" has value "([^"]*)"`, f.inputElementHasValue)
 	ctx.Step(`^the beta phase banner should be visible$`, f.theBetaBannerShouldBeVisible)
 	ctx.Step(`^the improve this page banner should be visible$`, f.theImproveThisPageBannerShouldBeVisible)
 	ctx.Step(`^the page should have the following content$`, f.thePageShouldHaveTheFollowingContent)
@@ -95,6 +96,25 @@ func (f *UIFeature) ElementShouldBeVisible(elementSelector string) error {
 		}),
 	)
 	assert.Nil(f, err)
+
+	return f.StepError()
+}
+
+func (f *UIFeature) inputElementHasValue(elementSelector string, expectedValue string) error {
+
+	var actualValue string
+
+	err := chromedp.Run(f.Chrome.Ctx,
+		f.RunWithTimeOut(f.WaitTimeOut, chromedp.Tasks{
+			chromedp.WaitVisible(elementSelector),
+			chromedp.Value(elementSelector, &actualValue),
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
+	assert.Equal(f, expectedValue, actualValue)
 
 	return f.StepError()
 }
