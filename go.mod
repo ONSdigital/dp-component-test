@@ -2,8 +2,12 @@ module github.com/ONSdigital/dp-component-test
 
 go 1.21
 
-// to fix: [CVE-2023-32731] CWE-Other
-replace google.golang.org/grpc => google.golang.org/grpc v1.55.0
+replace (
+	// to fix: [CVE-2023-32731] CWE-Other
+	google.golang.org/grpc => google.golang.org/grpc v1.55.0
+	// to fix: [CVE-2024-24786] CWE-835: Loop with Unreachable Exit Condition ('Infinite Loop')
+	google.golang.org/protobuf => google.golang.org/protobuf v1.33.0
+)
 
 require (
 	github.com/ONSdigital/dp-mongodb-in-memory v1.6.0
@@ -57,9 +61,9 @@ require (
 	go.opentelemetry.io/otel v1.21.0 // indirect
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
-	golang.org/x/crypto v0.8.0 // indirect
+	golang.org/x/crypto v0.20.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
