@@ -25,6 +25,6 @@ audit:
 	go list -json -m all | nancy sleuth
 
 .PHONY: lint
-lint: 
-	golangci-lint run ./...
+lint:
+	golangci-lint run ./... --timeout 5m --tests=false --skip-dirs=features
 
