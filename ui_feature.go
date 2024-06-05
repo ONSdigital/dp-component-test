@@ -71,11 +71,11 @@ func (f *UIFeature) Close() {
 func (f *UIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I navigate to "([^"]*)"`, f.iNavigateTo)
 	ctx.Step(`^element "([^"]*)" should be visible$`, f.ElementShouldBeVisible)
+	ctx.Step(`^element "([^"]*)" should not be visible$`, f.ElementShouldNotBeVisible)
 	ctx.Step(`^input element "([^"]*)" has value "([^"]*)"`, f.inputElementHasValue)
 	ctx.Step(`^the beta phase banner should be visible$`, f.theBetaBannerShouldBeVisible)
 	ctx.Step(`^the improve this page banner should be visible$`, f.theImproveThisPageBannerShouldBeVisible)
 	ctx.Step(`^the page should have the following content$`, f.thePageShouldHaveTheFollowingContent)
-	ctx.Step(`^the page should not have the following content$`, f.thePageShouldNotHaveTheFollowingContent)
 	ctx.Step(`^the page should contain "([^"]*)" with list element text "([^"]*)" at (\d+) depth$`, f.innerListElementsShouldHaveText)
 	ctx.Step(`^I fill in "([^"]*)" with "([^"]*)"$`, f.iFillInWith)
 	ctx.Step(`^I click the "([^"]*)" button$`, f.iClickButton)
@@ -99,6 +99,19 @@ func (f *UIFeature) ElementShouldBeVisible(elementSelector string) error {
 		}),
 	)
 	assert.Nil(f, err)
+
+	return f.StepError()
+}
+
+func (f *UIFeature) ElementShouldNotBeVisible(elementSelector string) error {
+	err := chromedp.Run(f.Chrome.Ctx,
+		f.RunWithTimeOut(f.WaitTimeOut, chromedp.Tasks{
+			chromedp.WaitNotPresent(elementSelector),
+		}),
+	)
+	if err != nil {
+		return err
+	}
 
 	return f.StepError()
 }
@@ -194,35 +207,6 @@ func (f *UIFeature) thePageShouldHaveTheFollowingContent(expectedAPIResponse *go
 		}
 
 		assert.Equal(f, expectedContent, actualContent)
-	}
-
-	return f.StepError()
-}
-
-func (f *UIFeature) thePageShouldNotHaveTheFollowingContent(expectedAPIResponse *godog.DocString) error {
-	var contentElements map[string]string
-
-	err := json.Unmarshal([]byte(expectedAPIResponse.Content), &contentElements)
-	if err != nil {
-		return err
-	}
-
-	for selector, unexpectedContent := range contentElements {
-		var actualContent string
-		err = chromedp.Run(f.Chrome.Ctx,
-			f.RunWithTimeOut(f.WaitTimeOut, chromedp.Tasks{
-				chromedp.Text(selector, &actualContent, chromedp.NodeVisible),
-			}),
-		)
-		if err != nil {
-			// If an error occurs (e.g., the selector is not found), we consider it as a pass
-			continue
-		}
-
-		// If the unexpected content is found, return an error
-		if actualContent == unexpectedContent {
-			return fmt.Errorf("unexpected content '%s' found in selector '%s'", unexpectedContent, selector)
-		}
 	}
 
 	return f.StepError()

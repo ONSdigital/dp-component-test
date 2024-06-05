@@ -9,12 +9,7 @@ Feature: Example feature
             }
             """
         And element ".example-paragraph" should be visible
-        And the page should not have the following content
-            """
-            {
-                "p.unwanted-paragraph": "Unwanted content"
-            }
-            """
+        And element ".no-paragraph" should not be visible
         When I fill in ".example-input" with "new value"
         Then input element ".example-input" has value "new value"
         When I click the ".example-button" button
