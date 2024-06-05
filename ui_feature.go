@@ -70,8 +70,8 @@ func (f *UIFeature) Close() {
 // RegisterSteps binds the APIFeature steps to the godog context to enable usage in the component tests
 func (f *UIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I navigate to "([^"]*)"`, f.iNavigateTo)
-	ctx.Step(`^element "([^"]*)" should be visible$`, f.ElementShouldBeVisible)
-	ctx.Step(`^element "([^"]*)" should not be visible$`, f.ElementShouldNotBeVisible)
+	ctx.Step(`^element "([^"]*)" should be visible$`, f.elementShouldBeVisible)
+	ctx.Step(`^element "([^"]*)" should not be visible$`, f.elementShouldNotBeVisible)
 	ctx.Step(`^input element "([^"]*)" has value "([^"]*)"`, f.inputElementHasValue)
 	ctx.Step(`^the beta phase banner should be visible$`, f.theBetaBannerShouldBeVisible)
 	ctx.Step(`^the improve this page banner should be visible$`, f.theImproveThisPageBannerShouldBeVisible)
@@ -92,7 +92,7 @@ func (f *UIFeature) iNavigateTo(route string) error {
 	return nil
 }
 
-func (f *UIFeature) ElementShouldBeVisible(elementSelector string) error {
+func (f *UIFeature) elementShouldBeVisible(elementSelector string) error {
 	err := chromedp.Run(f.Chrome.Ctx,
 		f.RunWithTimeOut(f.WaitTimeOut, chromedp.Tasks{
 			chromedp.WaitVisible(elementSelector),
@@ -103,7 +103,7 @@ func (f *UIFeature) ElementShouldBeVisible(elementSelector string) error {
 	return f.StepError()
 }
 
-func (f *UIFeature) ElementShouldNotBeVisible(elementSelector string) error {
+func (f *UIFeature) elementShouldNotBeVisible(elementSelector string) error {
 	err := chromedp.Run(f.Chrome.Ctx,
 		f.RunWithTimeOut(f.WaitTimeOut, chromedp.Tasks{
 			chromedp.WaitNotPresent(elementSelector),
@@ -180,11 +180,11 @@ func (f *UIFeature) innerListElementsShouldHaveText(dataAttr, textList string, d
 }
 
 func (f *UIFeature) theBetaBannerShouldBeVisible() error {
-	return f.ElementShouldBeVisible(".ons-phase-banner")
+	return f.elementShouldBeVisible(".ons-phase-banner")
 }
 
 func (f *UIFeature) theImproveThisPageBannerShouldBeVisible() error {
-	return f.ElementShouldBeVisible(".improve-this-page")
+	return f.elementShouldBeVisible(".improve-this-page")
 }
 
 func (f *UIFeature) thePageShouldHaveTheFollowingContent(expectedAPIResponse *godog.DocString) error {
