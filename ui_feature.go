@@ -252,8 +252,10 @@ func getName(node *cdp.Node, expected string, didMatch *bool) {
 }
 
 func (f *UIFeature) iFillInWith(fieldSelector, value string) error {
+	jsScript := fmt.Sprintf(`document.querySelector('%s').value = '%s';`, fieldSelector, value)
+
 	err := chromedp.Run(f.Chrome.Ctx,
-		chromedp.SendKeys(fieldSelector, value),
+		chromedp.Evaluate(jsScript, nil),
 	)
 	if err != nil {
 		return err
