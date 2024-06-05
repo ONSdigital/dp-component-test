@@ -18,7 +18,13 @@ func ExampleHandler1(w http.ResponseWriter, _ *http.Request) {
 			</head>
 			<body>
 				<p class='example-paragraph'>Example web page</p>
-				<input class='example-input' value='test value'>
+				<input id='example-input' class='example-input' value=''>
+				<button class="example-button" onclick="changeValue()">Click me</button>
+				<script>
+					function changeValue() {
+					document.getElementById("example-input").value = "clicked";
+					}
+				</script>
 			</body>
 		</html>`
 	fmt.Fprint(w, htmlPage)
