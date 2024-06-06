@@ -249,6 +249,7 @@ func (f *UIFeature) iFillInWith(fieldSelector, value string) error {
 }
 
 func (f *UIFeature) iClickButton(buttonSelector string) error {
+	// if this doesn't work as expected, you might need a sleep after the click
 	err := chromedp.Run(f.Chrome.Ctx,
 		chromedp.Click(buttonSelector),
 	)
