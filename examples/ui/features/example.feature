@@ -1,7 +1,7 @@
 Feature: Example feature
 
     Scenario: View web page scenario
-        Given I navigate to "/example"
+        When I navigate to "/example"
         Then the page should have the following content
             """
             {

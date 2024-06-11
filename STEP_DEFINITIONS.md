@@ -41,8 +41,8 @@ This library provides these generic steps that should be useable across a variet
 | the beta phase banner should be visible                                              | Assert that the beta phase banner exists on the web page                                                                                                                | Then              |
 | the improve this page banner should be visible                                       | Assert that the improve this page banner exists on the web page                                                                                                         | Then              |
 | the page should contain "KEY" with list element text [LIST] at INT depth             | Assert that the expected breadcrumbs siblings are present                                                                                                               |                   |
-| I fill in "SELECTOR" with "VALUE"                                                    | Find a HTML input element on the web page that matches SELECTOR and fill it with VALUE                                                                                  | When              |
-| I click the "SELECTOR" button                                                        | Find a HTML button element on the web page that matches SELECTOR and simulate a click event                                                                             | When              |
+| I fill in input element "SELECTOR" with value "VALUE"                                                    | Find a HTML input element on the web page that matches SELECTOR and fill it with VALUE                                                                                  | When              |
+| I click the "SELECTOR" element                                                        | Find a HTML element on the web page that matches SELECTOR and simulate a click event                                                                             | When              |
 ---
 
 ## Example

@@ -22,7 +22,7 @@ func ExampleHandler1(w http.ResponseWriter, _ *http.Request) {
 				<button class="example-button" onclick="changeValue()">Click me</button>
 				<script>
 					function changeValue() {
-					document.getElementById("example-input").value = "clicked";
+						document.getElementById("example-input").value = "clicked";
 					}
 				</script>
 			</body>

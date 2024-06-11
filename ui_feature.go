@@ -77,8 +77,8 @@ func (f *UIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the improve this page banner should be visible$`, f.theImproveThisPageBannerShouldBeVisible)
 	ctx.Step(`^the page should have the following content$`, f.thePageShouldHaveTheFollowingContent)
 	ctx.Step(`^the page should contain "([^"]*)" with list element text "([^"]*)" at (\d+) depth$`, f.innerListElementsShouldHaveText)
-	ctx.Step(`^I fill in "([^"]*)" with "([^"]*)"$`, f.iFillInWith)
-	ctx.Step(`^I click the "([^"]*)" button$`, f.iClickButton)
+	ctx.Step(`^I fill in input element "([^"]*)" with value "([^"]*)"$`, f.iFillInInputElementWithValue)
+	ctx.Step(`^I click the "([^"]*)" element$`, f.iClickElement)
 }
 
 func (f *UIFeature) iNavigateTo(route string) error {
@@ -235,7 +235,7 @@ func getName(node *cdp.Node, expected string, didMatch *bool) {
 	getName(node.Children[0], expected, didMatch)
 }
 
-func (f *UIFeature) iFillInWith(fieldSelector, value string) error {
+func (f *UIFeature) iFillInInputElementWithValue(fieldSelector, value string) error {
 	jsScript := fmt.Sprintf(`document.querySelector('%s').value = '%s';`, fieldSelector, value)
 
 	err := chromedp.Run(f.Chrome.Ctx,
@@ -248,7 +248,7 @@ func (f *UIFeature) iFillInWith(fieldSelector, value string) error {
 	return f.StepError()
 }
 
-func (f *UIFeature) iClickButton(buttonSelector string) error {
+func (f *UIFeature) iClickElement(buttonSelector string) error {
 	// if this doesn't work as expected, you might need a sleep after the click
 	err := chromedp.Run(f.Chrome.Ctx,
 		chromedp.Click(buttonSelector),
