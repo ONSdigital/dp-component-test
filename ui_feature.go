@@ -73,8 +73,6 @@ func (f *UIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^element "([^"]*)" should be visible$`, f.elementShouldBeVisible)
 	ctx.Step(`^element "([^"]*)" should not be visible$`, f.elementShouldNotBeVisible)
 	ctx.Step(`^input element "([^"]*)" has value "([^"]*)"`, f.inputElementHasValue)
-	ctx.Step(`^the beta phase banner should be visible$`, f.theBetaBannerShouldBeVisible)
-	ctx.Step(`^the improve this page banner should be visible$`, f.theImproveThisPageBannerShouldBeVisible)
 	ctx.Step(`^the page should have the following content$`, f.thePageShouldHaveTheFollowingContent)
 	ctx.Step(`^the page should contain "([^"]*)" with list element text "([^"]*)" at (\d+) depth$`, f.innerListElementsShouldHaveText)
 	ctx.Step(`^I fill in input element "([^"]*)" with value "([^"]*)"$`, f.iFillInInputElementWithValue)
@@ -177,14 +175,6 @@ func (f *UIFeature) innerListElementsShouldHaveText(dataAttr, textList string, d
 		}),
 	)
 	return err
-}
-
-func (f *UIFeature) theBetaBannerShouldBeVisible() error {
-	return f.elementShouldBeVisible(".ons-phase-banner")
-}
-
-func (f *UIFeature) theImproveThisPageBannerShouldBeVisible() error {
-	return f.elementShouldBeVisible(".improve-this-page")
 }
 
 func (f *UIFeature) thePageShouldHaveTheFollowingContent(expectedAPIResponse *godog.DocString) error {
