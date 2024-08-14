@@ -7,8 +7,6 @@ run:
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 10m
 linters-settings:
-  govet:
-    check-shadowing: true
   golint:
     min-confidence: 0
   gocyclo:
@@ -92,6 +90,8 @@ issues:
       - govet
       text: 'declaration of "(err|ctx)" shadows declaration at'
   new: false
+  exclude-dirs:
+    - ./../features
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration

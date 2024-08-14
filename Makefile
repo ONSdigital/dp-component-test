@@ -26,5 +26,5 @@ audit:
 
 .PHONY: lint
 lint:
-	golangci-lint run ./... --timeout 5m --tests=false --skip-dirs=features
+	golangci-lint run ./... --timeout 5m --tests=false
 
