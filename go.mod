@@ -14,7 +14,7 @@ require (
 	github.com/ONSdigital/log.go/v2 v2.4.3
 	github.com/chromedp/cdproto v0.0.0-20230419194459-b5ff65bc57a3
 	github.com/chromedp/chromedp v0.9.1
-	github.com/cucumber/godog v0.12.6
+	github.com/cucumber/godog v0.14.1
 	github.com/gorilla/mux v1.8.0
 	github.com/maxcnunes/httpfake v1.2.4
 	github.com/smartystreets/goconvey v1.8.1
@@ -26,8 +26,8 @@ require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.254.1 // indirect
 	github.com/ONSdigital/dp-net/v2 v2.11.1 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
-	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
-	github.com/cucumber/messages-go/v16 v16.0.1 // indirect
+	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
+	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect

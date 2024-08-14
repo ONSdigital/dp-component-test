@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	a11y "github.com/ONSdigital/dp-component-test/utils"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/chromedp"
@@ -77,6 +78,8 @@ func (f *UIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the page should contain "([^"]*)" with list element text "([^"]*)" at (\d+) depth$`, f.innerListElementsShouldHaveText)
 	ctx.Step(`^I fill in input element "([^"]*)" with value "([^"]*)"$`, f.iFillInInputElementWithValue)
 	ctx.Step(`^I click the "([^"]*)" element$`, f.iClickElement)
+	ctx.Step(`^the page should be accessible$`, f.thePageShouldBeAccessible)
+	ctx.Step(`^the page should be accessible with the following exceptions$`, f.thePageShouldBeAccessibleWithTheExceptions)
 }
 
 func (f *UIFeature) iNavigateTo(route string) error {
@@ -210,6 +213,42 @@ func (f *UIFeature) RunWithTimeOut(timeout time.Duration, tasks chromedp.Tasks) 
 	}
 }
 
+func (f *UIFeature) thePageShouldBeAccessible() error {
+	violations, message, err := a11y.RunTest(f.Chrome.Ctx)
+	if err != nil {
+		return err
+	}
+
+	assert.Equal(f, len(violations), 0, message)
+
+	return f.StepError()
+}
+
+/*
+A list of rules and their IDs can be found here:
+https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md
+
+Table should look like:
+| id        |
+| image-alt |
+*/
+func (f *UIFeature) thePageShouldBeAccessibleWithTheExceptions(exceptionTable *godog.Table) error {
+	rules := convertDataTableToRuleExceptions(exceptionTable)
+
+	a11ycfg := a11y.AccessibilityConfig{
+		Rules: rules,
+	}
+
+	violations, message, err := a11y.RunTestWithConfig(f.Chrome.Ctx, a11ycfg)
+	if err != nil {
+		return err
+	}
+
+	assert.Equal(f, 0, len(violations), message)
+
+	return f.StepError()
+}
+
 // ---------------------------------------
 // Utils
 func getName(node *cdp.Node, expected string, didMatch *bool) {
@@ -248,4 +287,19 @@ func (f *UIFeature) iClickElement(buttonSelector string) error {
 	}
 
 	return f.StepError()
+}
+
+/* Converts a datatable from feature file into a map that axe-core is expecting */
+func convertDataTableToRuleExceptions(table *godog.Table) map[string]a11y.Rule {
+	rules := make(map[string]a11y.Rule, len(table.Rows)-1)
+
+	for i := range table.Rows {
+		if i > 0 {
+			rules[table.Rows[i].Cells[0].Value] = a11y.Rule{
+				Enabled: false,
+			}
+		}
+	}
+
+	return rules
 }

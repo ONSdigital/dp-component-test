@@ -26,7 +26,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.AfterScenario(func(*godog.Scenario, error) {
 		if err := component.Close(); err != nil {
-			log.Warn(context.Background(), "error closing identity component", log.FormatErrors([]error{err}))
+			log.Warn(context.Background(), "error closing component", log.FormatErrors([]error{err}))
 		}
 		uiFeature.Close()
 	})
