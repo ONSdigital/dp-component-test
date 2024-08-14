@@ -38,16 +38,17 @@ type RunOnly struct {
 	Values []string `json:"values,omitempty"`
 }
 
+type Rule struct {
+	Enabled bool `json:"enabled"`
+}
+
+// Exports the Accessibility config as a JSON string to supply to axe-core
 func (cfg *AccessibilityConfig) JSON() (string, error) {
 	cfgJSON, err := json.Marshal(cfg)
 	if err != nil {
 		return "", err
 	}
 	return string(cfgJSON), nil
-}
-
-type Rule struct {
-	Enabled bool `json:"enabled"`
 }
 
 func provisionAccessibilityTooling(ctx context.Context) error {

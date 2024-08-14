@@ -41,8 +41,8 @@ This library provides these generic steps that should be useable across a variet
 | the page should contain "KEY" with list element text [LIST] at INT depth             | Assert that the expected breadcrumbs siblings are present                                                                                                               |                   |
 | I fill in input element "SELECTOR" with value "VALUE"                                | Find a HTML input element on the web page that matches SELECTOR and fill it with VALUE                                                                                  | When              |
 | I click the "SELECTOR" element                                                       | Find a HTML element on the web page that matches SELECTOR and simulate a click event                                                                             | When              |
-| the page should be accessible | Assert that the page meets WCAG A and AA accessibility criteria \_LIST\_| Then |
-| the page should be accessible with the following exceptions | Assert that the page meets WCAG A and AA accessibility criteria whilst ignoring the exceptions. List should be a table of ids taken from the [list of axe-core rules](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md) | Then |
+| the page should be accessible | Assert that the page meets WCAG A and AA accessibility criteria | Then |
+| the page should be accessible with the following exceptions \_LIST\_ | Assert that the page meets WCAG A and AA accessibility criteria whilst ignoring the exceptions. List should be a table of ids taken from the [list of axe-core rules](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md) | Then |
 ---
 
 ## Example
