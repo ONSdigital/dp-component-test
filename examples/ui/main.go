@@ -44,7 +44,7 @@ func AccessibilityExclusionHandler(w http.ResponseWriter, _ *http.Request) {
 				<label for="test">This is a test label</label>
 				<input id="test" class='example-input' value='test value'>
 				<!-- This is an accessibility failure -->
-				<image src="/example.png" />
+				<img src="/example.png" />
 			</body>
 		</html>`
 	fmt.Fprint(w, htmlPage)

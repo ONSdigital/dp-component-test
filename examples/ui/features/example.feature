@@ -17,7 +17,7 @@ Feature: Example feature
         Then input element ".example-input" has value "clicked"
     
     Scenario: View web page scenario excluding certain accessibility rules
-        When I navigate to "/example"
+        When I navigate to "/example-accessibility-exclusion"
         Then the page should have the following content
         """
             {"p.example-paragraph" : "Example web page"}
