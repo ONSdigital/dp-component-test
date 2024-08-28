@@ -1,13 +1,6 @@
 module github.com/ONSdigital/dp-component-test
 
-go 1.21
-
-replace (
-	// to fix: [CVE-2023-32731] CWE-Other
-	google.golang.org/grpc => google.golang.org/grpc v1.55.0
-	// to fix: [CVE-2024-24786] CWE-835: Loop with Unreachable Exit Condition ('Infinite Loop')
-	google.golang.org/protobuf => google.golang.org/protobuf v1.33.0
-)
+go 1.22
 
 require (
 	github.com/ONSdigital/dp-mongodb-in-memory v1.6.0
@@ -52,7 +45,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
-	github.com/spf13/afero v1.9.5 // indirect
+	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
@@ -62,8 +55,10 @@ require (
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
 	golang.org/x/crypto v0.20.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
+	// version protobuf added to override vulnerable dependency in afero@v1.11.0
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
