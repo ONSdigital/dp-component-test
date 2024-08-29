@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"strconv"
 	"time"
 
@@ -61,7 +62,7 @@ func provisionAccessibilityTooling(ctx context.Context) error {
 func addAccessibilityTools(ctx context.Context) error {
 	var buf []byte
 
-	provisionScript := fmt.Sprintf(`
+	provisionScript := template.JS(fmt.Sprintf(`
 		(function(d, script) {
 			script = d.createElement('script');
 			script.type = 'text/javascript';
@@ -72,10 +73,12 @@ func addAccessibilityTools(ctx context.Context) error {
 			script.src = 'https://cdnjs.cloudflare.com/ajax/libs/axe-core/%s/axe.min.js';
 			d.getElementsByTagName('head')[0].appendChild(script);
 		}(document));
-	`, axeVersion)
+	`, axeVersion))
+
+	provisionScriptString := string(provisionScript)
 
 	if err := chromedp.Run(ctx,
-		chromedp.Evaluate(provisionScript, &buf),
+		chromedp.Evaluate(provisionScriptString, &buf),
 	); err != nil {
 		return fmt.Errorf("failed to evaluate script to add accessibility tooling")
 	}
@@ -121,7 +124,7 @@ func RunTestWithConfig(ctx context.Context, cfg AccessibilityConfig) ([]Violatio
 		return nil, "", err
 	}
 
-	testScript := fmt.Sprintf(`
+	testScript := template.JS(fmt.Sprintf(`
 	 	window.returnValue = axe
 			.run(%s)
 			.then(results => {
@@ -130,10 +133,12 @@ func RunTestWithConfig(ctx context.Context, cfg AccessibilityConfig) ([]Violatio
 			.catch(err => {
 				return err.message
 			});
-	`, cfgJSON)
+	`, cfgJSON))
+
+	testScriptString := string(testScript)
 
 	if err := chromedp.Run(ctx,
-		chromedp.Evaluate(testScript, &buf, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+		chromedp.Evaluate(testScriptString, &buf, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 			return p.WithAwaitPromise(true)
 		}),
 	); err != nil {
