@@ -24,6 +24,10 @@ type Violation struct {
 	Nodes       []ViolationNode `json:"nodes"`
 }
 
+func (v *Violation) toErrorMessage() string {
+	return v.ID + ": " + v.Description + " (" + strconv.Itoa(len(v.Nodes)) + " violations)"
+}
+
 type ViolationNode struct {
 	Impact string `json:"impact"`
 	HTML   string `json:"html"`
@@ -62,6 +66,7 @@ func provisionAccessibilityTooling(ctx context.Context) error {
 func addAccessibilityTools(ctx context.Context) error {
 	var buf []byte
 
+	//nolint:gosec // test code only and no way to exploit.
 	provisionScript := template.JS(fmt.Sprintf(`
 		(function(d, script) {
 			script = d.createElement('script');
@@ -124,6 +129,7 @@ func RunTestWithConfig(ctx context.Context, cfg AccessibilityConfig) ([]Violatio
 		return nil, "", err
 	}
 
+	//nolint:gosec // test code only and no way to exploit.
 	testScript := template.JS(fmt.Sprintf(`
 	 	window.returnValue = axe
 			.run(%s)
@@ -169,7 +175,7 @@ func generateViolationMessage(violations []Violation) string {
 
 		// TODO: we should add the HTML snippets in here.
 		for i := range violations {
-			errMessage += "\n" + violations[i].ID + ": " + violations[i].Description + " (" + strconv.Itoa(len(violations[i].Nodes)) + " violations)"
+			errMessage += "\n" + violations[i].toErrorMessage()
 		}
 	}
 
