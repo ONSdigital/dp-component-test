@@ -13,6 +13,7 @@ Feature: Example feature
         foo bar
         """
         Then the HTTP status code should be "403"
+        And I wait 2 seconds
         And I should receive the following response:
         """
         403 - Forbidden
