@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
@@ -65,6 +66,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I should receive the following JSON response with status "([^"]*)":$`, f.IShouldReceiveTheFollowingJSONResponseWithStatus)
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
 	ctx.Step(`^I use an X Florence user token "([^"]*)"$`, f.IUseAnXFlorenceUserToken)
+	ctx.Step(`^I wait (\d+) seconds`, f.delayTimeBySeconds)
 }
 
 func (f *APIFeature) IUseAServiceAuthToken(serviceAuthToken string) error {
@@ -182,4 +184,10 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCo
 		return err
 	}
 	return f.IShouldReceiveTheFollowingJSONResponse(expectedBody)
+}
+
+// delayTimeBySeconds pauses the goroutine for the given seconds
+func (f *APIFeature) delayTimeBySeconds(sec int) error {
+	time.Sleep(time.Duration(int64(sec)) * time.Second)
+	return nil
 }
