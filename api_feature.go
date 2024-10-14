@@ -187,6 +187,7 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCo
 }
 
 // delayTimeBySeconds pauses the goroutine for the given seconds
+// WARNING: This should not be used where other 'waits' would be possible. Use this only where absolutely necessary.
 func (f *APIFeature) delayTimeBySeconds(sec int) error {
 	time.Sleep(time.Duration(int64(sec)) * time.Second)
 	return nil
