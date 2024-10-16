@@ -6,7 +6,7 @@ image_resource:
   type: docker-image
   source:
     repository: onsdigital/dp-concourse-tools-chrome-go
-    tag: latest
+    tag: 1.22.1-bullseye-googlechromestablelatest
 
 inputs:
   - name: dp-component-test
