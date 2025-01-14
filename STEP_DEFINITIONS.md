@@ -21,6 +21,7 @@ This library provides these generic steps that should be useable across a variet
 | the following document exists in the "COLLECTION" collection: \_BODY\_               | put document BODY in the COLLECTION collection                                       | Given             |
 | I set the "KEY" header to "VALUE"                                                    | set a HTTP header of the request to the value                                        | Given             |
 | I GET "URL"                                                                          | make a GET request to the provided URL                                               | When              |
+| I GET "URL" without a request host                                                   | make a GET request without the host to the provided URL                              | When              |
 | I DELETE "URL"                                                                       | make a DELETE request to the provided URL                                            | When              |
 | I PUT "URL" "BODY"                                                                   | make a PUT request to the provided URL with the given body                           | When              |
 | I PATCH "URL" "BODY"                                                                 | make a PATCH request to the provided URL with the given body                         | When              |

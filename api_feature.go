@@ -55,7 +55,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I am authorised$`, f.IAmAuthorised)
 	ctx.Step(`^I am not authorised$`, f.IAmNotAuthorised)
 	ctx.Step(`^I GET "([^"]*)"$`, f.IGet)
-	ctx.Step(`^I GET "([^"]*)" with rewriting$`, f.IGetWithRewriting)
+	ctx.Step(`^I GET "([^"]*)" without a request host$`, f.IGetWithoutRequestHost)
 	ctx.Step(`^I POST "([^"]*)"$`, f.IPostToWithBody)
 	ctx.Step(`^I PUT "([^"]*)"$`, f.IPut)
 	ctx.Step(`^I PATCH "([^"]*)"$`, f.IPatch)
@@ -103,8 +103,8 @@ func (f *APIFeature) IGet(path string) error {
 	return f.makeRequest("GET", path, nil)
 }
 
-// IGetWithRewriting makes a get request to the provided path with the current headers without the host
-func (f *APIFeature) IGetWithRewriting(path string) error {
+// IGetWithoutRequestHost makes a get request without the host to the provided path with the current headers
+func (f *APIFeature) IGetWithoutRequestHost(path string) error {
 	return f.makeRequestWithoutHost("GET", path, nil)
 }
 
