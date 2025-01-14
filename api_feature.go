@@ -55,6 +55,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I am authorised$`, f.IAmAuthorised)
 	ctx.Step(`^I am not authorised$`, f.IAmNotAuthorised)
 	ctx.Step(`^I GET "([^"]*)"$`, f.IGet)
+	ctx.Step(`^I GET "([^"]*)" with rewriting$`, f.IGetWithRewriting)
 	ctx.Step(`^I POST "([^"]*)"$`, f.IPostToWithBody)
 	ctx.Step(`^I PUT "([^"]*)"$`, f.IPut)
 	ctx.Step(`^I PATCH "([^"]*)"$`, f.IPatch)
@@ -102,6 +103,11 @@ func (f *APIFeature) IGet(path string) error {
 	return f.makeRequest("GET", path, nil)
 }
 
+// IGetWithRewriting makes a get request to the provided path with the current headers without the host
+func (f *APIFeature) IGetWithRewriting(path string) error {
+	return f.makeRequestWithoutHost("GET", path, nil)
+}
+
 // IPostToWithBody makes a POST request to the provided path with the current headers and the body provided
 func (f *APIFeature) IPostToWithBody(path string, body *godog.DocString) error {
 	return f.makeRequest("POST", path, []byte(body.Content))
@@ -128,6 +134,25 @@ func (f *APIFeature) makeRequest(method, path string, data []byte) error {
 		return err
 	}
 	req := httptest.NewRequest(method, "http://foo"+path, bytes.NewReader(data))
+	for key, value := range f.requestHeaders {
+		req.Header.Set(key, value)
+	}
+
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+
+	f.HTTPResponse = w.Result()
+	return nil
+}
+
+// Request is made without a host so that FromHeadersOrDefault() within dp-net uses the defaultURL to build links
+func (f *APIFeature) makeRequestWithoutHost(method, path string, data []byte) error {
+	handler, err := f.Initialiser()
+	if err != nil {
+		return err
+	}
+	req := httptest.NewRequest(method, "http://foo"+path, bytes.NewReader(data))
+	req.Host = ""
 	for key, value := range f.requestHeaders {
 		req.Header.Set(key, value)
 	}
