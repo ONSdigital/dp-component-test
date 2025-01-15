@@ -6,7 +6,7 @@ image_resource:
   type: docker-image
   source:
     repository: golangci/golangci-lint
-    tag: v1.59
+    tag: v1.63.4
 
 inputs:
   - name: dp-component-test
