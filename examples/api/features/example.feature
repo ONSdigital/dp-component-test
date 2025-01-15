@@ -18,3 +18,10 @@ Feature: Example feature
         """
         403 - Forbidden
         """
+
+    Scenario: Example 3 endpoint scenario
+        When I GET "/example3" wihtout a request host
+        Then I should receive the following JSON response with status "200":
+        """
+        {"example_type": 3}
+        """

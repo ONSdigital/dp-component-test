@@ -26,11 +26,24 @@ func ExampleHandler2(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "403 - Forbidden")
 }
 
+func ExampleHandler3(w http.ResponseWriter, r *http.Request) {
+	data := struct {
+		ExampleType int `json:"example_type"`
+	}{ExampleType: 3}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	resp, _ := json.Marshal(data)
+
+	fmt.Fprintf(w, string(resp))
+}
+
 func newRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/example1", ExampleHandler1).Methods("GET")
 	router.HandleFunc("/example2", ExampleHandler2).Methods("POST")
+	router.HandleFunc("/example3", ExampleHandler3).Methods("GET")
 
 	return router
 }
