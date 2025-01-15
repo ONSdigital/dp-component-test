@@ -20,7 +20,7 @@ Feature: Example feature
         """
 
     Scenario: Example 3 endpoint scenario
-        When I GET "/example3" wihtout a request host
+        When I GET "/example3" without a request host
         Then I should receive the following JSON response with status "200":
         """
         {"example_type": 3}
