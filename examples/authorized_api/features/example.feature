@@ -56,7 +56,7 @@ Feature: Example feature
         Then the HTTP status code should be "401"
         And I should receive the following response:
             """
-            User has not been identified as an admin
+            user has not been identified as an admin
             """
 
     Scenario: accessing zebedee endpoint without service authorization

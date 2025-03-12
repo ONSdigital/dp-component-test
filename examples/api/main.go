@@ -18,7 +18,7 @@ func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
 
 	resp, _ := json.Marshal(data)
 
-	fmt.Fprintf(w, string(resp))
+	fmt.Fprintf(w, "%s", string(resp))
 }
 
 func ExampleHandler2(w http.ResponseWriter, r *http.Request) {

@@ -21,7 +21,7 @@ func ZebedeeMustPermitUser(handler http.HandlerFunc) http.HandlerFunc {
 		}
 		w.WriteHeader(status)
 		message := "[\"DELETE\", \"READ\", \"CREATE\", \"UPDATE\"]"
-		fmt.Fprintf(w, message)
+		fmt.Fprintf(w, "%s", message)
 		handler(w, r)
 	}
 }
@@ -79,7 +79,7 @@ func ZebedeeMustAuthorize(handler http.HandlerFunc) http.HandlerFunc {
 		}
 		w.WriteHeader(status)
 		message := "[\"DELETE\", \"READ\", \"CREATE\", \"UPDATE\"]"
-		fmt.Fprintf(w, message)
+		fmt.Fprintf(w, "%s", message)
 		handler(w, r)
 	}
 }
@@ -146,14 +146,14 @@ func validateIdentity() error {
 		return err
 	}
 	if len(body) == 0 {
-		return errors.New("User has not been identified as an admin")
+		return errors.New("user has not been identified as an admin")
 	}
 	err = json.Unmarshal(body, &identity)
 	if err != nil {
 		return err
 	}
 	if identity.Identity != "admin" {
-		return errors.New("User has not been identified as an admin")
+		return errors.New("user has not been identified as an admin")
 	}
 	return nil
 }
