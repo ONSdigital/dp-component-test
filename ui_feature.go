@@ -80,6 +80,7 @@ func (f *UIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I click the "([^"]*)" element$`, f.iClickElement)
 	ctx.Step(`^the page should be accessible$`, f.thePageShouldBeAccessible)
 	ctx.Step(`^the page should be accessible with the following exceptions$`, f.thePageShouldBeAccessibleWithTheExceptions)
+	ctx.Step(`^I should be redirected to "([^"]*)"`, f.iShouldBeRedirectedTo)
 }
 
 func (f *UIFeature) iNavigateTo(route string) error {
@@ -302,4 +303,35 @@ func convertDataTableToRuleExceptions(table *godog.Table) map[string]a11y.Rule {
 	}
 
 	return rules
+}
+
+func (f *UIFeature) iShouldBeRedirectedTo(expectedURL string) error {
+	err := f.CheckLocationUntilTimeOut(expectedURL)
+	if err != nil {
+		return f.StepError()
+	}
+
+	return f.StepError()
+}
+
+func (f *UIFeature) CheckLocationUntilTimeOut(expectedURL string) error {
+	var actualURL string
+
+	for start := time.Now(); ; {
+		err := chromedp.Run(f.Chrome.Ctx, chromedp.Tasks{
+			chromedp.Location(&actualURL),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if expectedURL == actualURL {
+			return nil
+		} else if time.Since(start) > f.WaitTimeOut {
+			return f.StepError()
+		}
+
+		time.Sleep(50 * time.Millisecond)
+	}
 }
