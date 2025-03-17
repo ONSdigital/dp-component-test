@@ -317,7 +317,8 @@ func (f *UIFeature) iShouldBeRedirectedTo(expectedURL string) error {
 func (f *UIFeature) CheckLocationUntilTimeOut(expectedURL string) error {
 	var actualURL string
 
-	for start := time.Now(); ; {
+	start := time.Now()
+	for time.Since(start) <= f.WaitTimeOut {
 		err := chromedp.Run(f.Chrome.Ctx, chromedp.Tasks{
 			chromedp.Location(&actualURL),
 		})
@@ -328,10 +329,9 @@ func (f *UIFeature) CheckLocationUntilTimeOut(expectedURL string) error {
 
 		if expectedURL == actualURL {
 			return nil
-		} else if time.Since(start) > f.WaitTimeOut {
-			return f.StepError()
 		}
 
 		time.Sleep(50 * time.Millisecond)
 	}
+	return f.StepError()
 }
