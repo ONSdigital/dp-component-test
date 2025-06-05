@@ -6,7 +6,7 @@ Below is a table which contains all of the currently implemented steps within th
 
 This library provides these generic steps that should be useable across a variety of projects, however they will probably not cover all of the desired features or scenarios you might want to test your application against. In this case you will want to create and define your own steps inside the application which is being tested - examples of this can be found in the links in the [USAGE](USAGE.md) markdown file
 
-**KEY**
+## Key
 
 "QUOTED_VALUE" : a value we pass to the step so that we can customise the scenario to the situation we want
 
@@ -14,7 +14,28 @@ This library provides these generic steps that should be useable across a variet
 
 [LIST] : represents a list of strings e.g `"item1,item2..."`.
 
-## API Feature steps
+### Example
+
+```gherkin
+    Scenario: data removed from db if dataset has been deleted
+        Given the following document exists in the "datasets" collection:
+            """
+            {
+                "id": "a1b2c3",
+                "example_data": "some data"
+            }
+            """
+        When I DELETE "/datasets/a1b2c3"
+        Then the HTTP status code should be "204"
+        And the document with "id" set to "a1b2c3" does not exist in the "datasets" collection
+
+```
+
+You can see how the steps are used in the example above. Single values are provided through the "VALUE" quote step options, and larger structures are provided through the multi-line doc string options - these are shown as \_BODY\_ variables in the table above.
+
+## Steps
+
+### API Feature steps
 
 | Step                                                                                 | What it does                                                                         | Scenario Position |
 |--------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|-------------------|
@@ -33,9 +54,13 @@ This library provides these generic steps that should be useable across a variet
 | I wait "SECONDS" seconds                                                             | Waits a given amount of seconds                                                      | Then              |
 | the document with "KEY" set to "VALUE" does not exist in the "COLLECTION" collection | Assert that a document with KEY set to VALUE does not exist in COLLECTION collection | Then              |
 
----
+### Redis Feature steps
 
-## Authorization Feature steps
+| Step                                                    | What it does                           | Scenario Position |
+|---------------------------------------------------------|----------------------------------------|-------------------|
+| the key "KEY" has a value of "VALUE" in the Redis store | Set the KEY to VALUE in the fake redis | Given             |
+
+### Authorization Feature steps
 
 | Step                      | What it does                                                   | Scenario Position |
 |---------------------------|----------------------------------------------------------------|-------------------|
@@ -44,7 +69,7 @@ This library provides these generic steps that should be useable across a variet
 | I am not identified       | remove the /identity endpoint from the stubbed identity server | Given             |
 | I am identified as "USER" | set /identity endpoint to return response with USER identity   | Given             |
 
-## UI Feature steps
+### UI Feature steps
 
 | Step                                                                     | What it does                                                                                        | Scenario Position |
 |--------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|-------------------|
@@ -61,22 +86,3 @@ This library provides these generic steps that should be useable across a variet
 
 [^1]: CONTENT selector must include a HTML id or class - an element type alone will not work!
 [^2]: List should be a table of ids taken from the [list of axe-core rules](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md)
-
-## Example
-
-```gherkin
-    Scenario: data removed from db if dataset has been deleted
-        Given the following document exists in the "datasets" collection:
-            """
-            {
-                "id": "a1b2c3",
-                "example_data": "some data"
-            }
-            """
-        When I DELETE "/datasets/a1b2c3"
-        Then the HTTP status code should be "204"
-        And the document with "id" set to "a1b2c3" does not exist in the "datasets" collection
-
-```
-
-You can see how the steps are used in the example above. Single values are provided through the "VALUE" quote step options, and larger structures are provided through the multi-line doc string options - these are shown as \_BODY\_ variables in the table above.
