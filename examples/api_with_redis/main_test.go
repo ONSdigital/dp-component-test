@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net/http"
 	"os"
@@ -30,14 +31,16 @@ func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 	component := NewMyAppComponent(server.Handler, t.Redis.Server.Addr())
 	apiFeature := componenttest.NewAPIFeature(component.initialiser(server.Handler))
 
-	ctx.BeforeScenario(func(*godog.Scenario) {
+	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		t.Redis.Reset()
 		apiFeature.Reset()
+		return ctx, nil
 	})
 
-	ctx.AfterScenario(func(*godog.Scenario, error) {
+	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		t.Redis.Reset()
 		apiFeature.Reset()
+		return ctx, nil
 	})
 
 	apiFeature.RegisterSteps(ctx)
