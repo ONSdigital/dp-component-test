@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"os"
@@ -56,7 +57,7 @@ func ExampleHandler(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		w.Header().Add("Content-Type", "text/html")
-		response := fmt.Sprintf(`<value id="key">%s</value><value id="value">%s</value>`, resultBody.Key, resultBody.Value)
+		response := fmt.Sprintf(`<value id="key">%s</value><value id="value">%s</value>`, html.EscapeString(resultBody.Key), html.EscapeString(resultBody.Value))
 		w.Write([]byte(response))
 	}
 }
