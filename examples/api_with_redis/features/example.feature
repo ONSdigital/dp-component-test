@@ -11,7 +11,7 @@ Feature: Example feature
             }
             """
 
-    Scenario: Return a 404 when the key doesn't in redis
+    Scenario: Return a 404 when the key doesn't exist in redis
         When I GET "/desserts/jelly"
         Then the HTTP status code should be "404"
 
