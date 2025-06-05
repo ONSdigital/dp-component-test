@@ -40,6 +40,7 @@ func (r *RedisFeature) Close() error {
 func (r *RedisFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the key "([^"]*)" has a value of "([^"]*)" in the Redis store$`, r.theKeyHasAValueOfInTheRedisStore)
 	ctx.Step(`^redis is healthy$`, r.redisIsHealthy)
+	ctx.Step(`^redis stops running$`, r.redisStopsRunning)
 }
 
 func (r *RedisFeature) theKeyHasAValueOfInTheRedisStore(key, value string) error {
@@ -53,4 +54,10 @@ func (r *RedisFeature) redisIsHealthy() error {
 	}
 	_, err = c.Do("PING")
 	return err
+}
+
+func (r *RedisFeature) redisStopsRunning() error {
+	r.Server.Close()
+
+	return nil
 }
