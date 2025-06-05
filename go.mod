@@ -9,6 +9,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20230419194459-b5ff65bc57a3
 	github.com/chromedp/chromedp v0.9.1
 	github.com/cucumber/godog v0.14.1
+	github.com/gomodule/redigo v1.9.2
 	github.com/gorilla/mux v1.8.1
 	github.com/maxcnunes/httpfake v1.2.4
 	github.com/redis/go-redis/v9 v9.9.0
