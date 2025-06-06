@@ -57,7 +57,8 @@ func (r *RedisFeature) redisIsHealthy() error {
 }
 
 func (r *RedisFeature) redisStopsRunning() error {
-	r.Server.Close()
-
+	if r.Server != nil {
+		r.Server.Close()
+	}
 	return nil
 }
