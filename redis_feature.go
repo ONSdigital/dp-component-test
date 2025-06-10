@@ -3,6 +3,7 @@ package componenttest
 import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/cucumber/godog"
+	"github.com/gomodule/redigo/redis"
 )
 
 // RedisFeature is a struct containing an in-memory redis database
@@ -38,8 +39,26 @@ func (r *RedisFeature) Close() error {
 
 func (r *RedisFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the key "([^"]*)" has a value of "([^"]*)" in the Redis store$`, r.theKeyHasAValueOfInTheRedisStore)
+	ctx.Step(`^redis is healthy$`, r.redisIsHealthy)
+	ctx.Step(`^redis stops running$`, r.redisStopsRunning)
 }
 
 func (r *RedisFeature) theKeyHasAValueOfInTheRedisStore(key, value string) error {
 	return r.Server.Set(key, value)
+}
+
+func (r *RedisFeature) redisIsHealthy() error {
+	c, err := redis.Dial("tcp", r.Server.Addr())
+	if err != nil {
+		panic(err)
+	}
+	_, err = c.Do("PING")
+	return err
+}
+
+func (r *RedisFeature) redisStopsRunning() error {
+	if r.Server != nil {
+		r.Server.Close()
+	}
+	return nil
 }
