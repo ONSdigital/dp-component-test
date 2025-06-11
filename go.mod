@@ -11,6 +11,7 @@ require (
 	github.com/cucumber/godog v0.14.1
 	github.com/gomodule/redigo v1.9.2
 	github.com/gorilla/mux v1.8.1
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/maxcnunes/httpfake v1.2.4
 	github.com/redis/go-redis/v9 v9.9.0
 	github.com/smartystreets/goconvey v1.8.1
@@ -19,9 +20,7 @@ require (
 )
 
 require (
-	github.com/ONSdigital/dis-redis v0.2.3 // indirect
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0 // indirect
-	github.com/ONSdigital/dp-healthcheck v1.6.4 // indirect
 	github.com/ONSdigital/dp-net/v3 v3.3.0 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20230218143504-906a9b012302 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -45,7 +44,6 @@ require (
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
