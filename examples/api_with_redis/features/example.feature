@@ -15,3 +15,12 @@ Feature: Example feature
         When I GET "/desserts/jelly"
         Then the HTTP status code should be "404"
 
+    Scenario: Return a 200 when redis is healthy
+        Given redis is healthy
+        When I GET "/health"
+        Then the HTTP status code should be "200"
+
+    Scenario: Return a 500 when redis is not healthy
+        Given redis stops running
+        When I GET "/health"
+        Then the HTTP status code should be "500"

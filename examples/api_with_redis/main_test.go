@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -28,7 +29,11 @@ func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitia
 func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 	server := NewServer()
 
-	component := NewMyAppComponent(server.Handler, t.Redis.Server.Addr())
+	component, err := NewMyAppComponent(server.Handler, t.Redis.Server.Addr(), t.Redis)
+	if err != nil {
+		fmt.Printf("failed to create redis app component - error: %v", err)
+		os.Exit(1)
+	}
 	apiFeature := componenttest.NewAPIFeature(component.initialiser(server.Handler))
 
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {

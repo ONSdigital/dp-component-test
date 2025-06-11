@@ -4,17 +4,33 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/redis/go-redis/v9"
 	"html"
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/gorilla/mux"
-	"github.com/redis/go-redis/v9"
 )
 
 type Config struct {
 	RedisUrl string
+}
+
+var cfg *Config
+
+// Get returns the default config with any modifications through environment
+// variables
+func Get() (*Config, error) {
+	if cfg != nil {
+		return cfg, nil
+	}
+
+	cfg = &Config{
+		RedisUrl: "localhost:6379",
+	}
+
+	return cfg, envconfig.Process("", cfg)
 }
 
 type Data struct {
@@ -78,10 +94,27 @@ func ExampleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
+func ExampleHealthHandler(w http.ResponseWriter, r *http.Request) {
+	config := NewConfig()
+	client := NewRedisClient(config.RedisUrl)
+	ctx := context.Background()
+	err := client.Ping(ctx).Err()
+
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Println(err.Error())
+		return
+	} else {
+		w.WriteHeader(200)
+		return
+	}
+}
+
 func newRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/desserts/{id}", ExampleHandler).Methods("GET")
 	router.HandleFunc("/desserts/{id}", ExampleDeleteHandler).Methods("DELETE")
+	router.HandleFunc("/health", ExampleHealthHandler).Methods("GET")
 	return router
 }
 
