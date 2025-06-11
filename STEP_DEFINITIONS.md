@@ -56,9 +56,11 @@ You can see how the steps are used in the example above. Single values are provi
 
 ### Redis Feature steps
 
-| Step                                                    | What it does                           | Scenario Position |
-|---------------------------------------------------------|----------------------------------------|-------------------|
-| the key "KEY" has a value of "VALUE" in the Redis store | Set the KEY to VALUE in the fake redis | Given             |
+| Step                                                     | What it does                                         | Scenario Position   |
+|----------------------------------------------------------|------------------------------------------------------|---------------------|
+| the key "KEY" has a value of "VALUE" in the Redis store  | Set the KEY to VALUE in the fake redis               | Given               |
+ | redis is healthy                                         | This pings the in-memory redis to check it's running | Given               |
+ | redis stops running                                      | This shuts down the in-memory redis                  | Given               |
 
 ### Authorization Feature steps
 
