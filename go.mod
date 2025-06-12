@@ -3,13 +3,13 @@ module github.com/ONSdigital/dp-component-test
 go 1.24
 
 require (
+	github.com/ONSdigital/dis-redis v0.3.0
 	github.com/ONSdigital/dp-mongodb-in-memory v1.8.1
 	github.com/ONSdigital/log.go/v2 v2.4.5
 	github.com/alicebob/miniredis/v2 v2.34.0
 	github.com/chromedp/cdproto v0.0.0-20230419194459-b5ff65bc57a3
 	github.com/chromedp/chromedp v0.9.1
 	github.com/cucumber/godog v0.14.1
-	github.com/gomodule/redigo v1.9.2
 	github.com/gorilla/mux v1.8.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/maxcnunes/httpfake v1.2.4
@@ -21,6 +21,7 @@ require (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0 // indirect
+	github.com/ONSdigital/dp-healthcheck v1.6.4 // indirect
 	github.com/ONSdigital/dp-net/v3 v3.3.0 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20230218143504-906a9b012302 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

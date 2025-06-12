@@ -1,9 +1,12 @@
 package componenttest
 
 import (
+	"context"
+
+	disRedis "github.com/ONSdigital/dis-redis"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/cucumber/godog"
-	"github.com/gomodule/redigo/redis"
 )
 
 // RedisFeature is a struct containing an in-memory redis database
@@ -48,11 +51,17 @@ func (r *RedisFeature) theKeyHasAValueOfInTheRedisStore(key, value string) error
 }
 
 func (r *RedisFeature) redisIsHealthy() error {
-	c, err := redis.Dial("tcp", r.Server.Addr())
+	ctx := context.Background()
+	clientConfig := &disRedis.ClientConfig{}
+	redisClient, err := disRedis.NewClient(ctx, clientConfig)
+
 	if err != nil {
-		panic(err)
+		log.Error(ctx, "Failed to create dis-redis client", err)
+		return err
 	}
-	_, err = c.Do("PING")
+
+	_, err = redisClient.Ping(ctx)
+
 	return err
 }
 

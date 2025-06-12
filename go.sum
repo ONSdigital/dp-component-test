@@ -1,5 +1,9 @@
+github.com/ONSdigital/dis-redis v0.3.0 h1:aI0d3MsXPmRbe+okYAbrwEGBibhoCw+gfbgtJ3mA11c=
+github.com/ONSdigital/dis-redis v0.3.0/go.mod h1:CLbCwaEfJhifBM7PufwNi0mymys+xM6xNgwhihhSIHQ=
 github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0 h1:NQbu+x2Q7ZhrjGKvN73qVxG/nqX+TJck7iCzSHHEp98=
 github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0/go.mod h1:bLseTP21r8LCStUEeOdVPyqtrTomOFP/azPjKWW4deA=
+github.com/ONSdigital/dp-healthcheck v1.6.4 h1:FhWOuVmob36dYq7AzCdbgyf0Vk58IFitSl8y8pWJ8ck=
+github.com/ONSdigital/dp-healthcheck v1.6.4/go.mod h1:j3UNbGT4ZJg1chrRkPLE6YUVYCg1su3AAQ8frcBrvgc=
 github.com/ONSdigital/dp-mongodb-in-memory v1.8.1 h1:yCz6BfjA0bvesA0JjyBIA6nsOzNquBNS7FQP5pbnZKU=
 github.com/ONSdigital/dp-mongodb-in-memory v1.8.1/go.mod h1:YyTE7QBdV+Fzz5vGnmcPI1nVGCkMcaqsO4TCUlRe6Pc=
 github.com/ONSdigital/dp-net/v3 v3.3.0 h1:NAH9z+nvbJxoK6OnDpOyJJ+52dqBhVtaugk5bqEDt0Y=
@@ -56,8 +60,6 @@ github.com/gofrs/uuid v4.4.0+incompatible h1:3qXRTX8/NbyulANqlc0lchS1gqAVxRgsuW1
 github.com/gofrs/uuid v4.4.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
 github.com/golang/snappy v0.0.4 h1:yAGX7huGHXlcLOEtBnF4w7FQwA26wojNCwOYAEhLjQM=
 github.com/golang/snappy v0.0.4/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
-github.com/gomodule/redigo v1.9.2 h1:HrutZBLhSIU8abiSfW8pj8mPhOyMYjZT/wcA4/L9L9s=
-github.com/gomodule/redigo v1.9.2/go.mod h1:KsU3hiK/Ay8U42qpaJk+kuNa3C+spxapWpM+ywhcgtw=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
 github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=
