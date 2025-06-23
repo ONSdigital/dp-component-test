@@ -4,6 +4,7 @@ go 1.24
 
 require (
 	github.com/ONSdigital/dis-redis v0.3.0
+	github.com/ONSdigital/dp-healthcheck v1.6.4
 	github.com/ONSdigital/dp-mongodb-in-memory v1.8.1
 	github.com/ONSdigital/log.go/v2 v2.4.5
 	github.com/alicebob/miniredis/v2 v2.34.0
@@ -21,7 +22,6 @@ require (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0 // indirect
-	github.com/ONSdigital/dp-healthcheck v1.6.4 // indirect
 	github.com/ONSdigital/dp-net/v3 v3.3.0 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20230218143504-906a9b012302 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

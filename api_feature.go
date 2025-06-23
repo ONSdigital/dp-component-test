@@ -2,6 +2,8 @@ package componenttest
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,17 +27,43 @@ func StaticHandler(handler http.Handler) ServiceInitialiser {
 // APIFeature contains the information needed to test REST API requests
 type APIFeature struct {
 	ErrorFeature
-	Initialiser       ServiceInitialiser
-	HTTPResponse      *http.Response
-	BeforeRequestHook func() error
-	requestHeaders    map[string]string
+	Initialiser                ServiceInitialiser
+	HTTPResponse               *http.Response
+	BeforeRequestHook          func() error
+	requestHeaders             map[string]string
+	StartTime                  time.Time
+	HealthCheckInterval        time.Duration
+	HealthCheckCriticalTimeout time.Duration
+}
+
+// HealthCheckTest represents a test healthcheck struct that mimics the real healthcheck struct
+type HealthCheckTest struct {
+	Status    string                  `json:"status"`
+	Version   healthcheck.VersionInfo `json:"version"`
+	Uptime    time.Duration           `json:"uptime"`
+	StartTime time.Time               `json:"start_time"`
+	Checks    []*Check                `json:"checks"`
+}
+
+// Check represents a health status of a registered app that mimics the real check struct
+type Check struct {
+	Name        string     `json:"name"`
+	Status      string     `json:"status"`
+	StatusCode  int        `json:"status_code"`
+	Message     string     `json:"message"`
+	LastChecked *time.Time `json:"last_checked"`
+	LastSuccess *time.Time `json:"last_success"`
+	LastFailure *time.Time `json:"last_failure"`
 }
 
 // NewAPIFeature returns a new APIFeature, takes a function to retrieve the bound handler just before a request is made
 func NewAPIFeature(initialiser ServiceInitialiser) *APIFeature {
 	return &APIFeature{
-		Initialiser:    initialiser,
-		requestHeaders: make(map[string]string),
+		Initialiser:                initialiser,
+		requestHeaders:             make(map[string]string),
+		HealthCheckInterval:        1 * time.Second,
+		HealthCheckCriticalTimeout: 3 * time.Second,
+		StartTime:                  time.Now(),
 	}
 }
 
@@ -62,6 +91,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
 	ctx.Step(`^I should receive the following response:$`, f.IShouldReceiveTheFollowingResponse)
+	ctx.Step(`^I should receive the following health JSON response:$`, f.iShouldReceiveTheFollowingHealthJSONResponse)
 	ctx.Step(`^I should receive the following JSON response:$`, f.IShouldReceiveTheFollowingJSONResponse)
 	ctx.Step(`^I should receive the following JSON response with status "([^"]*)":$`, f.IShouldReceiveTheFollowingJSONResponseWithStatus)
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
@@ -184,6 +214,71 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCo
 		return err
 	}
 	return f.IShouldReceiveTheFollowingJSONResponse(expectedBody)
+}
+
+// iShouldReceiveTheFollowingHealthJSONResponse asserts the health response and body match the expectation
+func (f *APIFeature) iShouldReceiveTheFollowingHealthJSONResponse(expectedResponse *godog.DocString) error {
+	var healthResponse, expectedHealth HealthCheckTest
+
+	responseBody, err := io.ReadAll(f.HTTPResponse.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read health response - error: %v", err)
+	}
+
+	err = json.Unmarshal(responseBody, &healthResponse)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal health response - error: %v", err)
+	}
+
+	err = json.Unmarshal([]byte(expectedResponse.Content), &expectedHealth)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal expected health response - error: %v", err)
+	}
+
+	f.validateHealthCheckResponse(healthResponse, expectedHealth)
+
+	return f.ErrorFeature.StepError()
+}
+
+func (f *APIFeature) validateHealthCheckResponse(healthResponse, expectedResponse HealthCheckTest) {
+	maxExpectedStartTime := f.StartTime.Add((f.HealthCheckInterval + 1) + time.Second)
+
+	assert.Equal(&f.ErrorFeature, expectedResponse.Status, healthResponse.Status)
+	assert.True(&f.ErrorFeature, healthResponse.StartTime.Before(maxExpectedStartTime.UTC()))
+	assert.Greater(&f.ErrorFeature, healthResponse.Uptime.Seconds(), float64(0))
+
+	f.validateHealthVersion(healthResponse.Version, expectedResponse.Version, maxExpectedStartTime.UTC())
+
+	for i, checkResponse := range healthResponse.Checks {
+		f.validateHealthCheck(checkResponse, expectedResponse.Checks[i])
+	}
+}
+
+func (f *APIFeature) validateHealthVersion(versionResponse, expectedVersion healthcheck.VersionInfo, maxExpectedStartTime time.Time) {
+	assert.True(&f.ErrorFeature, versionResponse.BuildTime.Before(maxExpectedStartTime))
+	assert.Equal(&f.ErrorFeature, expectedVersion.GitCommit, versionResponse.GitCommit)
+	assert.Equal(&f.ErrorFeature, expectedVersion.Language, versionResponse.Language)
+	assert.NotEmpty(&f.ErrorFeature, versionResponse.LanguageVersion)
+	assert.Equal(&f.ErrorFeature, expectedVersion.Version, versionResponse.Version)
+}
+
+func (f *APIFeature) validateHealthCheck(checkResponse, expectedCheck *Check) {
+	maxExpectedHealthCheckTime := f.StartTime.Add((f.HealthCheckInterval + f.HealthCheckCriticalTimeout + 1) + time.Second)
+
+	assert.Equal(&f.ErrorFeature, expectedCheck.Name, checkResponse.Name)
+	assert.Equal(&f.ErrorFeature, expectedCheck.Status, checkResponse.Status)
+	assert.Equal(&f.ErrorFeature, expectedCheck.StatusCode, checkResponse.StatusCode)
+	assert.Equal(&f.ErrorFeature, expectedCheck.Message, checkResponse.Message)
+	assert.True(&f.ErrorFeature, checkResponse.LastChecked.Before(maxExpectedHealthCheckTime.UTC()))
+	assert.True(&f.ErrorFeature, checkResponse.LastChecked.After(f.StartTime))
+
+	if expectedCheck.StatusCode == 200 {
+		assert.True(&f.ErrorFeature, checkResponse.LastSuccess.Before(maxExpectedHealthCheckTime.UTC()))
+		assert.True(&f.ErrorFeature, checkResponse.LastSuccess.After(f.StartTime))
+	} else {
+		assert.True(&f.ErrorFeature, checkResponse.LastFailure.Before(maxExpectedHealthCheckTime.UTC()))
+		assert.True(&f.ErrorFeature, checkResponse.LastFailure.After(f.StartTime))
+	}
 }
 
 // delayTimeBySeconds pauses the goroutine for the given seconds
