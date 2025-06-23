@@ -49,7 +49,8 @@ You can see how the steps are used in the example above. Single values are provi
 | the HTTP status code should be "CODE"                                                | Assert that the response code from the request is CODE                               | Then              |
 | the response header "KEY" should be "VALUE"                                          | Assert that the response header KEY has value VALUE                                  | Then              |
 | I should recieve the following response \_BODY\_                                     | Assert that the response body matches BODY                                           | Then              |
-| I should receive the following JSON response: \_BODY\_                               | Assert that the response body is JSON and that ir matches BODY                       | Then              |
+| I should receive the following health JSON response: \_BODY\_                        | Assert that the health check response body matches BODY                              | Then              |
+| I should receive the following JSON response: \_BODY\_                               | Assert that the response body is JSON and that it matches BODY                       | Then              |
 | I should receive the following JSON response with status "CODE": \_BODY\_            | Assert that the response code is CODE and the body is json which matches BODY        | Then              |
 | I wait "SECONDS" seconds                                                             | Waits a given amount of seconds                                                      | Then              |
 | the document with "KEY" set to "VALUE" does not exist in the "COLLECTION" collection | Assert that a document with KEY set to VALUE does not exist in COLLECTION collection | Then              |
