@@ -59,11 +59,9 @@ type Check struct {
 // NewAPIFeature returns a new APIFeature, takes a function to retrieve the bound handler just before a request is made
 func NewAPIFeature(initialiser ServiceInitialiser) *APIFeature {
 	return &APIFeature{
-		Initialiser:                initialiser,
-		requestHeaders:             make(map[string]string),
-		HealthCheckInterval:        1 * time.Second,
-		HealthCheckCriticalTimeout: 3 * time.Second,
-		StartTime:                  time.Now(),
+		Initialiser:    initialiser,
+		requestHeaders: make(map[string]string),
+		StartTime:      time.Now(),
 	}
 }
 
@@ -91,7 +89,8 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
 	ctx.Step(`^I should receive the following response:$`, f.IShouldReceiveTheFollowingResponse)
-	ctx.Step(`^I should receive the following health JSON response:$`, f.iShouldReceiveTheFollowingHealthJSONResponse)
+	ctx.Step(`^I have a healthcheck interval of (\d+) and healthcheck critical timeout of (\d+) seconds$`, f.iHaveAHealthcheckIntervalOfAndHealthcheckCriticalTimeoutOfSeconds)
+	ctx.Step(`^I should receive the following health JSON response in (\d+) seconds:$`, f.iShouldReceiveTheFollowingHealthJSONResponseInSeconds)
 	ctx.Step(`^I should receive the following JSON response:$`, f.IShouldReceiveTheFollowingJSONResponse)
 	ctx.Step(`^I should receive the following JSON response with status "([^"]*)":$`, f.IShouldReceiveTheFollowingJSONResponseWithStatus)
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
@@ -216,8 +215,16 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCo
 	return f.IShouldReceiveTheFollowingJSONResponse(expectedBody)
 }
 
+// iHaveAHealthcheckIntervalOfAndHealthcheckCriticalTimeoutOfSeconds sets healthcheck interval and critical timeout
+func (f *APIFeature) iHaveAHealthcheckIntervalOfAndHealthcheckCriticalTimeoutOfSeconds(healthCheckInterval, healthCheckCriticalTimeout int) error {
+	f.HealthCheckInterval = time.Duration(healthCheckInterval)
+	f.HealthCheckCriticalTimeout = time.Duration(healthCheckCriticalTimeout)
+
+	return f.StepError()
+}
+
 // iShouldReceiveTheFollowingHealthJSONResponse asserts the health response and body match the expectation
-func (f *APIFeature) iShouldReceiveTheFollowingHealthJSONResponse(expectedResponse *godog.DocString) error {
+func (f *APIFeature) iShouldReceiveTheFollowingHealthJSONResponseInSeconds(expectedResponseTime int, expectedResponse *godog.DocString) error {
 	var healthResponse, expectedHealth HealthCheckTest
 
 	responseBody, err := io.ReadAll(f.HTTPResponse.Body)
@@ -235,12 +242,12 @@ func (f *APIFeature) iShouldReceiveTheFollowingHealthJSONResponse(expectedRespon
 		return fmt.Errorf("failed to unmarshal expected health response - error: %v", err)
 	}
 
-	f.validateHealthCheckResponse(healthResponse, expectedHealth)
+	f.validateHealthCheckResponse(healthResponse, expectedHealth, expectedResponseTime)
 
 	return f.ErrorFeature.StepError()
 }
 
-func (f *APIFeature) validateHealthCheckResponse(healthResponse, expectedResponse HealthCheckTest) {
+func (f *APIFeature) validateHealthCheckResponse(healthResponse, expectedResponse HealthCheckTest, expectedResponseTime int) {
 	maxExpectedStartTime := f.StartTime.Add((f.HealthCheckInterval + 1) + time.Second)
 
 	assert.Equal(&f.ErrorFeature, expectedResponse.Status, healthResponse.Status)
@@ -250,7 +257,7 @@ func (f *APIFeature) validateHealthCheckResponse(healthResponse, expectedRespons
 	f.validateHealthVersion(healthResponse.Version, expectedResponse.Version, maxExpectedStartTime.UTC())
 
 	for i, checkResponse := range healthResponse.Checks {
-		f.validateHealthCheck(checkResponse, expectedResponse.Checks[i])
+		f.validateHealthCheck(checkResponse, expectedResponse.Checks[i], expectedResponseTime)
 	}
 }
 
@@ -262,8 +269,8 @@ func (f *APIFeature) validateHealthVersion(versionResponse, expectedVersion heal
 	assert.Equal(&f.ErrorFeature, expectedVersion.Version, versionResponse.Version)
 }
 
-func (f *APIFeature) validateHealthCheck(checkResponse, expectedCheck *Check) {
-	maxExpectedHealthCheckTime := f.StartTime.Add((f.HealthCheckInterval + f.HealthCheckCriticalTimeout + 1) + time.Second)
+func (f *APIFeature) validateHealthCheck(checkResponse, expectedCheck *Check, expectedResponseTime int) {
+	maxExpectedHealthCheckTime := f.StartTime.Add(time.Duration(expectedResponseTime) * time.Second)
 
 	assert.Equal(&f.ErrorFeature, expectedCheck.Name, checkResponse.Name)
 	assert.Equal(&f.ErrorFeature, expectedCheck.Status, checkResponse.Status)
