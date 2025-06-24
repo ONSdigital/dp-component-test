@@ -44,6 +44,7 @@ func (r *RedisFeature) Close() error {
 func (r *RedisFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the key "([^"]*)" is already set to a value of "([^"]*)" in the Redis store$`, r.theKeyIsAlreadySetToAValueOfInTheRedisStore)
 	ctx.Step(`^the key "([^"]*)" has a value of "([^"]*)" in the Redis store$`, r.theKeyHasAValueOfInTheRedisStore)
+	ctx.Step(`^redis contains no value for key "([^"]*)"$`, r.redisContainsNoValueFor)
 	ctx.Step(`^redis is healthy$`, r.redisIsHealthy)
 	ctx.Step(`^redis stops running$`, r.redisStopsRunning)
 }
@@ -62,6 +63,14 @@ func (r *RedisFeature) theKeyHasAValueOfInTheRedisStore(key, expected string) er
 		return fmt.Errorf("unexpected value for key %q: got %q, want %q", key, actual, expected)
 	}
 
+	return nil
+}
+
+func (r *RedisFeature) redisContainsNoValueFor(key string) error {
+	if r.Server.Exists(key) {
+		val, _ := r.Server.Get(key)
+		return fmt.Errorf("expected no value for key %q, but found %q", key, val)
+	}
 	return nil
 }
 
