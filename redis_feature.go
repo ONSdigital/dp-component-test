@@ -2,6 +2,7 @@ package componenttest
 
 import (
 	"context"
+	"fmt"
 
 	disRedis "github.com/ONSdigital/dis-redis"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -41,13 +42,27 @@ func (r *RedisFeature) Close() error {
 }
 
 func (r *RedisFeature) RegisterSteps(ctx *godog.ScenarioContext) {
+	ctx.Step(`^the key "([^"]*)" is already set to a value of "([^"]*)" in the Redis store$`, r.theKeyIsAlreadySetToAValueOfInTheRedisStore)
 	ctx.Step(`^the key "([^"]*)" has a value of "([^"]*)" in the Redis store$`, r.theKeyHasAValueOfInTheRedisStore)
 	ctx.Step(`^redis is healthy$`, r.redisIsHealthy)
 	ctx.Step(`^redis stops running$`, r.redisStopsRunning)
 }
 
-func (r *RedisFeature) theKeyHasAValueOfInTheRedisStore(key, value string) error {
+func (r *RedisFeature) theKeyIsAlreadySetToAValueOfInTheRedisStore(key, value string) error {
 	return r.Server.Set(key, value)
+}
+
+func (r *RedisFeature) theKeyHasAValueOfInTheRedisStore(key, expected string) error {
+	actual, err := r.Server.Get(key)
+	if err != nil {
+		return fmt.Errorf("failed to get key %q from Redis: %w", key, err)
+	}
+
+	if actual != expected {
+		return fmt.Errorf("unexpected value for key %q: got %q, want %q", key, actual, expected)
+	}
+
+	return nil
 }
 
 func (r *RedisFeature) redisIsHealthy() error {
