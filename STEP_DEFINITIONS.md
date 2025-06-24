@@ -50,7 +50,7 @@ You can see how the steps are used in the example above. Single values are provi
 | the response header "KEY" should be "VALUE"                                                      | Assert that the response header KEY has value VALUE                                  | Then              |
 | I should recieve the following response \_BODY\_                                                 | Assert that the response body matches BODY                                           | Then              |
 | I have a healthcheck interval of "SECONDS" and healthcheck critical timeout of "SECONDS" seconds | Sets the healthcheck interval and critical timeout                                   | Given             |
-| I should receive the following health JSON response: \_BODY\_                                    | Assert that the health check response body matches BODY                              | Then              |
+| I should receive the following health JSON response within "SECONDS" seconds: \_BODY\_           | Assert that the health check response body matches BODY within a given time          | Then              |
 | I should receive the following JSON response: \_BODY\_                                           | Assert that the response body is JSON and that it matches BODY                       | Then              |
 | I should receive the following JSON response with status "CODE": \_BODY\_                        | Assert that the response code is CODE and the body is json which matches BODY        | Then              |
 | I wait "SECONDS" seconds                                                                         | Waits a given amount of seconds                                                      | Then              |

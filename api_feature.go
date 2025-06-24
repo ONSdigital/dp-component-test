@@ -89,8 +89,8 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
 	ctx.Step(`^I should receive the following response:$`, f.IShouldReceiveTheFollowingResponse)
-	ctx.Step(`^I have a healthcheck interval of (\d+) and healthcheck critical timeout of (\d+) seconds$`, f.iHaveAHealthcheckIntervalOfAndHealthcheckCriticalTimeoutOfSeconds)
-	ctx.Step(`^I should receive the following health JSON response in (\d+) seconds:$`, f.iShouldReceiveTheFollowingHealthJSONResponseInSeconds)
+	ctx.Step(`^I have a healthcheck interval of (\d+) second and a healthcheck critical timeout of (\d+) seconds$`, f.iHaveAHealthcheckIntervalOfSecondAndAHealthcheckCriticalTimeoutOfSeconds)
+	ctx.Step(`^I should receive the following health JSON response within (\d+) seconds:$`, f.iShouldReceiveTheFollowingHealthJSONResponseWithinSeconds)
 	ctx.Step(`^I should receive the following JSON response:$`, f.IShouldReceiveTheFollowingJSONResponse)
 	ctx.Step(`^I should receive the following JSON response with status "([^"]*)":$`, f.IShouldReceiveTheFollowingJSONResponseWithStatus)
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
@@ -215,16 +215,16 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCo
 	return f.IShouldReceiveTheFollowingJSONResponse(expectedBody)
 }
 
-// iHaveAHealthcheckIntervalOfAndHealthcheckCriticalTimeoutOfSeconds sets healthcheck interval and critical timeout
-func (f *APIFeature) iHaveAHealthcheckIntervalOfAndHealthcheckCriticalTimeoutOfSeconds(healthCheckInterval, healthCheckCriticalTimeout int) error {
+// iHaveAHealthcheckIntervalOfSecondAndAHealthcheckCriticalTimeoutOfSeconds sets healthcheck interval and critical timeout
+func (f *APIFeature) iHaveAHealthcheckIntervalOfSecondAndAHealthcheckCriticalTimeoutOfSeconds(healthCheckInterval, healthCheckCriticalTimeout int) error {
 	f.HealthCheckInterval = time.Duration(healthCheckInterval)
 	f.HealthCheckCriticalTimeout = time.Duration(healthCheckCriticalTimeout)
 
 	return f.StepError()
 }
 
-// iShouldReceiveTheFollowingHealthJSONResponse asserts the health response and body match the expectation
-func (f *APIFeature) iShouldReceiveTheFollowingHealthJSONResponseInSeconds(expectedResponseTime int, expectedResponse *godog.DocString) error {
+// iShouldReceiveTheFollowingHealthJSONResponseWithinSeconds asserts the health response and body match the expectation
+func (f *APIFeature) iShouldReceiveTheFollowingHealthJSONResponseWithinSeconds(expectedResponseTime int, expectedResponse *godog.DocString) error {
 	var healthResponse, expectedHealth HealthCheckTest
 
 	responseBody, err := io.ReadAll(f.HTTPResponse.Body)
