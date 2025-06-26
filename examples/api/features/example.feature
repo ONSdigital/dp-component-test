@@ -24,7 +24,7 @@ Feature: Example feature
         When I GET "/health"
         Then the health checks should have completed within 2 seconds
         And I should receive the following health JSON response:
-                """
+          """
             {
               "status": "OK",
               "version": {
@@ -42,4 +42,4 @@ Feature: Example feature
                 }
               ]
             }
-        """
+          """
