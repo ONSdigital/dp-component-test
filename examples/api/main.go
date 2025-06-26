@@ -67,14 +67,12 @@ func ExampleHealthHandler(w http.ResponseWriter, r *http.Request) {
 	healthResponse, err := json.Marshal(responseBody)
 	if err != nil {
 		w.WriteHeader(500)
-		fmt.Println(err.Error())
 		return
 	} else {
 		w.WriteHeader(200)
 		w.Write(healthResponse)
 		return
 	}
-
 }
 
 func newRouter() http.Handler {
