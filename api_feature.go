@@ -27,14 +27,13 @@ func StaticHandler(handler http.Handler) ServiceInitialiser {
 // APIFeature contains the information needed to test REST API requests
 type APIFeature struct {
 	ErrorFeature
-	Initialiser                ServiceInitialiser
-	HTTPResponse               *http.Response
-	BeforeRequestHook          func() error
-	requestHeaders             map[string]string
-	StartTime                  time.Time
-	HealthCheckInterval        time.Duration
-	HealthCheckCriticalTimeout time.Duration
-	ExpectedResponseTime       time.Duration
+	Initialiser          ServiceInitialiser
+	HTTPResponse         *http.Response
+	BeforeRequestHook    func() error
+	requestHeaders       map[string]string
+	StartTime            time.Time
+	HealthCheckInterval  time.Duration
+	ExpectedResponseTime time.Duration
 }
 
 // HealthCheckTest represents a test healthcheck struct that mimics the real healthcheck struct
@@ -90,8 +89,8 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
 	ctx.Step(`^I should receive the following response:$`, f.IShouldReceiveTheFollowingResponse)
-	ctx.Step(`^I have a healthcheck interval of (\d+) second$`, f.iHaveAHealthCheckIntervalOfSecond)
-	ctx.Step(`^the health checks should have completed within (\d+) seconds$`, f.theHealthChecksShouldHaveCompletedWithinSeconds)
+	ctx.Step(`^I have a healthcheck interval of (\d+) seconds?$`, f.iHaveAHealthCheckIntervalOfSecond)
+	ctx.Step(`^the health checks should have completed within (\d+) seconds?$`, f.theHealthChecksShouldHaveCompletedWithinSeconds)
 	ctx.Step(`^I should receive the following health JSON response:$`, f.iShouldReceiveTheFollowingHealthJSONResponse)
 	ctx.Step(`^I should receive the following JSON response:$`, f.IShouldReceiveTheFollowingJSONResponse)
 	ctx.Step(`^I should receive the following JSON response with status "([^"]*)":$`, f.IShouldReceiveTheFollowingJSONResponseWithStatus)

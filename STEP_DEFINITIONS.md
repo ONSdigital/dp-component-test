@@ -49,7 +49,7 @@ You can see how the steps are used in the example above. Single values are provi
 | the HTTP status code should be "CODE"                                                | Assert that the response code from the request is CODE                               | Then              |
 | the response header "KEY" should be "VALUE"                                          | Assert that the response header KEY has value VALUE                                  | Then              |
 | I should recieve the following response \_BODY\_                                     | Assert that the response body matches BODY                                           | Then              |
-| I have a healthcheck interval of "SECOND" second                                     | Set the healthcheck interval                                                         | Given             |
+| I have a healthcheck interval of "SECONDS" seconds                                   | Set the healthcheck interval                                                         | Given             |
 | the health checks should have completed within "SECONDS" seconds                     | Set the expected time for health check completion                                    | When              |
 | I should receive the following health JSON response \_BODY\_                         | Assert that the health check response body matches BODY                              | Then              |
 | I should receive the following JSON response: \_BODY\_                               | Assert that the response body is JSON and that it matches BODY                       | Then              |
