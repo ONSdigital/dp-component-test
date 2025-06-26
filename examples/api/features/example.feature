@@ -18,3 +18,28 @@ Feature: Example feature
         """
         403 - Forbidden
         """
+    
+    Scenario: Example health scenario
+        Given I have a healthcheck interval of 1 second
+        When I GET "/health"
+        Then the health checks should have completed within 2 seconds
+        And I should receive the following health JSON response:
+                """
+            {
+              "status": "OK",
+              "version": {
+                "git_commit": "6584b786caac36b6214ffe04bf62f058d4021538",
+                "language": "go",
+                "language_version": "go1.24.2",
+                "version": "v1.2.3"
+              },
+              "checks": [
+                {
+                  "name": "Redis",
+                  "status": "OK",
+                  "status_code": 200,
+                  "message": "redis is healthy"
+                }
+              ]
+            }
+        """
