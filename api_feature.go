@@ -277,21 +277,24 @@ func (f *APIFeature) validateHealthVersion(versionResponse, expectedVersion heal
 }
 
 func (f *APIFeature) validateHealthCheck(checkResponse, expectedCheck *Check) {
-	maxExpectedHealthCheckTime := f.StartTime.Add(f.ExpectedResponseTime * time.Second)
-
 	assert.Equal(&f.ErrorFeature, expectedCheck.Name, checkResponse.Name)
 	assert.Equal(&f.ErrorFeature, expectedCheck.Status, checkResponse.Status)
 	assert.Equal(&f.ErrorFeature, expectedCheck.StatusCode, checkResponse.StatusCode)
 	assert.Equal(&f.ErrorFeature, expectedCheck.Message, checkResponse.Message)
-	assert.True(&f.ErrorFeature, checkResponse.LastChecked.Before(maxExpectedHealthCheckTime.UTC()))
 	assert.True(&f.ErrorFeature, checkResponse.LastChecked.After(f.StartTime))
 
-	if expectedCheck.StatusCode == 200 {
-		assert.True(&f.ErrorFeature, checkResponse.LastSuccess.Before(maxExpectedHealthCheckTime.UTC()))
-		assert.True(&f.ErrorFeature, checkResponse.LastSuccess.After(f.StartTime))
-	} else {
-		assert.True(&f.ErrorFeature, checkResponse.LastFailure.Before(maxExpectedHealthCheckTime.UTC()))
-		assert.True(&f.ErrorFeature, checkResponse.LastFailure.After(f.StartTime))
+	if f.ExpectedResponseTime > 0 {
+		maxExpectedHealthCheckTime := f.StartTime.Add(f.ExpectedResponseTime * time.Second)
+
+		assert.True(&f.ErrorFeature, checkResponse.LastChecked.Before(maxExpectedHealthCheckTime.UTC()))
+
+		if expectedCheck.StatusCode == 200 {
+			assert.True(&f.ErrorFeature, checkResponse.LastSuccess.Before(maxExpectedHealthCheckTime.UTC()))
+			assert.True(&f.ErrorFeature, checkResponse.LastSuccess.After(f.StartTime))
+		} else {
+			assert.True(&f.ErrorFeature, checkResponse.LastFailure.Before(maxExpectedHealthCheckTime.UTC()))
+			assert.True(&f.ErrorFeature, checkResponse.LastFailure.After(f.StartTime))
+		}
 	}
 }
 

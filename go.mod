@@ -2,6 +2,8 @@ module github.com/ONSdigital/dp-component-test
 
 go 1.24
 
+retract v0.24.0 // contains breaking unguarded time assertions for health check feature
+
 require (
 	github.com/ONSdigital/dis-redis v0.3.0
 	github.com/ONSdigital/dp-healthcheck v1.6.4
