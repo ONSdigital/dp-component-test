@@ -2,8 +2,11 @@ package componenttest
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
+	"github.com/ONSdigital/log.go/v2/log"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -86,6 +89,8 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I PUT "([^"]*)"$`, f.IPut)
 	ctx.Step(`^I PATCH "([^"]*)"$`, f.IPatch)
 	ctx.Step(`^I DELETE "([^"]*)"`, f.IDelete)
+	ctx.Step(`^I am an admin user$`, f.adminJWTToken)
+	ctx.Step(`^I am not authenticated$`, f.iAmNotAuthenticated)
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
 	ctx.Step(`^I should receive the following response:$`, f.IShouldReceiveTheFollowingResponse)
@@ -97,6 +102,16 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
 	ctx.Step(`^I use an X Florence user token "([^"]*)"$`, f.IUseAnXFlorenceUserToken)
 	ctx.Step(`^I wait (\d+) seconds`, f.delayTimeBySeconds)
+}
+
+func (f *APIFeature) adminJWTToken() error {
+	err := f.ISetTheHeaderTo("Authorization", authorisationtest.AdminJWTToken)
+	return err
+}
+
+func (f *APIFeature) iAmNotAuthenticated() error {
+	err := f.ISetTheHeaderTo("Authorization", "")
+	return err
 }
 
 func (f *APIFeature) IUseAServiceAuthToken(serviceAuthToken string) error {
@@ -158,6 +173,9 @@ func (f *APIFeature) makeRequest(method, path string, data []byte) error {
 		return err
 	}
 	req := httptest.NewRequest(method, "http://foo"+path, bytes.NewReader(data))
+	log.Info(context.Background(), "some values", log.Data{
+		"headers": f.requestHeaders,
+	})
 	for key, value := range f.requestHeaders {
 		req.Header.Set(key, value)
 	}

@@ -1,13 +1,21 @@
 package componenttest
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/ONSdigital/log.go/v2/log"
+
+	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
+	permissionsSDK "github.com/ONSdigital/dp-permissions-api/sdk"
 	"github.com/cucumber/godog"
 	"github.com/maxcnunes/httpfake"
 )
 
 func NewAuthorizationFeature() *AuthorizationFeature {
 	f := &AuthorizationFeature{
-		FakeAuthService: httpfake.New(),
+		FakeAuthService:    httpfake.New(),
+		FakePermissionsAPI: setupFakePermissionsAPI(),
 	}
 
 	return f
@@ -15,16 +23,24 @@ func NewAuthorizationFeature() *AuthorizationFeature {
 
 type AuthorizationFeature struct {
 	ErrorFeature
-	FakeAuthService *httpfake.HTTPFake
+	FakeAuthService    *httpfake.HTTPFake
+	FakePermissionsAPI *authorisationtest.FakePermissionsAPI
 }
 
 func (f *AuthorizationFeature) Reset() {
 	f.ErrorFeature.Reset()
 	f.FakeAuthService.Reset()
+	f.FakePermissionsAPI.Reset()
 }
 
 func (f *AuthorizationFeature) Close() {
 	f.FakeAuthService.Close()
+	f.FakePermissionsAPI.Close()
+}
+
+func (f *AuthorizationFeature) RegisterDefaultPermissionsBundle() error {
+	emptyBundle := permissionsSDK.Bundle{}
+	return f.FakePermissionsAPI.UpdatePermissionsBundleResponse(&emptyBundle)
 }
 
 func (f *AuthorizationFeature) iAmNotIdentified() error {
@@ -59,6 +75,48 @@ func (f *AuthorizationFeature) zebedeeRecognisesTheUserTokenAsValid() error {
 	return nil
 }
 
+func setupFakePermissionsAPI() *authorisationtest.FakePermissionsAPI {
+	fake := authorisationtest.NewFakePermissionsAPI()
+
+	// Optional: preload with a default bundle (empty)
+	defaultBundle := permissionsSDK.Bundle{}
+	if err := fake.UpdatePermissionsBundleResponse(&defaultBundle); err != nil {
+		log.Error(context.Background(), "failed to set default permissions bundle", err)
+	}
+
+	return fake
+}
+
+func (f *AuthorizationFeature) adminUserHasPermission(permission string) error {
+	bundle := &permissionsSDK.Bundle{
+		permission: {
+			"groups/role-admin": {
+				{ID: "1"},
+			},
+		},
+	}
+	return f.FakePermissionsAPI.UpdatePermissionsBundleResponse(bundle)
+}
+
+func (f *AuthorizationFeature) adminUserHasPermissionsJSON(jsonInput string) error {
+	var raw map[string]map[string][]permissionsSDK.Policy
+
+	err := json.Unmarshal([]byte(jsonInput), &raw)
+	if err != nil {
+		return fmt.Errorf("invalid JSON input: %w", err)
+	}
+
+	bundle := permissionsSDK.Bundle{}
+	for action, entityMap := range raw {
+		bundle[action] = make(permissionsSDK.EntityIDToPolicies)
+		for entityID, policies := range entityMap {
+			bundle[action][entityID] = policies
+		}
+	}
+
+	return f.FakePermissionsAPI.UpdatePermissionsBundleResponse(&bundle)
+}
+
 func (f *AuthorizationFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I am not identified$`, f.iAmNotIdentified)
 	ctx.Step(`^I am identified as "([^"]*)"$`, f.iAmIdentifiedAs)
@@ -66,4 +124,6 @@ func (f *AuthorizationFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^zebedee recognises the user token as valid$`, f.zebedeeRecognisesTheUserTokenAsValid)
 	ctx.Step(`^zebedee does not recognise the service auth token$`, f.zebedeeDoesNotRecogniseTheServiceAuthToken)
 	ctx.Step(`^zebedee does not recognise the user token$`, f.zebedeeDoesNotRecogniseTheUserToken)
+	ctx.Step(`^an admin user has the "([^"]*)" permission$`, f.adminUserHasPermission)
+	ctx.Step(`^an admin user has the following permissions as JSON:$`, f.adminUserHasPermissionsJSON)
 }
