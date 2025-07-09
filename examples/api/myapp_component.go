@@ -9,7 +9,6 @@ type MyAppComponent struct {
 }
 
 func NewMyAppComponent(handler http.Handler) *MyAppComponent {
-
 	return &MyAppComponent{
 		Handler: handler,
 	}

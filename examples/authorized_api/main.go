@@ -6,25 +6,26 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 )
 
 type Config struct {
-	authorizationServiceUrl string
+	authorizationServiceURL string
 }
 
 func NewConfig() *Config {
 	return &Config{
-		authorizationServiceUrl: os.Getenv("AUTH_URL"),
+		authorizationServiceURL: os.Getenv("AUTH_URL"),
 	}
 }
 
-func ExampleHandler2(w http.ResponseWriter, r *http.Request) {
+func ExampleHandler2(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(500)
 }
 
-func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
+func ExampleHandler1(w http.ResponseWriter, _ *http.Request) {
 	data := struct {
 		ExampleType int `json:"example_type"`
 	}{ExampleType: 1}
@@ -36,7 +37,7 @@ func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", string(resp))
 }
 
-func ExampleHandler(w http.ResponseWriter, r *http.Request) {
+func ExampleHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(201)
 	fmt.Fprintf(w, "accepted")
 }
@@ -54,5 +55,14 @@ func NewRouter() http.Handler {
 }
 
 func main() {
-	log.Fatal(http.ListenAndServe(":10000", NewRouter()))
+	server := &http.Server{
+		Addr:              ":10000",
+		Handler:           NewRouter(),
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	log.Fatal(server.ListenAndServe())
 }

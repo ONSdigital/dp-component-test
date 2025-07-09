@@ -1,4 +1,5 @@
-package utils
+// revive:disable:var-naming
+package utils // ignoring revive var-naming temporarily till a more permanent fix is implemented
 
 import (
 	"context"

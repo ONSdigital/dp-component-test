@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
+func ExampleHandler1(w http.ResponseWriter, _ *http.Request) {
 	data := struct {
 		ExampleType int `json:"example_type"`
 	}{ExampleType: 1}
@@ -24,12 +24,12 @@ func ExampleHandler1(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", string(resp))
 }
 
-func ExampleHandler2(w http.ResponseWriter, r *http.Request) {
+func ExampleHandler2(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(403)
 	fmt.Fprintf(w, "403 - Forbidden")
 }
 
-func ExampleHealthHandler(w http.ResponseWriter, r *http.Request) {
+func ExampleHealthHandler(w http.ResponseWriter, _ *http.Request) {
 	var (
 		checkTime       = time.Now()
 		gitCommit       = "6584b786caac36b6214ffe04bf62f058d4021538"
@@ -66,12 +66,14 @@ func ExampleHealthHandler(w http.ResponseWriter, r *http.Request) {
 
 	healthResponse, err := json.Marshal(responseBody)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
-	} else {
-		w.WriteHeader(200)
-		w.Write(healthResponse)
-		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, writeErr := w.Write(healthResponse); writeErr != nil {
+		// optionally log the error or handle it
+		fmt.Printf("failed to write response: %v\n", writeErr)
 	}
 }
 
@@ -87,11 +89,20 @@ func newRouter() http.Handler {
 
 func NewServer() *http.Server {
 	return &http.Server{
-		Handler: newRouter(),
+		Handler:     newRouter(),
+		ReadTimeout: 10 * time.Second,
 	}
 }
 
 func main() {
-	server := NewServer()
-	log.Fatal(http.ListenAndServe(":10000", server.Handler))
+	server := &http.Server{
+		Addr:              ":10000",
+		Handler:           NewServer().Handler,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	log.Fatal(server.ListenAndServe())
 }

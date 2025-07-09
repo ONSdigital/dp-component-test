@@ -24,16 +24,16 @@ example is provided at the bottom of this file.
 
 ```gherkin
     Scenario: data removed from db if dataset has been deleted
-Given the following document exists in the "datasets" collection:
-"""
+        Given the following document exists in the "datasets" collection:
+            """
             {
                 "id": "a1b2c3",
                 "example_data": "some data"
             }
             """
-When I DELETE "/datasets/a1b2c3"
-Then the HTTP status code should be "204"
-And the document with "id" set to "a1b2c3" does not exist in the "datasets" collection
+        When I DELETE "/datasets/a1b2c3"
+        Then the HTTP status code should be "204"
+        And the document with "id" set to "a1b2c3" does not exist in the "datasets" collection
 
 ```
 
@@ -49,6 +49,8 @@ variables in the table above.
 |--------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|-------------------|
 | the following document exists in the "COLLECTION" collection: \_BODY\_               | put document BODY in the COLLECTION collection                                       | Given             |
 | I set the "KEY" header to "VALUE"                                                    | set a HTTP header of the request to the value                                        | Given             |
+| I am an admin user                                                                   | set the request Authorization header to an admin JWT token                           | Given             |
+| I am not authenticated                                                               | removes any Authorization header set in the request headers                          | Given             |
 | I GET "URL"                                                                          | make a GET request to the provided URL                                               | When              |
 | I DELETE "URL"                                                                       | make a DELETE request to the provided URL                                            | When              |
 | I PUT "URL" "BODY"                                                                   | make a PUT request to the provided URL with the given body                           | When              |
@@ -80,8 +82,6 @@ variables in the table above.
 | I am authorised                                      | set the request Authorization header to a random token                                                | Given             |
 | I am not authorised                                  | clear any existing Authorization token from the request                                               | Given             |
 | I am not identified                                  | remove the /identity endpoint from the stubbed identity server                                        | Given             |
-| I am an admin user                                   | set the request Authorization header to an admin JWT token                                            | Given             |
-| I am not authenticated                               | removes any Authorization header set in the request headers                                           | Given             |
 | I am identified as "USER"                            | set /identity endpoint to return response with USER identity                                          | Given             |
 | service "SERVICE" has the "PERMISSION" permission    | Configure the fake permissions API to grant a permission to a specific service account                | Given             |
 | an admin user has the "PERMISSION" permission        | Configure the fake permissions API to grant a single permission to the admin user                     | Given             |
