@@ -2,7 +2,6 @@ package componenttest
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
@@ -173,9 +172,6 @@ func (f *APIFeature) makeRequest(method, path string, data []byte) error {
 		return err
 	}
 	req := httptest.NewRequest(method, "http://foo"+path, bytes.NewReader(data))
-	log.Info(context.Background(), "some values", log.Data{
-		"headers": f.requestHeaders,
-	})
 	for key, value := range f.requestHeaders {
 		req.Header.Set(key, value)
 	}

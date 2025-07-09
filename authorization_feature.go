@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/ONSdigital/log.go/v2/log"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
@@ -98,6 +99,17 @@ func (f *AuthorizationFeature) adminUserHasPermission(permission string) error {
 	return f.FakePermissionsAPI.UpdatePermissionsBundleResponse(bundle)
 }
 
+func (f *AuthorizationFeature) serviceUserHasPermission(service, permission string) error {
+	bundle := &permissionsSDK.Bundle{
+		permission: {
+			fmt.Sprintf("users/%s", service): {
+				{ID: "1"},
+			},
+		},
+	}
+	return f.FakePermissionsAPI.UpdatePermissionsBundleResponse(bundle)
+}
+
 func (f *AuthorizationFeature) adminUserHasPermissionsJSON(jsonInput string) error {
 	var raw map[string]map[string][]permissionsSDK.Policy
 
@@ -124,6 +136,7 @@ func (f *AuthorizationFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^zebedee recognises the user token as valid$`, f.zebedeeRecognisesTheUserTokenAsValid)
 	ctx.Step(`^zebedee does not recognise the service auth token$`, f.zebedeeDoesNotRecogniseTheServiceAuthToken)
 	ctx.Step(`^zebedee does not recognise the user token$`, f.zebedeeDoesNotRecogniseTheUserToken)
+	ctx.Step(`^service "([^"]*)" has the "([^"]*)" permission$`, f.serviceUserHasPermission)
 	ctx.Step(`^an admin user has the "([^"]*)" permission$`, f.adminUserHasPermission)
 	ctx.Step(`^an admin user has the following permissions as JSON:$`, f.adminUserHasPermissionsJSON)
 }
