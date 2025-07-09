@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
-	"github.com/ONSdigital/log.go/v2/log"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
@@ -265,7 +264,7 @@ func (f *APIFeature) iShouldReceiveTheFollowingHealthJSONResponse(expectedRespon
 
 	f.validateHealthCheckResponse(healthResponse, expectedHealth)
 
-	return f.ErrorFeature.StepError()
+	return f.StepError()
 }
 
 func (f *APIFeature) validateHealthCheckResponse(healthResponse, expectedResponse HealthCheckTest) {

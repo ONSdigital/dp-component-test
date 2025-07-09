@@ -9,9 +9,8 @@ type MyAppComponent struct {
 	Handler http.Handler
 }
 
-func NewMyAppComponent(auth_url string) *MyAppComponent {
-
-	os.Setenv("AUTH_URL", auth_url)
+func NewMyAppComponent(authURL string) *MyAppComponent {
+	os.Setenv("AUTH_URL", authURL)
 
 	return &MyAppComponent{
 		Handler: NewRouter(),

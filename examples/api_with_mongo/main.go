@@ -16,19 +16,19 @@ import (
 )
 
 type Config struct {
-	MongoUrl     string
+	MongoURL     string
 	DatabaseName string
 }
 
 type Data struct {
-	MongoId     string `bson:"_id" json:"_id"`
+	MongoID     string `bson:"_id" json:"_id"`
 	ID          string `bson:"id" json:"id"`
 	ExampleData string `bson:"example_data" json:"example_data"`
 }
 
 func NewConfig() *Config {
 	return &Config{
-		MongoUrl:     os.Getenv("MONGO_URL"),
+		MongoURL:     os.Getenv("MONGO_URL"),
 		DatabaseName: os.Getenv("DATABASE_NAME"),
 	}
 }
@@ -36,7 +36,7 @@ func NewConfig() *Config {
 func ExampleHandler(w http.ResponseWriter, r *http.Request) {
 	post := mux.Vars(r)
 	config := NewConfig()
-	client, _ := NewMongoClient(config.MongoUrl)
+	client, _ := NewMongoClient(config.MongoURL)
 	collection := client.Database(config.DatabaseName).Collection("datasets")
 	var result Data
 
@@ -53,19 +53,25 @@ func ExampleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Header.Get("Accept") != "text/html" {
 		w.Header().Add("Content-Type", "application/json")
-		w.Write(resultBody)
-
+		if _, err := w.Write(resultBody); err != nil {
+			fmt.Printf("failed to write JSON response: %v\n", err)
+		}
 	} else {
 		w.Header().Add("Content-Type", "text/html")
-		response := fmt.Sprintf(`<value id="_id">%s</value><value id="id">%s</value><value id="example_data">%s</value>`, result.MongoId, result.ID, result.ExampleData)
-		w.Write([]byte(response))
+		response := fmt.Sprintf(
+			`<value id="_id">%s</value><value id="id">%s</value><value id="example_data">%s</value>`,
+			result.MongoID, result.ID, result.ExampleData)
+
+		if _, err := w.Write([]byte(response)); err != nil {
+			fmt.Printf("failed to write HTML response: %v\n", err)
+		}
 	}
 }
 
 func ExampleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	post := mux.Vars(r)
 	config := NewConfig()
-	client, _ := NewMongoClient(config.MongoUrl)
+	client, _ := NewMongoClient(config.MongoURL)
 	collection := client.Database(config.DatabaseName).Collection("datasets")
 
 	_, err := collection.DeleteOne(context.Background(), bson.M{"id": post["id"]})
@@ -77,7 +83,7 @@ func ExampleDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
-func ExamplePutHandler(w http.ResponseWriter, r *http.Request) {
+func ExamplePutHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(200)
 }
 
@@ -91,20 +97,23 @@ func newRouter() http.Handler {
 
 func NewServer() *http.Server {
 	return &http.Server{
-		Handler: newRouter(),
+		Handler:           newRouter(),
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 }
 
-func NewMongoClient(mongoUrl string) (*mongo.Client, error) {
-	config := NewConfig()
-	client, err := mongo.NewClient(options.Client().ApplyURI(config.MongoUrl))
-	if err != nil {
-		return nil, err
-	}
+// NewMongoClient creates and returns a connected MongoDB client
+func NewMongoClient(mongoURL string) (*mongo.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	if err := client.Connect(ctx); err != nil {
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURL))
+	if err != nil {
+		return nil, err
+	}
+
+	// Ping to ensure the connection is established
+	if err := client.Ping(ctx, nil); err != nil {
 		return nil, err
 	}
 
@@ -112,6 +121,14 @@ func NewMongoClient(mongoUrl string) (*mongo.Client, error) {
 }
 
 func main() {
-	server := NewServer()
-	log.Fatal(http.ListenAndServe(":10000", server.Handler))
+	server := &http.Server{
+		Addr:              ":10000",
+		Handler:           NewServer().Handler,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	log.Fatal(server.ListenAndServe())
 }

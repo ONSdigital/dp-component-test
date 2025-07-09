@@ -37,7 +37,8 @@ func NewMyAppComponent(handler http.Handler) *MyAppComponent {
 		errorChan: make(chan error, 1),
 		Config:    NewConfig(),
 		HTTPServer: &http.Server{
-			Handler: handler,
+			Handler:           handler,
+			ReadHeaderTimeout: 5 * time.Second,
 		},
 		ServiceRunning: false,
 	}

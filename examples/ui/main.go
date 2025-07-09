@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -59,11 +60,20 @@ func newRouter() http.Handler {
 
 func NewServer() *http.Server {
 	return &http.Server{
-		Handler: newRouter(),
+		Handler:           newRouter(),
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 }
 
 func main() {
-	server := NewServer()
-	log.Fatal(http.ListenAndServe(":10000", server.Handler))
+	server := &http.Server{
+		Addr:              ":10000",
+		Handler:           NewServer().Handler,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	log.Fatal(server.ListenAndServe())
 }

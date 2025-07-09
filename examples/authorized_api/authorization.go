@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -32,13 +32,13 @@ func zebedeeValidateUser() (int, error) {
 	}
 	var permissions Permissions
 	config := NewConfig()
-	response, err := http.Get(config.authorizationServiceUrl + "/userInstancePermissions")
+	response, err := http.Get(config.authorizationServiceURL + "/userInstancePermissions")
 	if err != nil {
 		return 500, err
 	}
 	status := response.StatusCode
 	if status == 401 {
-		body, err := ioutil.ReadAll(response.Body)
+		body, err := io.ReadAll(response.Body)
 		defer response.Body.Close()
 		if err != nil {
 			return status, err
@@ -90,13 +90,13 @@ func zebedeeValidateAuth() (int, error) {
 	}
 	var permissions Permissions
 	config := NewConfig()
-	response, err := http.Get(config.authorizationServiceUrl + "/serviceInstancePermissions")
+	response, err := http.Get(config.authorizationServiceURL + "/serviceInstancePermissions")
 	if err != nil {
 		return 500, err
 	}
 	status := response.StatusCode
 	if status == 401 {
-		body, err := ioutil.ReadAll(response.Body)
+		body, err := io.ReadAll(response.Body)
 		defer response.Body.Close()
 		if err != nil {
 			return status, err
@@ -137,11 +137,11 @@ func validateIdentity() error {
 	}
 	var identity Identity
 	config := NewConfig()
-	response, err := http.Get(config.authorizationServiceUrl + "/identity")
+	response, err := http.Get(config.authorizationServiceURL + "/identity")
 	if err != nil {
 		return err
 	}
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return err
 	}
