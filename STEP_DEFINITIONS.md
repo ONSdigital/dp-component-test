@@ -1,16 +1,22 @@
 # Step definitions
 
-This file aims to provide a description of what each implemented step in this repository does and should serve to be a reference guide to anyone writing scenarios for a service.
+This file aims to provide a description of what each implemented step in this repository does and should serve to be a
+reference guide to anyone writing scenarios for a service.
 
-Below is a table which contains all of the currently implemented steps within this repository. Each step will have a description of its use as well as which part of the scenario it should be used in (i.e. Given, When or Then)
+Below is a table which contains all of the currently implemented steps within this repository. Each step will have a
+description of its use as well as which part of the scenario it should be used in (i.e. Given, When or Then)
 
-This library provides these generic steps that should be useable across a variety of projects, however they will probably not cover all of the desired features or scenarios you might want to test your application against. In this case you will want to create and define your own steps inside the application which is being tested - examples of this can be found in the links in the [USAGE](USAGE.md) markdown file
+This library provides these generic steps that should be useable across a variety of projects, however they will
+probably not cover all of the desired features or scenarios you might want to test your application against. In this
+case you will want to create and define your own steps inside the application which is being tested - examples of this
+can be found in the links in the [USAGE](USAGE.md) markdown file
 
 ## Key
 
 "QUOTED_VALUE" : a value we pass to the step so that we can customise the scenario to the situation we want
 
-\_DOC_STRING\_ : a value that is provided on a new line underneath the step in a set of three quotation marks - an example is provided at the bottom of this file.
+\_DOC_STRING\_ : a value that is provided on a new line underneath the step in a set of three quotation marks - an
+example is provided at the bottom of this file.
 
 [LIST] : represents a list of strings e.g `"item1,item2..."`.
 
@@ -18,20 +24,22 @@ This library provides these generic steps that should be useable across a variet
 
 ```gherkin
     Scenario: data removed from db if dataset has been deleted
-        Given the following document exists in the "datasets" collection:
-            """
+Given the following document exists in the "datasets" collection:
+"""
             {
                 "id": "a1b2c3",
                 "example_data": "some data"
             }
             """
-        When I DELETE "/datasets/a1b2c3"
-        Then the HTTP status code should be "204"
-        And the document with "id" set to "a1b2c3" does not exist in the "datasets" collection
+When I DELETE "/datasets/a1b2c3"
+Then the HTTP status code should be "204"
+And the document with "id" set to "a1b2c3" does not exist in the "datasets" collection
 
 ```
 
-You can see how the steps are used in the example above. Single values are provided through the "VALUE" quote step options, and larger structures are provided through the multi-line doc string options - these are shown as \_BODY\_ variables in the table above.
+You can see how the steps are used in the example above. Single values are provided through the "VALUE" quote step
+options, and larger structures are provided through the multi-line doc string options - these are shown as \_BODY\_
+variables in the table above.
 
 ## Steps
 
@@ -59,20 +67,25 @@ You can see how the steps are used in the example above. Single values are provi
 
 ### Redis Feature steps
 
-| Step                                                     | What it does                                         | Scenario Position   |
-|----------------------------------------------------------|------------------------------------------------------|---------------------|
-| the key "KEY" has a value of "VALUE" in the Redis store  | Set the KEY to VALUE in the fake redis               | Given               |
-| redis is healthy                                         | This pings the in-memory redis to check it's running | Given               |
-| redis stops running                                      | This shuts down the in-memory redis                  | Given               |
+| Step                                                    | What it does                                         | Scenario Position |
+|---------------------------------------------------------|------------------------------------------------------|-------------------|
+| the key "KEY" has a value of "VALUE" in the Redis store | Set the KEY to VALUE in the fake redis               | Given             |
+| redis is healthy                                        | This pings the in-memory redis to check it's running | Given             |
+| redis stops running                                     | This shuts down the in-memory redis                  | Given             |
 
 ### Authorization Feature steps
 
-| Step                      | What it does                                                   | Scenario Position |
-|---------------------------|----------------------------------------------------------------|-------------------|
-| I am authorised           | set the request Authorization header to a random token         | Given             |
-| I am not authorised       | clear any existing Authorization token from the request        | Given             |
-| I am not identified       | remove the /identity endpoint from the stubbed identity server | Given             |
-| I am identified as "USER" | set /identity endpoint to return response with USER identity   | Given             |
+| Step                                                 | What it does                                                                                          | Scenario Position |
+|------------------------------------------------------|-------------------------------------------------------------------------------------------------------|-------------------|
+| I am authorised                                      | set the request Authorization header to a random token                                                | Given             |
+| I am not authorised                                  | clear any existing Authorization token from the request                                               | Given             |
+| I am not identified                                  | remove the /identity endpoint from the stubbed identity server                                        | Given             |
+| I am an admin user                                   | set the request Authorization header to an admin JWT token                                            | Given             |
+| I am not authenticated                               | removes any Authorization header set in the request headers                                           | Given             |
+| I am identified as "USER"                            | set /identity endpoint to return response with USER identity                                          | Given             |
+| service "SERVICE" has the "PERMISSION" permission    | Configure the fake permissions API to grant a permission to a specific service account                | Given             |
+| an admin user has the "PERMISSION" permission        | Configure the fake permissions API to grant a single permission to the admin user                     | Given             |
+| an admin user has the following permissions as JSON: | Configure the fake permissions API to grant multiple permissions to the admin user using a JSON input | Given             |
 
 ### UI Feature steps
 
@@ -90,4 +103,5 @@ You can see how the steps are used in the example above. Single values are provi
 | the page should be accessible with the following exceptions \_LIST\_     | Assert that the page meets WCAG A and AA accessibility criteria whilst ignoring the exceptions.[^2] | Then              |
 
 [^1]: CONTENT selector must include a HTML id or class - an element type alone will not work!
-[^2]: List should be a table of ids taken from the [list of axe-core rules](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md)
+[^2]: List should be a table of ids taken from
+the [list of axe-core rules](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md)

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
@@ -86,6 +87,8 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I PUT "([^"]*)"$`, f.IPut)
 	ctx.Step(`^I PATCH "([^"]*)"$`, f.IPatch)
 	ctx.Step(`^I DELETE "([^"]*)"`, f.IDelete)
+	ctx.Step(`^I am an admin user$`, f.adminJWTToken)
+	ctx.Step(`^I am not authenticated$`, f.iAmNotAuthenticated)
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
 	ctx.Step(`^I should receive the following response:$`, f.IShouldReceiveTheFollowingResponse)
@@ -97,6 +100,16 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
 	ctx.Step(`^I use an X Florence user token "([^"]*)"$`, f.IUseAnXFlorenceUserToken)
 	ctx.Step(`^I wait (\d+) seconds`, f.delayTimeBySeconds)
+}
+
+func (f *APIFeature) adminJWTToken() error {
+	err := f.ISetTheHeaderTo("Authorization", authorisationtest.AdminJWTToken)
+	return err
+}
+
+func (f *APIFeature) iAmNotAuthenticated() error {
+	err := f.ISetTheHeaderTo("Authorization", "")
+	return err
 }
 
 func (f *APIFeature) IUseAServiceAuthToken(serviceAuthToken string) error {
@@ -251,7 +264,7 @@ func (f *APIFeature) iShouldReceiveTheFollowingHealthJSONResponse(expectedRespon
 
 	f.validateHealthCheckResponse(healthResponse, expectedHealth)
 
-	return f.ErrorFeature.StepError()
+	return f.StepError()
 }
 
 func (f *APIFeature) validateHealthCheckResponse(healthResponse, expectedResponse HealthCheckTest) {

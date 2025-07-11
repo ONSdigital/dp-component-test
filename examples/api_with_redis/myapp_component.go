@@ -13,9 +13,8 @@ type MyAppComponent struct {
 	Config       *Config
 }
 
-func NewMyAppComponent(handler http.Handler, redisUrl string, redisFeat *componentTest.RedisFeature) (*MyAppComponent, error) {
-
-	os.Setenv("REDIS_URL", redisUrl)
+func NewMyAppComponent(handler http.Handler, redisURL string, redisFeat *componentTest.RedisFeature) (*MyAppComponent, error) {
+	os.Setenv("REDIS_URL", redisURL)
 
 	c := &MyAppComponent{
 		Handler:      handler,
@@ -30,7 +29,7 @@ func NewMyAppComponent(handler http.Handler, redisUrl string, redisFeat *compone
 	}
 
 	c.redisFeature = redisFeat
-	c.Config.RedisUrl = c.redisFeature.Server.Addr()
+	c.Config.RedisURL = c.redisFeature.Server.Addr()
 
 	return c, nil
 }

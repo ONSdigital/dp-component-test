@@ -114,3 +114,82 @@ Feature: Example feature
             """
             ["DELETE", "READ", "CREATE", "UPDATE"]
             """
+
+
+    Scenario: accessing a zebedee endpoint with a service that has a specific permission
+        Given I use a service auth token "validServiceToken"
+        And service "my-service" has the "read" permission
+        When I POST "/example3"
+        """
+        some payload
+        """
+        Then the HTTP status code should be "201"
+        And I should receive the following response:
+        """
+        accepted
+        """
+
+
+    Scenario: accessing a zebedee endpoint with an admin user that has a specific permission
+        Given I am authorised
+        And an admin user has the "update" permission
+        And I am an admin user
+        When I POST "/example3"
+        """
+        some update payload
+        """
+        Then the HTTP status code should be "201"
+        And I should receive the following response:
+        """
+        accepted
+        """
+
+    Scenario: accessing a zebedee endpoint with an unauthenticated user
+        Given I am authorised
+        And an admin user has the "update" permission
+        And I am not authenticated
+        When I POST "/example3"
+        """
+        some update payload
+        """
+        Then the HTTP status code should be "401"
+        And I should receive the following response:
+        """
+        401 - Unauthorized
+        """
+
+
+    Scenario: an admin user has multiple permissions provided as JSON
+        Given I am authorised
+        And an admin user has the following permissions as JSON:
+            """
+            {
+                "read": {
+                    "users/admin": [
+                        { "id": "1" }
+                    ]
+                },
+                "update": {
+                    "users/admin": [
+                        { "id": "1" }
+                    ]
+                },
+                "delete": {
+                    "users/admin": [
+                        { "id": "1" }
+                    ]
+                }
+            }
+            """
+        And I am an admin user
+        When I POST "/example3"
+            """
+            delete this thing
+            """
+        Then the HTTP status code should be "201"
+        And I should receive the following response:
+            """
+            accepted
+            """
+
+
