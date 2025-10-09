@@ -27,7 +27,7 @@ func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitia
 func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 	server := NewServer()
 
-	component := NewMyAppComponent(server.Handler, t.Mongo.Server.URI())
+	component := NewMyAppComponent(server.Handler)
 	apiFeature := componenttest.NewAPIFeature(component.initialiser(server.Handler))
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
@@ -47,11 +47,10 @@ func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 
 func (t *componenttestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	ctx.BeforeSuite(func() {
-		mongoOptions := componenttest.MongoOptions{
-			MongoVersion: "4.4.8",
-			DatabaseName: "testing",
-		}
-		t.Mongo = componenttest.NewMongoFeature(mongoOptions)
+		t.Mongo = componenttest.NewMongoFeature(componenttest.MongoOptions{
+			ClusterEndpoint: "mongodb:27017",
+			DatabaseName:    "test",
+		})
 	})
 
 	ctx.AfterSuite(func() {

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	mim "github.com/ONSdigital/dp-mongodb-in-memory"
 	"github.com/cucumber/godog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,16 +15,15 @@ import (
 
 // MongoFeature is a struct containing an in-memory mongo database
 type MongoFeature struct {
-	Server   *mim.Server
 	Client   mongo.Client
 	Database *mongo.Database
 }
 
 // MongoOptions contains a set of options required to create a new MongoFeature
 type MongoOptions struct {
-	MongoVersion   string
-	DatabaseName   string
-	ReplicaSetName string
+	ClusterEndpoint string
+	DatabaseName    string
+	ReplicaSetName  string
 }
 
 // MongoDeletedDocs contains a list of counts for all deleted documents
@@ -42,25 +40,14 @@ type MongoCollectionDeletedDocs struct {
 	Count int64
 }
 
-// NewMongoFeature creates a new in-memory mongo database using the supplied options
+// NewMongoFeature creates connects to a mongodb container using the supplied options
 func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var (
-		mongoServer *mim.Server
-		err         error
-	)
-	if mongoOptions.ReplicaSetName == "" {
-		mongoServer, err = mim.Start(ctx, mongoOptions.MongoVersion)
-	} else {
-		mongoServer, err = mim.StartWithReplicaSet(ctx, mongoOptions.MongoVersion, mongoOptions.ReplicaSetName)
-	}
-	if err != nil {
-		panic(err)
-	}
+	connectionURI := fmt.Sprintf("mongodb://%s", mongoOptions.ClusterEndpoint)
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoServer.URI()))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionURI))
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +55,6 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	database := client.Database(mongoOptions.DatabaseName)
 
 	return &MongoFeature{
-		Server:   mongoServer,
 		Client:   *client,
 		Database: database,
 	}
@@ -125,12 +111,16 @@ func (m *MongoFeature) ResetCollections(ctx context.Context, databaseName string
 	return deletedDocs, nil
 }
 
-// Close stops the in-memory mongo database
+// Close stops the connection
 func (m *MongoFeature) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	m.Server.Stop(ctx)
+	err := m.Client.Disconnect(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	return nil
 }
 

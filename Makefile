@@ -14,7 +14,8 @@ test:
 
 .PHONY: test-component
 test-component:
-	go test -race -cover ./... -component
+	cd examples/api_with_mongo/compose; docker compose up --no-attach mongodb --abort-on-container-exit
+	@echo "please ignore error codes 0, like so: ERRO[xxxx] 0, as error code 0 means that there was no error"
 
 .PHONY: build
 build:

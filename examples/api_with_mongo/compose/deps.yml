@@ -1,0 +1,15 @@
+services:
+  mongodb:
+    image: mongo:5.0
+    expose:
+      - "27017"
+    ports:
+      - 27017:27017
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongodb:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    logging:
+      driver: none

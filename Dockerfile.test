@@ -1,0 +1,7 @@
+FROM golang:1.24.7 AS base
+
+ENV GOCACHE=/go/.go/cache GOPATH=/go/.go/path TZ=Europe/London
+
+# Map between the working directories of dev and live
+RUN ln -s /go /dp-component-test
+WORKDIR /dp-component-test

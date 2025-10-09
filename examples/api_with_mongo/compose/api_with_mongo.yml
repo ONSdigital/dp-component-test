@@ -1,0 +1,24 @@
+services:
+  dp-component-test-api_with_mongo:
+    build:
+      context: ../../../../dp-component-test
+      dockerfile: Dockerfile.test
+    command:
+      - go
+      - test
+      - -cover
+      - -race
+      - -cover
+      - ./examples/api_with_mongo
+      - -component
+      - -test.v
+    volumes:
+      - ../../../:/dp-component-test
+    working_dir: /dp-component-test
+    ports:
+      - 23200:23200
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URL: "mongodb:27017"
+      DATABASE_NAME: "test"
