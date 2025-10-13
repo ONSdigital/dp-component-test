@@ -300,11 +300,17 @@ func (f *APIFeature) validateHealthCheck(checkResponse, expectedCheck *Check) {
 	assert.True(&f.ErrorFeature, checkResponse.LastChecked.After(f.StartTime))
 
 	if expectedCheck.StatusCode == 200 {
-		assert.True(&f.ErrorFeature, checkResponse.LastSuccess.Before(maxExpectedHealthCheckTime.UTC()))
-		assert.True(&f.ErrorFeature, checkResponse.LastSuccess.After(f.StartTime))
+		lastSuccess := checkResponse.LastSuccess
+		if lastSuccess != nil {
+			assert.True(&f.ErrorFeature, lastSuccess.Before(maxExpectedHealthCheckTime.UTC()))
+			assert.True(&f.ErrorFeature, lastSuccess.After(f.StartTime))
+		}
 	} else {
-		assert.True(&f.ErrorFeature, checkResponse.LastFailure.Before(maxExpectedHealthCheckTime.UTC()))
-		assert.True(&f.ErrorFeature, checkResponse.LastFailure.After(f.StartTime))
+		lastFailure := checkResponse.LastFailure
+		if lastFailure != nil {
+			assert.True(&f.ErrorFeature, lastFailure.Before(maxExpectedHealthCheckTime.UTC()))
+			assert.True(&f.ErrorFeature, lastFailure.After(f.StartTime))
+		}
 	}
 }
 
