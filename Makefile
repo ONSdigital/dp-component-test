@@ -13,8 +13,8 @@ test:
 	go test -race -cover ./...
 
 .PHONY: test-component
-test-component:
-	cd examples/api_with_mongo/compose; docker compose up --no-attach mongodb --abort-on-container-exit
+test-component: 
+	cd examples/compose; docker compose up --abort-on-container-exit
 	@echo "please ignore error codes 0, like so: ERRO[xxxx] 0, as error code 0 means that there was no error"
 
 .PHONY: build
@@ -27,5 +27,5 @@ audit:
 
 .PHONY: lint
 lint:
-	golangci-lint run ./... --timeout 5m --tests=false
+	golangci-lint run ./...
 

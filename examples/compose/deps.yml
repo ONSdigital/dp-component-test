@@ -11,5 +11,15 @@ services:
       timeout: 10s
       retries: 10
       start_period: 40s
-    logging:
-      driver: none
+    attach: false
+  chrome:
+    image: browserless/chrome
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    environment:
+      - DEFAULT_HEADLESS=true
+      - DEFAULT_ARGS=--disable-gpu,--no-sandbox,--disable-dev-shm-usage
+    attach: false
+      

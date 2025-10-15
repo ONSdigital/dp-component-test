@@ -18,7 +18,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	server := NewServer()
 	component := NewMyAppComponent(server.Handler)
 
-	uiFeature := componenttest.NewUIFeature("http://" + component.Config.SiteDomain + component.Config.BindAddr)
+	uiFeature := componenttest.NewUIFeatureWithRemoteChrome("http://"+component.Config.SiteDomain+component.Config.BindAddr, component.Config.ChromeWS)
 
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		uiFeature.Reset()

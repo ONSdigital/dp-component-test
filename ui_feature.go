@@ -19,17 +19,29 @@ import (
 
 // Chrome contains Chrome session-related resources
 type Chrome struct {
-	ExecAllocatorCanceller context.CancelFunc
-	CtxCanceller           context.CancelFunc
-	Ctx                    context.Context
+	AllocatorCanceller context.CancelFunc
+	CtxCanceller       context.CancelFunc
+	Ctx                context.Context
 }
 
 // UIFeature contains the information needed to test UI interactions
 type UIFeature struct {
 	ErrorFeature
-	BaseURL     string
-	Chrome      Chrome
-	WaitTimeOut time.Duration
+	BaseURL         string
+	Chrome          Chrome
+	RemoteChromeURL string
+	WaitTimeOut     time.Duration
+}
+
+// NewUIFeatureWithRemoteChrome returns a new UIFeature configured with baseURL and remote chrome access
+func NewUIFeatureWithRemoteChrome(baseURL, chromeURL string) *UIFeature {
+	f := &UIFeature{
+		RemoteChromeURL: chromeURL,
+		BaseURL:         baseURL,
+		WaitTimeOut:     10 * time.Second,
+	}
+
+	return f
 }
 
 // NewUIFeature returns a new UIFeature configured with baseURL
@@ -42,6 +54,15 @@ func NewUIFeature(baseURL string) *UIFeature {
 	return f
 }
 
+func (f *UIFeature) setChromeContextRemote() {
+	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(), f.RemoteChromeURL)
+	f.Chrome.AllocatorCanceller = cancel
+	ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
+	f.Chrome.CtxCanceller = cancel
+	log.Print("re-starting chrome ...")
+	f.Chrome.Ctx = ctx
+}
+
 func (f *UIFeature) setChromeContext() {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.DisableGPU,
@@ -49,7 +70,7 @@ func (f *UIFeature) setChromeContext() {
 		chromedp.Flag("headless", true),
 	)
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
-	f.Chrome.ExecAllocatorCanceller = cancel
+	f.Chrome.AllocatorCanceller = cancel
 	ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
 	f.Chrome.CtxCanceller = cancel
 	log.Print("re-starting chrome ...")
@@ -59,13 +80,18 @@ func (f *UIFeature) setChromeContext() {
 // Reset the chrome context
 func (f *UIFeature) Reset() {
 	f.ErrorFeature.Reset()
-	f.setChromeContext()
+
+	if f.RemoteChromeURL != "" {
+		f.setChromeContextRemote()
+	} else {
+		f.setChromeContext()
+	}
 }
 
 // Close Chrome
 func (f *UIFeature) Close() {
 	f.Chrome.CtxCanceller()
-	f.Chrome.ExecAllocatorCanceller()
+	f.Chrome.AllocatorCanceller()
 }
 
 // RegisterSteps binds the APIFeature steps to the godog context to enable usage in the component tests

@@ -1,7 +1,7 @@
 services:
-  dp-component-test-api_with_mongo:
+  dp-component-test:
     build:
-      context: ../../../../dp-component-test
+      context: ../../../dp-component-test
       dockerfile: Dockerfile.test
     command:
       - go
@@ -9,16 +9,21 @@ services:
       - -cover
       - -race
       - -cover
-      - ./examples/api_with_mongo
+      - ./...
       - -component
       - -test.v
     volumes:
-      - ../../../:/dp-component-test
+      - ../../:/dp-component-test
     working_dir: /dp-component-test
+    expose: 
+      - "26601"
     ports:
-      - 23200:23200
+      - "26601:26601"
     depends_on:
       - mongodb
     environment:
-      MONGO_URL: "mongodb:27017"
+      BIND_ADDR: ":26601"
+      CHROME_WS: "ws://chrome:3000"
       DATABASE_NAME: "test"
+      MONGO_URL: "mongodb:27017"
+      SITE_DOMAIN: "dp-component-test"
