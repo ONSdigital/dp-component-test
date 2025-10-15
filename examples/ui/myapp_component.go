@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"os"
 	"time"
 )
 
 // Config holds configuration used by MyAppComponent.
 type Config struct {
 	BindAddr                string
+	ChromeWS                string
 	SiteDomain              string
 	GracefulShutdownTimeout time.Duration
 }
@@ -17,8 +19,9 @@ type Config struct {
 // NewConfig initialises hard-coded configuration for MyAppComponent.
 func NewConfig() *Config {
 	return &Config{
-		BindAddr:                ":26601",
-		SiteDomain:              "localhost",
+		BindAddr:                os.Getenv("BIND_ADDR"),
+		SiteDomain:              os.Getenv("SITE_DOMAIN"),
+		ChromeWS:                os.Getenv("CHROME_WS"),
 		GracefulShutdownTimeout: 5 * time.Second,
 	}
 }

@@ -1,4 +1,4 @@
-package utils
+package utils //nolint:revive // TODO: refactor this into a less generic package
 
 import (
 	"flag"

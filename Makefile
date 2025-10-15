@@ -13,8 +13,9 @@ test:
 	go test -race -cover ./...
 
 .PHONY: test-component
-test-component:
-	go test -race -cover ./... -component
+test-component: 
+	cd examples/compose; docker compose up --abort-on-container-exit
+	@echo "please ignore error codes 0, like so: ERRO[xxxx] 0, as error code 0 means that there was no error"
 
 .PHONY: build
 build:
@@ -22,9 +23,9 @@ build:
 
 .PHONY: audit
 audit:
-	go list -json -m all | nancy sleuth
+	dis-vulncheck
 
 .PHONY: lint
 lint:
-	golangci-lint run ./... --timeout 5m --tests=false
+	golangci-lint run ./...
 

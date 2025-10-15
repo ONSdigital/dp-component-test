@@ -36,13 +36,13 @@ func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 	}
 	apiFeature := componenttest.NewAPIFeature(component.initialiser(server.Handler))
 
-	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
+	ctx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		t.Redis.Reset()
 		apiFeature.Reset()
 		return ctx, nil
 	})
 
-	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+	ctx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 		t.Redis.Reset()
 		apiFeature.Reset()
 		return ctx, nil
@@ -50,7 +50,6 @@ func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 
 	apiFeature.RegisterSteps(ctx)
 	t.Redis.RegisterSteps(ctx)
-
 }
 
 func (t *componenttestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
@@ -83,7 +82,6 @@ func TestComponent(t *testing.T) {
 		if status > 0 {
 			t.Fail()
 		}
-
 	} else {
 		t.Skip()
 	}

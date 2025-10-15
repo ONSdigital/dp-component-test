@@ -107,7 +107,7 @@ func NewMongoClient(mongoURL string) (*mongo.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURL))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(fmt.Sprintf("mongodb://%s", mongoURL)))
 	if err != nil {
 		return nil, err
 	}
