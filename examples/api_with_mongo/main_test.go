@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net/http"
 	"os"
@@ -24,25 +25,26 @@ func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitia
 	}
 }
 
-func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
+func (t *componenttestSuite) InitializeScenario(godogCtx *godog.ScenarioContext) {
 	server := NewServer()
 
 	component := NewMyAppComponent(server.Handler)
 	apiFeature := componenttest.NewAPIFeature(component.initialiser(server.Handler))
 
-	ctx.BeforeScenario(func(*godog.Scenario) {
+	godogCtx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		t.Mongo.Reset()
 		apiFeature.Reset()
+		return ctx, nil
 	})
 
-	ctx.AfterScenario(func(*godog.Scenario, error) {
+	godogCtx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 		t.Mongo.Reset()
 		apiFeature.Reset()
+		return ctx, nil
 	})
 
-	apiFeature.RegisterSteps(ctx)
-	t.Mongo.RegisterSteps(ctx)
-
+	apiFeature.RegisterSteps(godogCtx)
+	t.Mongo.RegisterSteps(godogCtx)
 }
 
 func (t *componenttestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
@@ -78,7 +80,6 @@ func TestComponent(t *testing.T) {
 		if status > 0 {
 			t.Fail()
 		}
-
 	} else {
 		t.Skip()
 	}
