@@ -32,6 +32,8 @@ go get github.com/ONSdigital/dp-component-test
 This package uses the Godog BDD framework.
 For instructions on writing Godog tests [it is best to follow the instructions found here](https://github.com/cucumber/godog)
 
+We use `dis-vulncheck` to do auditing, which you will [need to install](https://github.com/ONSdigital/dis-vulncheck).
+
 ### Testing a REST API
 
 To integrate your REST API component tests with this library all you need to do is update your root level test file to pass
