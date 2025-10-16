@@ -301,15 +301,21 @@ func (f *APIFeature) validateHealthCheck(checkResponse, expectedCheck *Check) {
 
 	if expectedCheck.StatusCode == 200 {
 		lastSuccess := checkResponse.LastSuccess
+
 		if lastSuccess != nil {
 			assert.True(&f.ErrorFeature, lastSuccess.Before(maxExpectedHealthCheckTime.UTC()))
 			assert.True(&f.ErrorFeature, lastSuccess.After(f.StartTime))
+		} else {
+			assert.Fail(&f.ErrorFeature, "last success should not be nil")
 		}
 	} else {
 		lastFailure := checkResponse.LastFailure
+
 		if lastFailure != nil {
 			assert.True(&f.ErrorFeature, lastFailure.Before(maxExpectedHealthCheckTime.UTC()))
 			assert.True(&f.ErrorFeature, lastFailure.After(f.StartTime))
+		} else {
+			assert.Fail(&f.ErrorFeature, "last failure should not be nil")
 		}
 	}
 }
