@@ -28,7 +28,12 @@ func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitia
 func (t *componenttestSuite) InitializeScenario(godogCtx *godog.ScenarioContext) {
 	server := NewServer()
 
-	component := NewMyAppComponent(server.Handler, t.Mongo.Server.URI())
+	mongoURI, err := t.Mongo.Server.ConnectionString(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
+	component := NewMyAppComponent(server.Handler, mongoURI)
 	apiFeature := componenttest.NewAPIFeature(component.initialiser(server.Handler))
 
 	godogCtx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {

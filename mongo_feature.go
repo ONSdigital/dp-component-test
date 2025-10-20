@@ -7,16 +7,17 @@ import (
 	"strings"
 	"time"
 
-	mim "github.com/ONSdigital/dp-mongodb-in-memory"
 	"github.com/cucumber/godog"
+	testMongo "github.com/testcontainers/testcontainers-go/modules/mongodb"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// MongoFeature is a struct containing an in-memory mongo database
+// MongoFeature is a struct containing a mongo database in a container
 type MongoFeature struct {
-	Server   *mim.Server
+	Server   *testMongo.MongoDBContainer
 	Client   mongo.Client
 	Database *mongo.Database
 }
@@ -42,25 +43,36 @@ type MongoCollectionDeletedDocs struct {
 	Count int64
 }
 
-// NewMongoFeature creates a new in-memory mongo database using the supplied options
+// NewMongoFeature creates a new mongo database in a container using the supplied options
 func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	var (
-		mongoServer *mim.Server
-		err         error
+		mongoContainer *testMongo.MongoDBContainer
+		err            error
 	)
+
 	if mongoOptions.ReplicaSetName == "" {
-		mongoServer, err = mim.Start(ctx, mongoOptions.MongoVersion)
+		mongoContainer, err = testMongo.Run(
+			ctx,
+			fmt.Sprintf("mongo:%s", mongoOptions.MongoVersion))
 	} else {
-		mongoServer, err = mim.StartWithReplicaSet(ctx, mongoOptions.MongoVersion, mongoOptions.ReplicaSetName)
+		mongoContainer, err = testMongo.Run(
+			ctx,
+			fmt.Sprintf("mongo:%s", mongoOptions.MongoVersion),
+			testMongo.WithReplicaSet(mongoOptions.ReplicaSetName))
 	}
 	if err != nil {
 		panic(err)
 	}
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoServer.URI()))
+	endpoint, err := mongoContainer.ConnectionString(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(endpoint))
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +80,7 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	database := client.Database(mongoOptions.DatabaseName)
 
 	return &MongoFeature{
-		Server:   mongoServer,
+		Server:   mongoContainer,
 		Client:   *client,
 		Database: database,
 	}
@@ -125,13 +137,14 @@ func (m *MongoFeature) ResetCollections(ctx context.Context, databaseName string
 	return deletedDocs, nil
 }
 
-// Close stops the in-memory mongo database
+// Close stops the container mongo database
 func (m *MongoFeature) Close() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	timeAllowed := 2 * time.Minute
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeAllowed)
 	defer cancel()
 
-	m.Server.Stop(ctx)
-	return nil
+	return m.Server.Stop(ctx, &timeAllowed)
 }
 
 func (m *MongoFeature) RegisterSteps(ctx *godog.ScenarioContext) {

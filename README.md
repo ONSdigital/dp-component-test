@@ -165,3 +165,16 @@ The mechanism by which the tests and steps are validated (testing the test libra
 If you add any new steps, make sure you also add sufficient feature tests to exercise them in appropriate examples in the examples folder.
 
 If you are adding a new testing feature entirely, it might be worth adding a new example service which exercises the steps of any new feature you add.
+
+## Using testcontainers
+
+For local dependencies, we use [testcontainers](https://golang.testcontainers.org/) for near neighbour testing where we can run a dependency via docker to connect to.
+
+Currently, the only service using this is [mongo_feature](./mongo_feature.go) but in future more types may be added.
+
+To use this with colima you will need to set the following env vars:
+
+```sh
+export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
+```
