@@ -26,7 +26,7 @@ func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitia
 	}
 }
 
-func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
+func (t *componenttestSuite) InitializeScenario(godogCtx *godog.ScenarioContext) {
 	server := NewServer()
 
 	component, err := NewMyAppComponent(server.Handler, t.Redis.Server.Addr(), t.Redis)
@@ -36,29 +36,28 @@ func (t *componenttestSuite) InitializeScenario(ctx *godog.ScenarioContext) {
 	}
 	apiFeature := componenttest.NewAPIFeature(component.initialiser(server.Handler))
 
-	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
+	godogCtx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		t.Redis.Reset()
 		apiFeature.Reset()
 		return ctx, nil
 	})
 
-	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+	godogCtx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 		t.Redis.Reset()
 		apiFeature.Reset()
 		return ctx, nil
 	})
 
-	apiFeature.RegisterSteps(ctx)
-	t.Redis.RegisterSteps(ctx)
-
+	apiFeature.RegisterSteps(godogCtx)
+	t.Redis.RegisterSteps(godogCtx)
 }
 
-func (t *componenttestSuite) InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() {
+func (t *componenttestSuite) InitializeTestSuite(godogCtx *godog.TestSuiteContext) {
+	godogCtx.BeforeSuite(func() {
 		t.Redis = componenttest.NewRedisFeature()
 	})
 
-	ctx.AfterSuite(func() {
+	godogCtx.AfterSuite(func() {
 		t.Redis.Close()
 	})
 }
@@ -83,7 +82,6 @@ func TestComponent(t *testing.T) {
 		if status > 0 {
 			t.Fail()
 		}
-
 	} else {
 		t.Skip()
 	}
