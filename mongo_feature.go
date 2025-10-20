@@ -144,7 +144,7 @@ func (m *MongoFeature) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeAllowed)
 	defer cancel()
 
-	return m.Server.Stop(ctx, &timeAllowed)
+	return m.Server.Terminate(ctx)
 }
 
 func (m *MongoFeature) RegisterSteps(ctx *godog.ScenarioContext) {

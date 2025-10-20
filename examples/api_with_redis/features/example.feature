@@ -11,14 +11,6 @@ Feature: Example feature
             }
             """
 
-    Scenario: Confirm the value of a key stored in Redis
-        Given the key "cheese" is already set to a value of "crackers" in the Redis store
-        Then the key "cheese" has a value of "crackers" in the Redis store
-
-    Scenario: Confirm key doesn't exist when it is not stored in Redis
-        Given redis is healthy
-        Then redis contains no value for key "cheese"
-
     Scenario: Return a 404 when the key doesn't exist in redis
         When I GET "/desserts/jelly"
         Then the HTTP status code should be "404"

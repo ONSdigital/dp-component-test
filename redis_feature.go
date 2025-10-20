@@ -3,42 +3,61 @@ package componenttest
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	disRedis "github.com/ONSdigital/dis-redis"
-	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
+
 	"github.com/cucumber/godog"
+	testRedis "github.com/testcontainers/testcontainers-go/modules/redis"
 )
 
 // RedisFeature is a struct containing an in-memory redis database
 type RedisFeature struct {
-	Server *miniredis.Miniredis
+	Server *testRedis.RedisContainer
+	Client *redis.Client
+}
+
+type RedisOptions struct {
+	RedisVersion string
 }
 
 // NewRedisFeature creates a new in-memory redis database using the supplied options
-func NewRedisFeature() *RedisFeature {
-	s := miniredis.NewMiniRedis()
+func NewRedisFeature(opts RedisOptions) *RedisFeature {
+	ctx := context.Background()
 
-	err := s.StartAddr("localhost:6379")
+	s, err := testRedis.Run(ctx, fmt.Sprintf("redis:%s", opts.RedisVersion))
 	if err != nil {
 		panic(err)
 	}
 
+	err = s.Start(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	connectionString, err := s.ConnectionString(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	client := redis.NewClient(&redis.Options{
+		Addr: strings.ReplaceAll(connectionString, "redis://", ""),
+	})
+
 	return &RedisFeature{
 		Server: s,
+		Client: client,
 	}
 }
 
 // Reset drops all keys from the in memory server
 func (r *RedisFeature) Reset() error {
-	r.Server.FlushAll()
-	return nil
+	return r.Client.FlushAll(context.Background()).Err()
 }
 
 // Close stops the in-memory redis database
 func (r *RedisFeature) Close() error {
-	r.Server.Close()
-	return nil
+	return r.Server.Terminate(context.Background())
 }
 
 func (r *RedisFeature) RegisterSteps(ctx *godog.ScenarioContext) {
@@ -50,11 +69,11 @@ func (r *RedisFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (r *RedisFeature) theKeyIsAlreadySetToAValueOfInTheRedisStore(key, value string) error {
-	return r.Server.Set(key, value)
+	return r.Client.Set(context.Background(), key, value, 0).Err()
 }
 
 func (r *RedisFeature) theKeyHasAValueOfInTheRedisStore(key, expected string) error {
-	actual, err := r.Server.Get(key)
+	actual, err := r.Client.Get(context.Background(), key).Result()
 	if err != nil {
 		return fmt.Errorf("failed to get key %q from Redis: %w", key, err)
 	}
@@ -67,31 +86,29 @@ func (r *RedisFeature) theKeyHasAValueOfInTheRedisStore(key, expected string) er
 }
 
 func (r *RedisFeature) redisContainsNoValueFor(key string) error {
-	if r.Server.Exists(key) {
-		val, _ := r.Server.Get(key)
+	ctx := context.Background()
+	exists, err := r.Client.Exists(ctx, key).Result()
+	if err != nil {
+		return fmt.Errorf("error checking existence of key %q", key)
+	}
+
+	if exists == 1 {
+		val, err := r.Client.Get(ctx, key).Result()
+		if err != nil {
+			return fmt.Errorf("error getting value of key %q", key)
+		}
 		return fmt.Errorf("expected no value for key %q, but found %q", key, val)
 	}
 	return nil
 }
 
 func (r *RedisFeature) redisIsHealthy() error {
-	ctx := context.Background()
-	clientConfig := &disRedis.ClientConfig{}
-	redisClient, err := disRedis.NewClient(ctx, clientConfig)
-
-	if err != nil {
-		log.Error(ctx, "Failed to create dis-redis client", err)
-		return err
-	}
-
-	_, err = redisClient.Ping(ctx)
-
-	return err
+	return r.Client.Ping(context.Background()).Err()
 }
 
 func (r *RedisFeature) redisStopsRunning() error {
 	if r.Server != nil {
-		r.Server.Close()
+		return r.Server.Terminate(context.Background())
 	}
 	return nil
 }

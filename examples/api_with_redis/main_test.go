@@ -29,7 +29,7 @@ func (m *MyAppComponent) initialiser(h http.Handler) componenttest.ServiceInitia
 func (t *componenttestSuite) InitializeScenario(godogCtx *godog.ScenarioContext) {
 	server := NewServer()
 
-	component, err := NewMyAppComponent(server.Handler, t.Redis.Server.Addr(), t.Redis)
+	component, err := NewMyAppComponent(server.Handler, t.Redis)
 	if err != nil {
 		fmt.Printf("failed to create redis app component - error: %v", err)
 		os.Exit(1)
@@ -54,7 +54,9 @@ func (t *componenttestSuite) InitializeScenario(godogCtx *godog.ScenarioContext)
 
 func (t *componenttestSuite) InitializeTestSuite(godogCtx *godog.TestSuiteContext) {
 	godogCtx.BeforeSuite(func() {
-		t.Redis = componenttest.NewRedisFeature()
+		t.Redis = componenttest.NewRedisFeature(componenttest.RedisOptions{
+			RedisVersion: "7.2",
+		})
 	})
 
 	godogCtx.AfterSuite(func() {
