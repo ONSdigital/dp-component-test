@@ -250,7 +250,7 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCo
 
 // validateDynamicTimestamps checks for any fields in expected with the value "{{DYNAMIC_TIMESTAMP}}", validates them and replaces them with a placeholder.
 // Returns error if any such field in actual is not a valid RFC3339 timestamp within 10s of now.
-func validateDynamicTimestamps(actual, expected string) (string, string, error) {
+func validateDynamicTimestamps(actual, expected string) (actualValidated, expectedValidated string, err error) {
 	timestampRegex := regexp.MustCompile(`"([^"]+)":\s*"{{DYNAMIC_TIMESTAMP}}"`)
 	matches := timestampRegex.FindAllStringSubmatch(expected, -1)
 
@@ -274,8 +274,8 @@ func validateDynamicTimestamps(actual, expected string) (string, string, error) 
 			return "", "", fmt.Errorf("field %q timestamp %q is not within 10s of now", field, actualTimestampStr)
 		}
 
-		actual = jsonFieldRegex.ReplaceAllString(actual, fmt.Sprintf(`"%s": "VALID_TIMESTAMP"`, field))
-		expected = jsonFieldRegex.ReplaceAllString(expected, fmt.Sprintf(`"%s": "VALID_TIMESTAMP"`, field))
+		actual = jsonFieldRegex.ReplaceAllString(actual, fmt.Sprintf(`%q: "VALID_TIMESTAMP"`, field))
+		expected = jsonFieldRegex.ReplaceAllString(expected, fmt.Sprintf(`%q: "VALID_TIMESTAMP"`, field))
 	}
 
 	return actual, expected, nil
