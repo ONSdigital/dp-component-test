@@ -12,6 +12,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type EmbeddedTimestamp struct {
+	InnerTimestamp time.Time `json:"inner_timestamp"`
+}
+
+type TimestampResponse struct {
+	Timestamp     time.Time         `json:"timestamp"`
+	EmbeddedField EmbeddedTimestamp `json:"embedded"`
+}
+
 func ExampleHandler1(w http.ResponseWriter, _ *http.Request) {
 	data := struct {
 		ExampleType int `json:"example_type"`
@@ -77,12 +86,31 @@ func ExampleHealthHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+func timestampValidationHandler(w http.ResponseWriter, _ *http.Request) {
+	response := TimestampResponse{
+		Timestamp: time.Now(),
+		EmbeddedField: EmbeddedTimestamp{
+			InnerTimestamp: time.Now(),
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func newRouter() http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/example1", ExampleHandler1).Methods("GET")
 	router.HandleFunc("/example2", ExampleHandler2).Methods("POST")
 	router.HandleFunc("/health", ExampleHealthHandler).Methods("GET")
+	router.HandleFunc("/timestamp/validation", timestampValidationHandler).Methods("GET")
 
 	return router
 }

@@ -43,3 +43,15 @@ Feature: Example feature
               ]
             }
           """
+    Scenario: Timestamp validation handler
+        When I GET "/timestamp/validation"
+        Then I should receive the following JSON response with status "200":
+        """
+        {
+          "timestamp": "{{DYNAMIC_TIMESTAMP}}",
+          "embedded": {
+            "inner_timestamp": "{{DYNAMIC_TIMESTAMP}}"
+          }
+        }
+        """
+      
