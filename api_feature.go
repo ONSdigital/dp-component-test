@@ -97,6 +97,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I should receive the following health JSON response:$`, f.iShouldReceiveTheFollowingHealthJSONResponse)
 	ctx.Step(`^I should receive the following JSON response:$`, f.IShouldReceiveTheFollowingJSONResponse)
 	ctx.Step(`^I should receive the following JSON response with status "([^"]*)":$`, f.IShouldReceiveTheFollowingJSONResponseWithStatus)
+	ctx.Step(`^I should receive the following JSON response with (\d+) dynamic timestamp(?:s)?:$`, f.IShouldReceiveTheFollowingJSONResponseWithDynamicTimestamps)
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
 	ctx.Step(`^I use an X Florence user token "([^"]*)"$`, f.IUseAnXFlorenceUserToken)
 	ctx.Step(`^I wait (\d+) seconds`, f.delayTimeBySeconds)
@@ -227,6 +228,70 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCo
 		return err
 	}
 	return f.IShouldReceiveTheFollowingJSONResponse(expectedBody)
+}
+
+// IShouldReceiveTheFollowingJSONResponseWithDynamicTimestamps asserts the response body matches the expected body with a given number of dynamic timestamps.
+// Timestamps must match the placeholder "{{DYNAMIC_TIMESTAMP}}" in the expected JSON and be of RFC3339 format in the actual response.
+func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithDynamicTimestamps(numberOfTimestamps int, expectedJSON *godog.DocString) error {
+	if err := f.TheResponseHeaderShouldBe("Content-Type", "application/json"); err != nil {
+		return err
+	}
+
+	b, err := io.ReadAll(f.HTTPResponse.Body)
+	if err != nil {
+		return fmt.Errorf("error reading body: %w", err)
+	}
+	f.HTTPResponse.Body = io.NopCloser(bytes.NewReader(b))
+
+	var actual, expected map[string]interface{}
+	if err := json.Unmarshal(b, &actual); err != nil {
+		return fmt.Errorf("invalid actual JSON: %w", err)
+	}
+	if err := json.Unmarshal([]byte(expectedJSON.Content), &expected); err != nil {
+		return fmt.Errorf("invalid expected JSON: %w", err)
+	}
+
+	// Store all keys which have the value "{{DYNAMIC_TIMESTAMP}}"
+	timestampKeys := []string{}
+	for key, value := range expected {
+		if stringValue, ok := value.(string); ok && stringValue == "{{DYNAMIC_TIMESTAMP}}" {
+			timestampKeys = append(timestampKeys, key)
+		}
+	}
+
+	if len(timestampKeys) != numberOfTimestamps {
+		return fmt.Errorf("expected %d dynamic timestamps, but found %d placeholders in expected JSON", numberOfTimestamps, len(timestampKeys))
+	}
+
+	for _, key := range timestampKeys {
+		actualTimestampStr, ok := actual[key].(string)
+		if !ok {
+			return fmt.Errorf("missing or non-string %s in actual", key)
+		}
+		parsedTimestamp, err := time.Parse(time.RFC3339, actualTimestampStr)
+		if err != nil {
+			return fmt.Errorf("%s is not a valid RFC3339 timestamp: %w", key, err)
+		}
+		timestampAge := time.Since(parsedTimestamp)
+		if timestampAge < 0 || timestampAge > 10*time.Second {
+			return fmt.Errorf("%s %v is not within 10s of now", key, parsedTimestamp)
+		}
+		delete(actual, key)
+		delete(expected, key)
+	}
+
+	got, err := json.Marshal(actual)
+	if err != nil {
+		return fmt.Errorf("marshalling actual JSON: %w", err)
+	}
+	want, err := json.Marshal(expected)
+	if err != nil {
+		return fmt.Errorf("marshalling expected JSON: %w", err)
+	}
+	if !bytes.Equal(got, want) {
+		return fmt.Errorf("response mismatch:\nExpected: %s\nActual: %s", want, got)
+	}
+	return f.StepError()
 }
 
 // iHaveAHealthCheckIntervalOfSecond sets healthcheck interval and critical timeout
