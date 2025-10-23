@@ -43,50 +43,50 @@ the http handler of your application to our NewAPIFeature, register the steps an
 package main
 
 import (
-	componenttest "github.com/ONSdigital/dp-component-test"
+    componenttest "github.com/ONSdigital/dp-component-test"
 )
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	myAppComponent := NewMyAppComponent() // This is the part that YOU will implement
-	apiFeature := componenttest.NewAPIFeature(myAppComponent.Handler)
+    myAppComponent := NewMyAppComponent() // This is the part that YOU will implement
+    apiFeature := componenttest.NewAPIFeature(myAppComponent.Handler)
 
-	ctx.BeforeScenario(func(*godog.Scenario) {
-		apiFeature.Reset()
-	})
-	ctx.AfterScenario(func(*godog.Scenario, error) {
-	})
+    ctx.BeforeScenario(func(*godog.Scenario) {
+        apiFeature.Reset()
+    })
+    ctx.AfterScenario(func(*godog.Scenario, error) {
+    })
 
-	apiFeature.RegisterSteps(ctx)
+    apiFeature.RegisterSteps(ctx)
 }
 
 func InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() {
-	})
+    ctx.BeforeSuite(func() {
+    })
 }
 
 func TestComponent(t *testing.T) {
-	if *componentFlag {
-		var opts = godog.Options{
-			Output: colors.Colored(os.Stdout),
-			Format: "pretty",
-			Paths:  flag.Args(),
-		}
-		
-		status := godog.TestSuite{
-			Name:                 "component_tests",
-			ScenarioInitializer:  InitializeScenario,
-			TestSuiteInitializer: InitializeTestSuite,
-			Options:              &opts,
-		}.Run()
-
-		if status > 0 {
-			t.Fail()
+    if *componentFlag {
+        var opts = godog.Options{
+            Output: colors.Colored(os.Stdout),
+            Format: "pretty",
+            Paths:  flag.Args(),
         }
-	} else {
-		t.Skip("component flag required to run component tests")
-	}
+        
+        status := godog.TestSuite{
+            Name:                 "component_tests",
+            ScenarioInitializer:  InitializeScenario,
+            TestSuiteInitializer: InitializeTestSuite,
+            Options:              &opts,
+        }.Run()
+
+        if status > 0 {
+            t.Fail()
+        }
+    } else {
+        t.Skip("component flag required to run component tests")
+    }
 }
 
 ```
@@ -101,51 +101,51 @@ and add the close function to the AfterScenario function.
 package main
 
 import (
-	componenttest "github.com/ONSdigital/dp-component-test"
+    componenttest "github.com/ONSdigital/dp-component-test"
 )
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	myAppComponent := NewMyAppComponent() // This is the part that YOU will implement
-	uiFeature := componenttest.NewUIFeature("http://" + myAppComponent.Config.SiteDomain + myAppComponent.Config.BindAddr)
+    myAppComponent := NewMyAppComponent() // This is the part that YOU will implement
+    uiFeature := componenttest.NewUIFeature("http://" + myAppComponent.Config.SiteDomain + myAppComponent.Config.BindAddr)
 
-	ctx.BeforeScenario(func(*godog.Scenario) {
-		uiFeature.Reset()
-	})
-	ctx.AfterScenario(func(*godog.Scenario, error) {
-		uiFeature.Close()
-	})
+    ctx.BeforeScenario(func(*godog.Scenario) {
+        uiFeature.Reset()
+    })
+    ctx.AfterScenario(func(*godog.Scenario, error) {
+        uiFeature.Close()
+    })
 
-	uiFeature.RegisterSteps(ctx)
+    uiFeature.RegisterSteps(ctx)
 }
 
 func InitializeTestSuite(ctx *godog.TestSuiteContext) {
-	ctx.BeforeSuite(func() {
-	})
+    ctx.BeforeSuite(func() {
+    })
 }
 
 func TestComponent(t *testing.T) {
-	if *componentFlag {
-		var opts = godog.Options{
-			Output: colors.Colored(os.Stdout),
-			Format: "pretty",
-			Paths:  flag.Args(),
-		}
+    if *componentFlag {
+        var opts = godog.Options{
+            Output: colors.Colored(os.Stdout),
+            Format: "pretty",
+            Paths:  flag.Args(),
+        }
 
-		status := godog.TestSuite{
-			Name:                 "component_tests",
-			ScenarioInitializer:  InitializeScenario,
-			TestSuiteInitializer: InitializeTestSuite,
-			Options:              &opts,
-		}.Run()
+        status := godog.TestSuite{
+            Name:                 "component_tests",
+            ScenarioInitializer:  InitializeScenario,
+            TestSuiteInitializer: InitializeTestSuite,
+            Options:              &opts,
+        }.Run()
 
-		if status > 0 {
-			t.Fail()
-		}
-	} else {
-		t.Skip("component flag required to run component tests")
-	}
+        if status > 0 {
+            t.Fail()
+        }
+    } else {
+        t.Skip("component flag required to run component tests")
+    }
 }
 
 ```

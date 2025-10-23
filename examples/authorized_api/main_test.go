@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 	"testing"
@@ -12,22 +13,24 @@ import (
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
-func InitializeScenario(ctx *godog.ScenarioContext) {
+func InitializeScenario(godogCtx *godog.ScenarioContext) {
 	authorizationFeature := componenttest.NewAuthorizationFeature()
 	myAppFeature := NewMyAppComponent(authorizationFeature.FakeAuthService.ResolveURL(""))
 	apiFeature := componenttest.NewAPIFeatureWithHandler(myAppFeature.Handler)
 
-	ctx.BeforeScenario(func(*godog.Scenario) {
+	godogCtx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		apiFeature.Reset()
 		authorizationFeature.Reset()
+		return ctx, nil
 	})
 
-	ctx.AfterScenario(func(*godog.Scenario, error) {
+	godogCtx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 		authorizationFeature.Close()
+		return ctx, nil
 	})
 
-	apiFeature.RegisterSteps(ctx)
-	authorizationFeature.RegisterSteps(ctx)
+	apiFeature.RegisterSteps(godogCtx)
+	authorizationFeature.RegisterSteps(godogCtx)
 }
 
 func TestComponent(t *testing.T) {
@@ -47,7 +50,6 @@ func TestComponent(t *testing.T) {
 		if status > 0 {
 			t.Fail()
 		}
-
 	} else {
 		t.Skip()
 	}

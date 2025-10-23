@@ -14,24 +14,26 @@ import (
 
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
-func InitializeScenario(ctx *godog.ScenarioContext) {
+func InitializeScenario(godogCtx *godog.ScenarioContext) {
 	server := NewServer()
 	component := NewMyAppComponent(server.Handler)
 
 	uiFeature := componenttest.NewUIFeature("http://" + component.Config.SiteDomain + component.Config.BindAddr)
 
-	ctx.BeforeScenario(func(*godog.Scenario) {
+	godogCtx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		uiFeature.Reset()
+		return ctx, nil
 	})
 
-	ctx.AfterScenario(func(*godog.Scenario, error) {
+	godogCtx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 		if err := component.Close(); err != nil {
 			log.Warn(context.Background(), "error closing component", log.FormatErrors([]error{err}))
 		}
 		uiFeature.Close()
+		return ctx, nil
 	})
 
-	uiFeature.RegisterSteps(ctx)
+	uiFeature.RegisterSteps(godogCtx)
 }
 
 func TestComponent(t *testing.T) {
@@ -51,7 +53,6 @@ func TestComponent(t *testing.T) {
 		if status > 0 {
 			t.Fail()
 		}
-
 	} else {
 		t.Skip()
 	}
