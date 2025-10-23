@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -97,7 +98,6 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I should receive the following health JSON response:$`, f.iShouldReceiveTheFollowingHealthJSONResponse)
 	ctx.Step(`^I should receive the following JSON response:$`, f.IShouldReceiveTheFollowingJSONResponse)
 	ctx.Step(`^I should receive the following JSON response with status "([^"]*)":$`, f.IShouldReceiveTheFollowingJSONResponseWithStatus)
-	ctx.Step(`^I should receive the following JSON response with (\d+) dynamic timestamp(?:s)?:$`, f.IShouldReceiveTheFollowingJSONResponseWithDynamicTimestamps)
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
 	ctx.Step(`^I use an X Florence user token "([^"]*)"$`, f.IUseAnXFlorenceUserToken)
 	ctx.Step(`^I wait (\d+) seconds`, f.delayTimeBySeconds)
@@ -193,12 +193,29 @@ func (f *APIFeature) IShouldReceiveTheFollowingResponse(expectedAPIResponse *god
 	return f.StepError()
 }
 
-// IShouldReceiveTheFollowingJSONResponse asserts that the response body and expected response body are equal
+// IShouldReceiveTheFollowingJSONResponse asserts that the response body and expected response body are equal.
+// This also validates any "{{DYNAMIC_TIMESTAMP}}" fields.
 func (f *APIFeature) IShouldReceiveTheFollowingJSONResponse(expectedAPIResponse *godog.DocString) error {
 	responseBody := f.HTTPResponse.Body
-	body, _ := io.ReadAll(responseBody)
+	body, err := io.ReadAll(responseBody)
+	if err != nil {
+		return fmt.Errorf("error reading response body: %w", err)
+	}
 
-	assert.JSONEq(f, expectedAPIResponse.Content, string(body))
+	var actual, expected map[string]interface{}
+	if err := json.Unmarshal(body, &actual); err != nil {
+		return fmt.Errorf("error unmarshalling actual response body: %w", err)
+	}
+	if err := json.Unmarshal([]byte(expectedAPIResponse.Content), &expected); err != nil {
+		return fmt.Errorf("error unmarshalling expected response body: %w", err)
+	}
+
+	actualValidated, expectedValidated, err := validateDynamicTimestamps(string(body), expectedAPIResponse.Content)
+	if err != nil {
+		return err
+	}
+
+	assert.JSONEq(f, expectedValidated, actualValidated)
 
 	return f.StepError()
 }
@@ -219,7 +236,8 @@ func (f *APIFeature) TheResponseHeaderShouldBe(headerName, expectedValue string)
 	return f.StepError()
 }
 
-// IShouldReceiveTheFollowingJSONResponseWithStatus asserts the response code and body match the expectation
+// IShouldReceiveTheFollowingJSONResponseWithStatus asserts the response code and body match the expectation.
+// This also validates any "{{DYNAMIC_TIMESTAMP}}" fields.
 func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCodeStr string, expectedBody *godog.DocString) error {
 	if err := f.TheHTTPStatusCodeShouldBe(expectedCodeStr); err != nil {
 		return err
@@ -230,68 +248,37 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCo
 	return f.IShouldReceiveTheFollowingJSONResponse(expectedBody)
 }
 
-// IShouldReceiveTheFollowingJSONResponseWithDynamicTimestamps asserts the response body matches the expected body with a given number of dynamic timestamps.
-// Timestamps must match the placeholder "{{DYNAMIC_TIMESTAMP}}" in the expected JSON and be of RFC3339 format in the actual response.
-func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithDynamicTimestamps(numberOfTimestamps int, expectedJSON *godog.DocString) error {
-	if err := f.TheResponseHeaderShouldBe("Content-Type", "application/json"); err != nil {
-		return err
-	}
+// validateDynamicTimestamps checks for any fields in expected with the value "{{DYNAMIC_TIMESTAMP}}", validates them and replaces them with a placeholder.
+// Returns error if any such field in actual is not a valid RFC3339 timestamp within 10s of now.
+func validateDynamicTimestamps(actual, expected string) (string, string, error) {
+	timestampRegex := regexp.MustCompile(`"([^"]+)":\s*"{{DYNAMIC_TIMESTAMP}}"`)
+	matches := timestampRegex.FindAllStringSubmatch(expected, -1)
 
-	b, err := io.ReadAll(f.HTTPResponse.Body)
-	if err != nil {
-		return fmt.Errorf("error reading body: %w", err)
-	}
-	f.HTTPResponse.Body = io.NopCloser(bytes.NewReader(b))
-
-	var actual, expected map[string]interface{}
-	if err := json.Unmarshal(b, &actual); err != nil {
-		return fmt.Errorf("invalid actual JSON: %w", err)
-	}
-	if err := json.Unmarshal([]byte(expectedJSON.Content), &expected); err != nil {
-		return fmt.Errorf("invalid expected JSON: %w", err)
-	}
-
-	// Store all keys which have the value "{{DYNAMIC_TIMESTAMP}}"
-	timestampKeys := []string{}
-	for key, value := range expected {
-		if stringValue, ok := value.(string); ok && stringValue == "{{DYNAMIC_TIMESTAMP}}" {
-			timestampKeys = append(timestampKeys, key)
+	// For each field with a dynamic timestamp, validate and replace in both actual and expected
+	for _, match := range matches {
+		field := match[1]
+		jsonFieldRegex := regexp.MustCompile(`"` + field + `":\s*"([^"]+)"`)
+		actualFieldMatch := jsonFieldRegex.FindStringSubmatch(actual)
+		if len(actualFieldMatch) != 2 {
+			return "", "", fmt.Errorf("field %q not found in actual response", field)
 		}
-	}
 
-	if len(timestampKeys) != numberOfTimestamps {
-		return fmt.Errorf("expected %d dynamic timestamps, but found %d placeholders in expected JSON", numberOfTimestamps, len(timestampKeys))
-	}
-
-	for _, key := range timestampKeys {
-		actualTimestampStr, ok := actual[key].(string)
-		if !ok {
-			return fmt.Errorf("missing or non-string %s in actual", key)
-		}
-		parsedTimestamp, err := time.Parse(time.RFC3339, actualTimestampStr)
+		actualTimestampStr := actualFieldMatch[1]
+		actualParsedTimestamp, err := time.Parse(time.RFC3339, actualTimestampStr)
 		if err != nil {
-			return fmt.Errorf("%s is not a valid RFC3339 timestamp: %w", key, err)
+			return "", "", fmt.Errorf("field %q value %q is not a valid RFC3339 timestamp: %w", field, actualTimestampStr, err)
 		}
-		timestampAge := time.Since(parsedTimestamp)
+
+		timestampAge := time.Since(actualParsedTimestamp)
 		if timestampAge < 0 || timestampAge > 10*time.Second {
-			return fmt.Errorf("%s %v is not within 10s of now", key, parsedTimestamp)
+			return "", "", fmt.Errorf("field %q timestamp %q is not within 10s of now", field, actualTimestampStr)
 		}
-		delete(actual, key)
-		delete(expected, key)
+
+		actual = jsonFieldRegex.ReplaceAllString(actual, fmt.Sprintf(`"%s": "VALID_TIMESTAMP"`, field))
+		expected = jsonFieldRegex.ReplaceAllString(expected, fmt.Sprintf(`"%s": "VALID_TIMESTAMP"`, field))
 	}
 
-	got, err := json.Marshal(actual)
-	if err != nil {
-		return fmt.Errorf("marshalling actual JSON: %w", err)
-	}
-	want, err := json.Marshal(expected)
-	if err != nil {
-		return fmt.Errorf("marshalling expected JSON: %w", err)
-	}
-	if !bytes.Equal(got, want) {
-		return fmt.Errorf("response mismatch:\nExpected: %s\nActual: %s", want, got)
-	}
-	return f.StepError()
+	return actual, expected, nil
 }
 
 // iHaveAHealthCheckIntervalOfSecond sets healthcheck interval and critical timeout
