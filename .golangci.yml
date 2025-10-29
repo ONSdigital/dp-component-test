@@ -72,6 +72,11 @@ linters:
       - linters:
           - govet
         text: declaration of "(err|ctx)" shadows declaration at
+      - linters:
+          - revive
+        path: _test.go
+        text: dot-imports
+        source: github.com/smartystreets/goconvey/convey
 issues:
   new: false
 formatters:

@@ -14,7 +14,7 @@ test:
 
 .PHONY: test-component
 test-component:
-	go test -race -cover ./... -component
+	go test -race -cover ./examples/... -component
 
 .PHONY: build
 build:

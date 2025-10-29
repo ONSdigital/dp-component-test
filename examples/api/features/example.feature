@@ -43,15 +43,17 @@ Feature: Example feature
               ]
             }
           """
-    Scenario: Timestamp validation handler
-        When I GET "/timestamp/validation"
+    Scenario: Dynamic validation handler
+        When I GET "/dynamic/validation"
         Then I should receive the following JSON response with status "200":
         """
         {
           "timestamp": "{{DYNAMIC_TIMESTAMP}}",
+          "id": "{{DYNAMIC_UUID}}",
           "embedded": {
-            "inner_timestamp": "{{DYNAMIC_TIMESTAMP}}"
-          }
+            "inner_timestamp": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+          },
+          "url": "{{DYNAMIC_URL}}"
         }
         """
       

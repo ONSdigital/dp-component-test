@@ -62,10 +62,19 @@ variables in the table above.
 | I have a healthcheck interval of "SECONDS" seconds                                   | Set the healthcheck interval                                                         | Given             |
 | the health checks should have completed within "SECONDS" seconds                     | Set the expected time for health check completion                                    | When              |
 | I should receive the following health JSON response \_BODY\_                         | Assert that the health check response body matches BODY                              | Then              |
-| I should receive the following JSON response: \_BODY\_                               | Assert that the response body is JSON and that it matches BODY                       | Then              |
-| I should receive the following JSON response with status "CODE": \_BODY\_            | Assert that the response code is CODE and the body is json which matches BODY        | Then              |
+| I should receive the following JSON response: \_BODY\_[^1]                           | Assert that the response body is JSON and that it matches BODY                       | Then              |
+| I should receive the following JSON response with status "CODE": \_BODY\_[^1]        | Assert that the response code is CODE and the body is json which matches BODY        | Then              |
 | I wait "SECONDS" seconds                                                             | Waits a given amount of seconds                                                      | Then              |
 | the document with "KEY" set to "VALUE" does not exist in the "COLLECTION" collection | Assert that a document with KEY set to VALUE does not exist in COLLECTION collection | Then              |
+
+[^1]: these steps can use the following dynamic values when these are not predictable:
+
+- `DYNAMIC_RECENT_TIMESTAMP` - validates against RFC339 from the last 10 seconds
+- `DYNAMIC_TIMESTAMP` - validate against RFC339
+- `DYNAMIC_URL` - validates against urls.
+- `DYNAMIC_UUID` - validates against uuids.
+
+Each value should be enclosed with double curly braces, e.g.: `{{DYNAMIC_TIMETAMP}}`. This approach does not currently work for duplicate keys.
 
 ### Redis Feature steps
 

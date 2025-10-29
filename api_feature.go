@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
+	"github.com/ONSdigital/dp-component-test/validator"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
@@ -210,7 +211,7 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponse(expectedAPIResponse 
 		return fmt.Errorf("error unmarshalling expected response body: %w", err)
 	}
 
-	actualValidated, expectedValidated, err := validateDynamicTimestamps(string(body), expectedAPIResponse.Content)
+	actualValidated, expectedValidated, err := validateDynamicValues(string(body), expectedAPIResponse.Content)
 	if err != nil {
 		return err
 	}
@@ -248,37 +249,81 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponseWithStatus(expectedCo
 	return f.IShouldReceiveTheFollowingJSONResponse(expectedBody)
 }
 
-// validateDynamicTimestamps checks for any fields in expected with the value "{{DYNAMIC_TIMESTAMP}}", validates them and replaces them with a placeholder.
-// Returns error if any such field in actual is not a valid RFC3339 timestamp within 10s of now.
-func validateDynamicTimestamps(actual, expected string) (actualValidated, expectedValidated string, err error) {
-	timestampRegex := regexp.MustCompile(`"([^"]+)":\s*"{{DYNAMIC_TIMESTAMP}}"`)
-	matches := timestampRegex.FindAllStringSubmatch(expected, -1)
+type DynamicValidator struct {
+	ValidationFunc func(value string) bool
+	Placeholder    string
+}
 
-	// For each field with a dynamic timestamp, validate and replace in both actual and expected
-	for _, match := range matches {
-		field := match[1]
-		jsonFieldRegex := regexp.MustCompile(`"` + field + `":\s*"([^"]+)"`)
-		actualFieldMatch := jsonFieldRegex.FindStringSubmatch(actual)
-		if len(actualFieldMatch) != 2 {
-			return "", "", fmt.Errorf("field %q not found in actual response", field)
-		}
-
-		actualTimestampStr := actualFieldMatch[1]
-		actualParsedTimestamp, err := time.Parse(time.RFC3339, actualTimestampStr)
-		if err != nil {
-			return "", "", fmt.Errorf("field %q value %q is not a valid RFC3339 timestamp: %w", field, actualTimestampStr, err)
-		}
-
-		timestampAge := time.Since(actualParsedTimestamp)
-		if timestampAge < 0 || timestampAge > 10*time.Second {
-			return "", "", fmt.Errorf("field %q timestamp %q is not within 10s of now", field, actualTimestampStr)
-		}
-
-		actual = jsonFieldRegex.ReplaceAllString(actual, fmt.Sprintf(`%q: "VALID_TIMESTAMP"`, field))
-		expected = jsonFieldRegex.ReplaceAllString(expected, fmt.Sprintf(`%q: "VALID_TIMESTAMP"`, field))
+func (v DynamicValidator) Validate(field, actual, expected string) (actualValidated, expectedValidated string, err error) {
+	// Extract the value for the field from the actual JSON
+	jsonFieldRegex := regexp.MustCompile(`"` + field + `":\s*"([^"]+)"`)
+	actualFieldMatch := jsonFieldRegex.FindStringSubmatch(actual)
+	if len(actualFieldMatch) != 2 {
+		return "", "", fmt.Errorf("field %q not found in actual response", field)
 	}
 
-	return actual, expected, nil
+	actualValue := actualFieldMatch[1]
+
+	validValue := v.ValidationFunc(actualValue)
+	if !validValue {
+		return "", "", fmt.Errorf("field %q value %q is not a valid value: %w", field, actualValue, err)
+	}
+
+	// Replace the dynamic value with the placeholder
+	// TODO: this relies on unique keys in the json, if there was a nested key that
+	// duplicated an unnested one then they would overwrite the validation.
+	actualValidated = jsonFieldRegex.ReplaceAllString(actual, fmt.Sprintf(`%q: %q`, field, v.Placeholder))
+	expectedValidated = jsonFieldRegex.ReplaceAllString(expected, fmt.Sprintf(`%q: %q`, field, v.Placeholder))
+
+	return actualValidated, expectedValidated, nil
+}
+
+var dynamicValidators = map[string]DynamicValidator{
+	"TIMESTAMP": {
+		ValidationFunc: validator.ValidateTimestamp,
+		Placeholder:    "VALID_TIMESTAMP",
+	},
+	"RECENT_TIMESTAMP": {
+		ValidationFunc: validator.ValidateRecentTimestamp,
+		Placeholder:    "VALID_RECENT_TIMESTAMP",
+	},
+	"URL": {
+		ValidationFunc: validator.ValidateURL,
+		Placeholder:    "VALID_URL",
+	},
+	"UUID": {
+		ValidationFunc: validator.ValidateUUID,
+		Placeholder:    "VALID_UUID",
+	},
+}
+
+// validateDynamicValues checks for any fields in expected with dynamic value strings, e.g. "{{DYNAMIC_TIMESTAMP}}", validates them and replaces
+// them with a placeholder.
+func validateDynamicValues(actual, expected string) (actualValidated, expectedValidated string, err error) {
+	dynamicRegex := regexp.MustCompile(`"([^"]+)":\s*"{{DYNAMIC_(.+)}}"`)
+	matches := dynamicRegex.FindAllStringSubmatch(expected, -1)
+
+	actualValidated = actual
+	expectedValidated = expected
+
+	// For each field with a dynamic value, validate and replace in both actual and expected
+	for _, match := range matches {
+		field := match[1]
+		validationType := match[2]
+
+		validatorFunc, exists := dynamicValidators[validationType]
+		if !exists {
+			return "", "", fmt.Errorf("unknown validation type: %s", validationType)
+		}
+
+		var err error
+		actualValidated, expectedValidated, err = validatorFunc.Validate(field, actualValidated, expectedValidated)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	return actualValidated, expectedValidated, nil
 }
 
 // iHaveAHealthCheckIntervalOfSecond sets healthcheck interval and critical timeout
