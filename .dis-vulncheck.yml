@@ -1,0 +1,19 @@
+---
+ignore:
+  - id: "GO-2025-4007"
+    reason: "We can't upgrade to >1.24.6 yet due to the dependency on mim server - this is only test code so is not concerning"
+  - id: "GO-2025-4008"
+    reason: "We can't upgrade to >1.24.6  yet due to the dependency on mim server - this is only test code so is not concerning"
+  - id: "GO-2025-4009"
+    reason: "We can't upgrade to >1.24.6  yet due to the dependency on mim server - this is only test code so is not concerning"
+  - id: "GO-2025-4010"
+    reason: "We can't upgrade to >1.24.6 yet due to the dependency on mim server - this is only test code so is not concerning"
+  - id: "GO-2025-4011"
+    reason: "We can't upgrade to >1.24.6 yet due to the dependency on mim server - this is only test code so is not concerning"
+  - id: "GO-2025-4012"
+    reason: "We can't upgrade to >1.24.6 yet due to the dependency on mim server - this is only test code so is not concerning"
+  - id: "GO-2025-4013"
+    reason: "We can't upgrade to >1.24.6 yet due to the dependency on mim server - this is only test code so is not concerning"
+  - id: "GO-2025-4014"
+    reason: "We can't upgrade to >1.24.6 yet due to the dependency on mim server - this is only test code so is not concerning"
+
