@@ -170,7 +170,10 @@ If you are adding a new testing feature entirely, it might be worth adding a new
 
 For local dependencies, we use [testcontainers](https://golang.testcontainers.org/) for near neighbour testing where we can run a dependency via docker to connect to.
 
-Currently, the only service using this is [mongo_feature](./mongo_feature.go) but in future more types may be added.
+Currently, the tests using this are:
+
+- [mongo_feature](./mongo_feature.go)
+- [redis_feature](./redis_feature.go)
 
 To use this with colima you will need to set the following env vars:
 
