@@ -74,6 +74,25 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	}
 }
 
+// ConnectionString returns the underlying in-memory mongo server URI.
+// Kept with a context param to match callers that expect a context-aware signature,
+// but the in-memory server exposes a simple URI method so we ignore the ctx.
+func (m *MongoFeature) ConnectionString(ctx context.Context) (string, error) {
+	if m == nil || m.Server == nil {
+		return "", fmt.Errorf("mongo feature or server is nil")
+	}
+	return m.Server.URI(), nil
+}
+
+// URI is a convenience method that returns the connection URI.
+// This is useful for passing into constructors that expect a Mongo URI string.
+func (m *MongoFeature) URI() (string, error) {
+	if m == nil || m.Server == nil {
+		return "", fmt.Errorf("mongo feature or server is nil")
+	}
+	return m.Server.URI(), nil
+}
+
 // Reset is currently not implemented
 func (m *MongoFeature) Reset() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
