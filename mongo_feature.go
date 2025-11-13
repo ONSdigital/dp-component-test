@@ -86,6 +86,14 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	}
 }
 
+// GetConnectionString returns the MongoDB connection string for the container
+func (m *MongoFeature) GetConnectionString() (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	return m.Server.ConnectionString(ctx)
+}
+
 // Reset is currently not implemented
 func (m *MongoFeature) Reset() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
