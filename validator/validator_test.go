@@ -126,3 +126,29 @@ func TestValidateURL(t *testing.T) {
 		})
 	})
 }
+
+func TestValidateURIPath(t *testing.T) {
+	Convey("Given a valid URI path", t, func() {
+		uriPath := "/economy/data"
+
+		Convey("When it is validated", func() {
+			valid := ValidateURIPath(uriPath)
+
+			Convey("Then it is valid", func() {
+				So(valid, ShouldBeTrue)
+			})
+		})
+	})
+
+	Convey("Given an invalid URI path", t, func() {
+		uriPath := ""
+
+		Convey("When it is validated", func() {
+			valid := ValidateURIPath(uriPath)
+
+			Convey("Then it is invalid", func() {
+				So(valid, ShouldBeFalse)
+			})
+		})
+	})
+}

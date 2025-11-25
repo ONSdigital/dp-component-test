@@ -53,6 +53,7 @@ Feature: Example feature
           "embedded": {
             "inner_timestamp": "{{DYNAMIC_RECENT_TIMESTAMP}}"
           },
+          "uri_path": "{{DYNAMIC_URI_PATH}}",
           "url": "{{DYNAMIC_URL}}"
         }
         """

@@ -21,6 +21,7 @@ type DynamicResponse struct {
 	Timestamp     time.Time         `json:"timestamp"`
 	ID            string            `json:"id"`
 	EmbeddedField EmbeddedTimestamp `json:"embedded"`
+	URIPath       string            `json:"uri_path"`
 	URL           string            `json:"url"`
 }
 
@@ -96,7 +97,8 @@ func dynamicValidationHandler(w http.ResponseWriter, _ *http.Request) {
 		EmbeddedField: EmbeddedTimestamp{
 			InnerTimestamp: time.Now(),
 		},
-		URL: fmt.Sprintf("http://localhost/endpoint/%s", uuid.New().String()),
+		URIPath: "/endpoint/" + uuid.New().String(),
+		URL:     fmt.Sprintf("http://localhost/endpoint/%s", uuid.New().String()),
 	}
 
 	w.Header().Set("Content-Type", "application/json")

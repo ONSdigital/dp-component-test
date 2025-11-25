@@ -47,3 +47,16 @@ func ValidateURL(value string) bool {
 	}
 	return true
 }
+
+func ValidateURIPath(value string) bool {
+	parsedURL, err := url.Parse(value)
+	if err != nil {
+		return false
+	}
+
+	if parsedURL.Path == "" {
+		return false
+	}
+
+	return true
+}

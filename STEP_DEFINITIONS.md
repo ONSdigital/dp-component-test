@@ -71,6 +71,7 @@ variables in the table above.
 
 - `DYNAMIC_RECENT_TIMESTAMP` - validates against RFC339 from the last 10 seconds
 - `DYNAMIC_TIMESTAMP` - validate against RFC339
+- `DYNAMIC_URI_PATH` - validates against uri paths, e.g. /economy/data
 - `DYNAMIC_URL` - validates against urls.
 - `DYNAMIC_UUID` - validates against uuids.
 

@@ -287,6 +287,10 @@ var dynamicValidators = map[string]DynamicValidator{
 		ValidationFunc: validator.ValidateRecentTimestamp,
 		Placeholder:    "VALID_RECENT_TIMESTAMP",
 	},
+	"URI_PATH": {
+		ValidationFunc: validator.ValidateURIPath,
+		Placeholder:    "VALID_URI_PATH",
+	},
 	"URL": {
 		ValidationFunc: validator.ValidateURL,
 		Placeholder:    "VALID_URL",
