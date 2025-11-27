@@ -12,6 +12,7 @@ import (
 	a11y "github.com/ONSdigital/dp-component-test/utils"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/chromedp"
 	"github.com/cucumber/godog"
 	"github.com/stretchr/testify/assert"
@@ -81,6 +82,9 @@ func (f *UIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the page should be accessible$`, f.thePageShouldBeAccessible)
 	ctx.Step(`^the page should be accessible with the following exceptions$`, f.thePageShouldBeAccessibleWithTheExceptions)
 	ctx.Step(`^I should be redirected to "([^"]*)"`, f.iShouldBeRedirectedTo)
+	ctx.Step(`^I set the viewport to (\d+) and (\d+)$`, f.iSetTheViewport)
+	ctx.Step(`^I set the viewport to mobile`, f.iSetTheViewportToMobile)
+	ctx.Step(`^I set the viewport to tablet`, f.iSetTheViewportToTablet)
 }
 
 func (f *UIFeature) iNavigateTo(route string) error {
@@ -333,5 +337,40 @@ func (f *UIFeature) CheckLocationUntilTimeOut(expectedURL string) error {
 
 		time.Sleep(50 * time.Millisecond)
 	}
+	return f.StepError()
+}
+
+func (f *UIFeature) iSetTheViewport(width, height int) error {
+	err := chromedp.Run(f.Chrome.Ctx,
+		chromedp.EmulateViewport(int64(width), int64(height)),
+	)
+	if err != nil {
+		return err
+	}
+
+	return f.StepError()
+}
+
+func (f *UIFeature) iSetTheViewportToMobile() error {
+	err := chromedp.Run(f.Chrome.Ctx,
+		emulation.SetDeviceMetricsOverride(320, 480, 1, true),
+		emulation.SetTouchEmulationEnabled(true),
+	)
+	if err != nil {
+		return err
+	}
+
+	return f.StepError()
+}
+
+func (f *UIFeature) iSetTheViewportToTablet() error {
+	err := chromedp.Run(f.Chrome.Ctx,
+		emulation.SetDeviceMetricsOverride(768, 1024, 1, true),
+		emulation.SetTouchEmulationEnabled(true),
+	)
+	if err != nil {
+		return err
+	}
+
 	return f.StepError()
 }

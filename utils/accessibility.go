@@ -149,7 +149,7 @@ func RunTestWithConfig(ctx context.Context, cfg AccessibilityConfig) ([]Violatio
 			return p.WithAwaitPromise(true)
 		}),
 	); err != nil {
-		return nil, "", fmt.Errorf("error occured running accessibility script")
+		return nil, "", fmt.Errorf("error occurred running accessibility script")
 	}
 
 	var violations []Violation

@@ -101,6 +101,9 @@ Each value should be enclosed with double curly braces, e.g.: `{{DYNAMIC_TIMETAM
 
 | Step                                                                     | What it does                                                                                        | Scenario Position |
 |--------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|-------------------|
+| I set the viewport to "WIDTH" and "HEIGHT"                               | Set the viewport to pixel width (int) and pixel height (int) __Note: touch is deactivated__         | Given             |
+| I set the viewport to mobile                                             | Set the viewport to a typical mobile size (320px by 480px)                                          | Given             |
+| I set the viewport to tablet                                             | Set the viewport to a typical tablet size (768px by 1024px)                                         | Given             |
 | I navigate to "URL"                                                      | Navigate to URL in Chrome                                                                           | When              |
 | input element "SELECTOR" has value "VALUE"                               | Assert that a HTML input element on the web page has the value VALUE                                | Then              |
 | element "SELECTOR" should be visible                                     | Assert that a HTML element on the web page matches SELECTOR                                         | Then              |
