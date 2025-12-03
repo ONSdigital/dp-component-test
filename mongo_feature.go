@@ -72,6 +72,12 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 		panic(err)
 	}
 
+	// There is an issue with testcontainers and replica sets where the driver
+	// requires directConnection=true to connect properly
+	if mongoOptions.ReplicaSetName != "" {
+		endpoint += "&directConnection=true"
+	}
+
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(endpoint))
 	if err != nil {
 		panic(err)
