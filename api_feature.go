@@ -90,6 +90,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I PATCH "([^"]*)"$`, f.IPatch)
 	ctx.Step(`^I DELETE "([^"]*)"`, f.IDelete)
 	ctx.Step(`^I am an admin user$`, f.adminJWTToken)
+	ctx.Step(`^I am a publisher user$`, f.publisherJWTToken)
 	ctx.Step(`^I am not authenticated$`, f.iAmNotAuthenticated)
 	ctx.Step(`^the HTTP status code should be "([^"]*)"$`, f.TheHTTPStatusCodeShouldBe)
 	ctx.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, f.TheResponseHeaderShouldBe)
@@ -106,6 +107,11 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 
 func (f *APIFeature) adminJWTToken() error {
 	err := f.ISetTheHeaderTo("Authorization", authorisationtest.AdminJWTToken)
+	return err
+}
+
+func (f *APIFeature) publisherJWTToken() error {
+	err := f.ISetTheHeaderTo("Authorization", authorisationtest.PublisherJWTToken)
 	return err
 }
 
