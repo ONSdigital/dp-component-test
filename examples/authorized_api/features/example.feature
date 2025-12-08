@@ -192,4 +192,32 @@ Feature: Example feature
             accepted
             """
 
+    Scenario: a publisher user has multiple permissions provided as JSON
+        Given I am authorised
+        And a publisher user has the following permissions as JSON:
+            """
+            {
+                "read": {
+                    "users/publisher": [
+                        { "id": "1" }
+                    ]
+                },
+                "update": {
+                    "users/publisher": [
+                        { "id": "1" }
+                    ]
+                }
+            }
+            """
+        And I am a publisher user
+        When I PUT "/example3"
+            """
+            update something
+            """
+        Then the HTTP status code should be "200"
+        And I should receive the following response:
+            """
+            accepted
+            """
+
 

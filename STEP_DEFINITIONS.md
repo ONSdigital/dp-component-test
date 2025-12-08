@@ -50,6 +50,7 @@ variables in the table above.
 | the following document exists in the "COLLECTION" collection: \_BODY\_               | put document BODY in the COLLECTION collection                                       | Given             |
 | I set the "KEY" header to "VALUE"                                                    | set a HTTP header of the request to the value                                        | Given             |
 | I am an admin user                                                                   | set the request Authorization header to an admin JWT token                           | Given             |
+| I am a publisher user                                                                | set the request Authorization header to a publisher JWT token                        | Given             |
 | I am not authenticated                                                               | removes any Authorization header set in the request headers                          | Given             |
 | I GET "URL"                                                                          | make a GET request to the provided URL                                               | When              |
 | I DELETE "URL"                                                                       | make a DELETE request to the provided URL                                            | When              |
