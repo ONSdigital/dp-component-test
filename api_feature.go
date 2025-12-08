@@ -406,7 +406,7 @@ func (f *APIFeature) validateHealthCheck(checkResponse, expectedCheck *Check) {
 	assert.True(&f.ErrorFeature, checkResponse.LastChecked.Before(maxExpectedHealthCheckTime.UTC()))
 	assert.True(&f.ErrorFeature, checkResponse.LastChecked.After(f.StartTime))
 
-	if expectedCheck.StatusCode == 200 {
+	if expectedCheck.Status == healthcheck.StatusOK {
 		lastSuccess := checkResponse.LastSuccess
 
 		if lastSuccess != nil {
