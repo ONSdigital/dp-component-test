@@ -17,10 +17,16 @@ type EmbeddedTimestamp struct {
 	InnerTimestamp time.Time `json:"inner_timestamp"`
 }
 
+type EmbeddedItem struct {
+	ID          string    `json:"id"`
+	LastUpdated time.Time `json:"last_updated"`
+}
+
 type DynamicResponse struct {
 	Timestamp     time.Time         `json:"timestamp"`
 	ID            string            `json:"id"`
 	EmbeddedField EmbeddedTimestamp `json:"embedded"`
+	Items         []EmbeddedItem    `json:"items"`
 	URIPath       string            `json:"uri_path"`
 	URL           string            `json:"url"`
 }
@@ -96,6 +102,16 @@ func dynamicValidationHandler(w http.ResponseWriter, _ *http.Request) {
 		ID:        uuid.New().String(),
 		EmbeddedField: EmbeddedTimestamp{
 			InnerTimestamp: time.Now(),
+		},
+		Items: []EmbeddedItem{
+			{
+				ID:          uuid.New().String(),
+				LastUpdated: time.Now(),
+			},
+			{
+				ID:          uuid.New().String(),
+				LastUpdated: time.Now(),
+			},
 		},
 		URIPath: "/endpoint/" + uuid.New().String(),
 		URL:     fmt.Sprintf("http://localhost/endpoint/%s", uuid.New().String()),
