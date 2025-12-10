@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -201,7 +202,7 @@ func (f *APIFeature) IShouldReceiveTheFollowingResponse(expectedAPIResponse *god
 }
 
 // IShouldReceiveTheFollowingJSONResponse asserts that the response body and expected response body are equal.
-// This also validates any "{{DYNAMIC_TIMESTAMP}}" fields.
+// This also validates any dynamic fields.
 func (f *APIFeature) IShouldReceiveTheFollowingJSONResponse(expectedAPIResponse *godog.DocString) error {
 	responseBody := f.HTTPResponse.Body
 	body, err := io.ReadAll(responseBody)
@@ -260,80 +261,218 @@ type DynamicValidator struct {
 	Placeholder    string
 }
 
-func (v DynamicValidator) Validate(field, actual, expected string) (actualValidated, expectedValidated string, err error) {
-	// Extract the value for the field from the actual JSON
-	jsonFieldRegex := regexp.MustCompile(`"` + field + `":\s*"([^"]+)"`)
-	actualFieldMatch := jsonFieldRegex.FindStringSubmatch(actual)
-	if len(actualFieldMatch) != 2 {
-		return "", "", fmt.Errorf("field %q not found in actual response", field)
+func (v DynamicValidator) Validate(coord string, actual, expected map[string]interface{}) (actualValidated, expectedValidated map[string]interface{}, err error) {
+	actualFieldValue, err := getNestedValueByCoords(actual, coord)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	actualValue := actualFieldMatch[1]
-
-	validValue := v.ValidationFunc(actualValue)
+	validValue := v.ValidationFunc(actualFieldValue.(string))
 	if !validValue {
-		return "", "", fmt.Errorf("field %q value %q is not a valid value: %w", field, actualValue, err)
+		return nil, nil, fmt.Errorf("field %q value %q is not a valid value", coord, actualFieldValue)
 	}
 
-	// Replace the dynamic value with the placeholder
-	// TODO: this relies on unique keys in the json, if there was a nested key that
-	// duplicated an unnested one then they would overwrite the validation.
-	actualValidated = jsonFieldRegex.ReplaceAllString(actual, fmt.Sprintf(`%q: %q`, field, v.Placeholder))
-	expectedValidated = jsonFieldRegex.ReplaceAllString(expected, fmt.Sprintf(`%q: %q`, field, v.Placeholder))
+	actualValidated, err = setNestedValueByCoords(actual, coord, v.Placeholder)
+	if err != nil {
+		return nil, nil, err
+	}
+	expectedValidated, err = setNestedValueByCoords(expected, coord, v.Placeholder)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	return actualValidated, expectedValidated, nil
 }
 
-var dynamicValidators = map[string]DynamicValidator{
-	"TIMESTAMP": {
+type DynamicValueType string
+
+const (
+	ValidPrefix                             = "VALID"
+	DynamicTimestamp       DynamicValueType = "TIMESTAMP"
+	DynamicRecentTimestamp DynamicValueType = "RECENT_TIMESTAMP"
+	DynamicURIPath         DynamicValueType = "URI_PATH"
+	DynamicURL             DynamicValueType = "URL"
+	DynamicUUID            DynamicValueType = "UUID"
+)
+
+var dynamicValidators = map[DynamicValueType]DynamicValidator{
+	DynamicTimestamp: {
 		ValidationFunc: validator.ValidateTimestamp,
-		Placeholder:    "VALID_TIMESTAMP",
+		Placeholder:    fmt.Sprintf("%s_%s", ValidPrefix, DynamicTimestamp),
 	},
-	"RECENT_TIMESTAMP": {
+	DynamicRecentTimestamp: {
 		ValidationFunc: validator.ValidateRecentTimestamp,
-		Placeholder:    "VALID_RECENT_TIMESTAMP",
+		Placeholder:    fmt.Sprintf("%s_%s", ValidPrefix, DynamicRecentTimestamp),
 	},
-	"URI_PATH": {
+	DynamicURIPath: {
 		ValidationFunc: validator.ValidateURIPath,
-		Placeholder:    "VALID_URI_PATH",
+		Placeholder:    fmt.Sprintf("%s_%s", ValidPrefix, DynamicURIPath),
 	},
-	"URL": {
+	DynamicURL: {
 		ValidationFunc: validator.ValidateURL,
-		Placeholder:    "VALID_URL",
+		Placeholder:    fmt.Sprintf("%s_%s", ValidPrefix, DynamicURL),
 	},
-	"UUID": {
+	DynamicUUID: {
 		ValidationFunc: validator.ValidateUUID,
-		Placeholder:    "VALID_UUID",
+		Placeholder:    fmt.Sprintf("%s_%s", ValidPrefix, DynamicUUID),
 	},
+}
+
+type DynamicValue struct {
+	Coord string
+	Type  DynamicValueType
 }
 
 // validateDynamicValues checks for any fields in expected with dynamic value strings, e.g. "{{DYNAMIC_TIMESTAMP}}", validates them and replaces
 // them with a placeholder.
 func validateDynamicValues(actual, expected string) (actualValidated, expectedValidated string, err error) {
-	dynamicRegex := regexp.MustCompile(`"([^"]+)":\s*"{{DYNAMIC_(.+)}}"`)
-	matches := dynamicRegex.FindAllStringSubmatch(expected, -1)
+	var parsedActual map[string]interface{}
+	var parsedExpected map[string]interface{}
+	if err := json.Unmarshal([]byte(actual), &parsedActual); err != nil {
+		return "", "", fmt.Errorf("error unmarshalling actual response: %w", err)
+	}
+	if err := json.Unmarshal([]byte(expected), &parsedExpected); err != nil {
+		return "", "", fmt.Errorf("error unmarshalling expected response: %w", err)
+	}
 
-	actualValidated = actual
-	expectedValidated = expected
+	var dynamicValues []DynamicValue
+	findDynamicValueCoordinates(parsedExpected, "", &dynamicValues)
 
 	// For each field with a dynamic value, validate and replace in both actual and expected
-	for _, match := range matches {
-		field := match[1]
-		validationType := match[2]
-
-		validatorFunc, exists := dynamicValidators[validationType]
+	for _, dynamicValue := range dynamicValues {
+		validatorFunc, exists := dynamicValidators[dynamicValue.Type]
 		if !exists {
-			return "", "", fmt.Errorf("unknown validation type: %s", validationType)
+			return "", "", fmt.Errorf("unknown validation type: %s", dynamicValue.Type)
 		}
 
-		var err error
-		actualValidated, expectedValidated, err = validatorFunc.Validate(field, actualValidated, expectedValidated)
+		parsedActual, parsedExpected, err = validatorFunc.Validate(dynamicValue.Coord, parsedActual, parsedExpected)
 		if err != nil {
 			return "", "", err
 		}
 	}
 
-	return actualValidated, expectedValidated, nil
+	actualBytes, err := json.Marshal(parsedActual)
+	if err != nil {
+		return "", "", fmt.Errorf("error marshalling validated actual: %w", err)
+	}
+	expectedBytes, err := json.Marshal(parsedExpected)
+	if err != nil {
+		return "", "", fmt.Errorf("error marshalling validated expected: %w", err)
+	}
+	return string(actualBytes), string(expectedBytes), nil
+}
+
+// findDynamicValueCoordinates recursively searches a nested map/array structure for dynamic value placeholders
+// and appends their coordinates and types to the results slice.
+func findDynamicValueCoordinates(m map[string]interface{}, prefix string, results *[]DynamicValue) {
+	var dynamicPattern = regexp.MustCompile(`^\{\{DYNAMIC_([A-Z_0-9]+)\}\}$`)
+
+	for key, value := range m {
+		fullKey := key
+		if prefix != "" {
+			fullKey = prefix + "." + key
+		}
+
+		// Check the type of the value
+		switch val := value.(type) {
+		// If object, recurse
+		case map[string]interface{}:
+			findDynamicValueCoordinates(val, fullKey, results)
+		// If array, check each item
+		case []interface{}:
+			for i, item := range val {
+				if subMap, ok := item.(map[string]interface{}); ok {
+					findDynamicValueCoordinates(subMap, fmt.Sprintf("%s[%d]", fullKey, i), results)
+				} else if str, ok := item.(string); ok && dynamicPattern.MatchString(str) {
+					*results = append(*results, DynamicValue{Coord: fmt.Sprintf("%s[%d]", fullKey, i), Type: DynamicValueType(dynamicPattern.FindStringSubmatch(str)[1])})
+				}
+			}
+		// If string, check for dynamic pattern
+		default:
+			if reflect.TypeOf(val).Kind() == reflect.String && dynamicPattern.MatchString(val.(string)) {
+				*results = append(*results, DynamicValue{Coord: fullKey, Type: DynamicValueType(dynamicPattern.FindStringSubmatch(val.(string))[1])})
+			}
+		}
+	}
+}
+
+// traversePath traverses a nested map/array structure and returns the parent, key/index, and value at the path
+// in JSON dot notation (e.g. "data.items[0].id")
+func traversePath(root interface{}, coords string) (parent, key, value interface{}) {
+	parts := strings.Split(coords, ".")
+	var val = root
+	var prev interface{}
+	var k interface{}
+	for i, part := range parts {
+		// Check for array index
+		if idxStart := strings.Index(part, "["); idxStart != -1 && strings.HasSuffix(part, "]") {
+			keyStr := part[:idxStart]
+			idxStr := part[idxStart+1 : len(part)-1]
+			idx, err := strconv.Atoi(idxStr)
+			if err != nil {
+				return nil, nil, nil
+			}
+			if m2, ok := val.(map[string]interface{}); ok {
+				arr, ok := m2[keyStr].([]interface{})
+				if !ok || idx >= len(arr) {
+					return nil, nil, nil
+				}
+				prev = arr
+				k = idx
+				val = arr[idx]
+			} else {
+				return nil, nil, nil
+			}
+		} else {
+			// Check if object
+			if m2, ok := val.(map[string]interface{}); ok {
+				prev = m2
+				k = part
+				val = m2[part]
+			} else {
+				// No longer traversable
+				return nil, nil, nil
+			}
+		}
+		// If last part, return parent, key, value
+		if i == len(parts)-1 {
+			return prev, k, val
+		}
+	}
+	// Didn't find coords
+	return nil, nil, nil
+}
+
+// getNestedValueByCoords retrieves a value from a nested map/array structure at the specified path
+// in JSON dot notation (e.g. "data.items[0].id")
+func getNestedValueByCoords(m map[string]interface{}, coords string) (interface{}, error) {
+	_, _, value := traversePath(m, coords)
+	if value == nil {
+		return nil, fmt.Errorf("value not found for coords: %s", coords)
+	}
+	return value, nil
+}
+
+// setNestedValueByCoords sets a value in a nested map/array structure at the specified path
+// in JSON dot notation (e.g. "data.items[0].id")
+func setNestedValueByCoords(m map[string]interface{}, coords string, value interface{}) (map[string]interface{}, error) {
+	parent, key, _ := traversePath(m, coords)
+	// Check the parent type
+	switch p := parent.(type) {
+	// if object
+	case map[string]interface{}:
+		if k, ok := key.(string); ok {
+			p[k] = value
+			return m, nil
+		}
+	// if array
+	case []interface{}:
+		if idx, ok := key.(int); ok && idx < len(p) {
+			p[idx] = value
+			return m, nil
+		}
+	}
+	return m, fmt.Errorf("could not set value for coords: %s", coords)
 }
 
 // iHaveAHealthCheckIntervalOfSecond sets healthcheck interval and critical timeout

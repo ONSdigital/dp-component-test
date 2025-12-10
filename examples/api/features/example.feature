@@ -43,6 +43,7 @@ Feature: Example feature
               ]
             }
           """
+    @DynamicValidation
     Scenario: Dynamic validation handler
         When I GET "/dynamic/validation"
         Then I should receive the following JSON response with status "200":
@@ -53,6 +54,16 @@ Feature: Example feature
           "embedded": {
             "inner_timestamp": "{{DYNAMIC_RECENT_TIMESTAMP}}"
           },
+          "items": [
+            {
+              "id": "{{DYNAMIC_UUID}}",
+              "last_updated": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+            },
+            {
+              "id": "{{DYNAMIC_UUID}}",
+              "last_updated": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+            }
+          ],
           "uri_path": "{{DYNAMIC_URI_PATH}}",
           "url": "{{DYNAMIC_URL}}"
         }

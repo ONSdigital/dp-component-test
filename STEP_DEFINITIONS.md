@@ -76,7 +76,7 @@ variables in the table above.
 - `DYNAMIC_URL` - validates against urls.
 - `DYNAMIC_UUID` - validates against uuids.
 
-Each value should be enclosed with double curly braces, e.g.: `{{DYNAMIC_TIMETAMP}}`. This approach does not currently work for duplicate keys.
+Each value should be enclosed with double curly braces, e.g.: `{{DYNAMIC_TIMETAMP}}`.
 
 ### Redis Feature steps
 
