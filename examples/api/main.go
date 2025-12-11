@@ -17,10 +17,16 @@ type EmbeddedTimestamp struct {
 	InnerTimestamp time.Time `json:"inner_timestamp"`
 }
 
+type EmbeddedItem struct {
+	ID          string    `json:"id"`
+	LastUpdated time.Time `json:"last_updated"`
+}
+
 type DynamicResponse struct {
 	Timestamp     time.Time         `json:"timestamp"`
 	ID            string            `json:"id"`
 	EmbeddedField EmbeddedTimestamp `json:"embedded"`
+	Items         []EmbeddedItem    `json:"items"`
 	URIPath       string            `json:"uri_path"`
 	URL           string            `json:"url"`
 }
@@ -90,25 +96,81 @@ func ExampleHealthHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func dynamicValidationHandler(w http.ResponseWriter, _ *http.Request) {
+func dynamicValidationObjectHandler(w http.ResponseWriter, _ *http.Request) {
 	response := DynamicResponse{
 		Timestamp: time.Now(),
 		ID:        uuid.New().String(),
 		EmbeddedField: EmbeddedTimestamp{
 			InnerTimestamp: time.Now(),
 		},
+		Items: []EmbeddedItem{
+			{
+				ID:          uuid.New().String(),
+				LastUpdated: time.Now(),
+			},
+			{
+				ID:          uuid.New().String(),
+				LastUpdated: time.Now(),
+			},
+		},
 		URIPath: "/endpoint/" + uuid.New().String(),
 		URL:     fmt.Sprintf("http://localhost/endpoint/%s", uuid.New().String()),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
+	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		log.Printf("failed to encode response: %v", err)
+	}
+}
+
+func dynamicValidationArrayHandler(w http.ResponseWriter, _ *http.Request) {
+	responses := []DynamicResponse{
+		{
+			Timestamp: time.Now(),
+			ID:        uuid.New().String(),
+			EmbeddedField: EmbeddedTimestamp{
+				InnerTimestamp: time.Now(),
+			},
+			Items: []EmbeddedItem{
+				{
+					ID:          uuid.New().String(),
+					LastUpdated: time.Now(),
+				},
+				{
+					ID:          uuid.New().String(),
+					LastUpdated: time.Now(),
+				},
+			},
+			URIPath: "/endpoint/" + uuid.New().String(),
+			URL:     fmt.Sprintf("http://localhost/endpoint/%s", uuid.New().String()),
+		},
+		{
+			Timestamp: time.Now(),
+			ID:        uuid.New().String(),
+			EmbeddedField: EmbeddedTimestamp{
+				InnerTimestamp: time.Now(),
+			},
+			Items: []EmbeddedItem{
+				{
+					ID:          uuid.New().String(),
+					LastUpdated: time.Now(),
+				},
+				{
+					ID:          uuid.New().String(),
+					LastUpdated: time.Now(),
+				},
+			},
+			URIPath: "/endpoint/" + uuid.New().String(),
+			URL:     fmt.Sprintf("http://localhost/endpoint/%s", uuid.New().String()),
+		},
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(responses); err != nil {
+		log.Printf("failed to encode responses: %v", err)
+	}
 }
 
 func newRouter() http.Handler {
@@ -117,7 +179,8 @@ func newRouter() http.Handler {
 	router.HandleFunc("/example1", ExampleHandler1).Methods("GET")
 	router.HandleFunc("/example2", ExampleHandler2).Methods("POST")
 	router.HandleFunc("/health", ExampleHealthHandler).Methods("GET")
-	router.HandleFunc("/dynamic/validation", dynamicValidationHandler).Methods("GET")
+	router.HandleFunc("/dynamic/validation/object", dynamicValidationObjectHandler).Methods("GET")
+	router.HandleFunc("/dynamic/validation/array", dynamicValidationArrayHandler).Methods("GET")
 
 	return router
 }
