@@ -209,14 +209,6 @@ func (f *APIFeature) IShouldReceiveTheFollowingJSONResponse(expectedAPIResponse 
 		return fmt.Errorf("error reading response body: %w", err)
 	}
 
-	var actual, expected map[string]interface{}
-	if err := json.Unmarshal(body, &actual); err != nil {
-		return fmt.Errorf("error unmarshalling actual response body: %w", err)
-	}
-	if err := json.Unmarshal([]byte(expectedAPIResponse.Content), &expected); err != nil {
-		return fmt.Errorf("error unmarshalling expected response body: %w", err)
-	}
-
 	actualValidated, expectedValidated, err := validateDynamicValues(string(body), expectedAPIResponse.Content)
 	if err != nil {
 		return err
@@ -260,30 +252,6 @@ type DynamicValidator struct {
 	Placeholder    string
 }
 
-func (v DynamicValidator) Validate(field, actual, expected string) (actualValidated, expectedValidated string, err error) {
-	// Extract the value for the field from the actual JSON
-	jsonFieldRegex := regexp.MustCompile(`"` + field + `":\s*"([^"]+)"`)
-	actualFieldMatch := jsonFieldRegex.FindStringSubmatch(actual)
-	if len(actualFieldMatch) != 2 {
-		return "", "", fmt.Errorf("field %q not found in actual response", field)
-	}
-
-	actualValue := actualFieldMatch[1]
-
-	validValue := v.ValidationFunc(actualValue)
-	if !validValue {
-		return "", "", fmt.Errorf("field %q value %q is not a valid value: %w", field, actualValue, err)
-	}
-
-	// Replace the dynamic value with the placeholder
-	// TODO: this relies on unique keys in the json, if there was a nested key that
-	// duplicated an unnested one then they would overwrite the validation.
-	actualValidated = jsonFieldRegex.ReplaceAllString(actual, fmt.Sprintf(`%q: %q`, field, v.Placeholder))
-	expectedValidated = jsonFieldRegex.ReplaceAllString(expected, fmt.Sprintf(`%q: %q`, field, v.Placeholder))
-
-	return actualValidated, expectedValidated, nil
-}
-
 var dynamicValidators = map[string]DynamicValidator{
 	"TIMESTAMP": {
 		ValidationFunc: validator.ValidateTimestamp,
@@ -307,33 +275,132 @@ var dynamicValidators = map[string]DynamicValidator{
 	},
 }
 
+func (v DynamicValidator) Validate(actual, expected interface{}, path string) error {
+	switch exp := expected.(type) {
+	case map[string]interface{}:
+		act, ok := actual.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("type mismatch at %s: expected object, got %T", path, actual)
+		}
+
+		for key, expValue := range exp {
+			currentPath := key
+			if path != "" {
+				currentPath = path + "." + key
+			}
+
+			actValue, exists := act[key]
+			if !exists {
+				continue
+			}
+
+			if err := v.validateValue(act, exp, key, actValue, expValue, currentPath); err != nil {
+				return err
+			}
+		}
+
+	case []interface{}:
+		act, ok := actual.([]interface{})
+		if !ok {
+			return fmt.Errorf("type mismatch at %s: expected array, got %T", path, actual)
+		}
+
+		if len(act) != len(exp) {
+			return fmt.Errorf("array length mismatch at %s: expected %d, got %d", path, len(exp), len(act))
+		}
+
+		for i := range exp {
+			currentPath := fmt.Sprintf("[%d]", i)
+			if path != "" {
+				currentPath = path + currentPath
+			}
+
+			if err := v.Validate(act[i], exp[i], currentPath); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (v DynamicValidator) validateValue(act, exp map[string]interface{}, key string, actValue, expValue interface{}, currentPath string) error {
+	if expStr, ok := expValue.(string); ok && strings.HasPrefix(expStr, "{{DYNAMIC_") {
+		validationType := strings.TrimSuffix(strings.TrimPrefix(expStr, "{{DYNAMIC_"), "}}")
+
+		if validationType == strings.TrimPrefix(v.Placeholder, "VALID_") {
+			actStr, ok := actValue.(string)
+			if !ok {
+				return fmt.Errorf("field at %s is not a string", currentPath)
+			}
+
+			if !v.ValidationFunc(actStr) {
+				return fmt.Errorf("field at %s value %q is not valid", currentPath, actStr)
+			}
+
+			act[key] = v.Placeholder
+			exp[key] = v.Placeholder
+		}
+	}
+
+	// Always recurse into nested structures
+	if expValue != nil && actValue != nil {
+		switch expValue.(type) {
+		case map[string]interface{}, []interface{}:
+			if err := v.Validate(actValue, expValue, currentPath); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // validateDynamicValues checks for any fields in expected with dynamic value strings, e.g. "{{DYNAMIC_TIMESTAMP}}", validates them and replaces
 // them with a placeholder.
 func validateDynamicValues(actual, expected string) (actualValidated, expectedValidated string, err error) {
-	dynamicRegex := regexp.MustCompile(`"([^"]+)":\s*"{{DYNAMIC_(.+)}}"`)
+	var actualJSON, expectedJSON interface{}
+
+	if err := json.Unmarshal([]byte(actual), &actualJSON); err != nil {
+		return "", "", fmt.Errorf("failed to unmarshal actual JSON: %w", err)
+	}
+	if err := json.Unmarshal([]byte(expected), &expectedJSON); err != nil {
+		return "", "", fmt.Errorf("failed to unmarshal expected JSON: %w", err)
+	}
+
+	// Find all dynamic validation types in the expected JSON
+	dynamicRegex := regexp.MustCompile(`"{{DYNAMIC_(.+)}}"`)
 	matches := dynamicRegex.FindAllStringSubmatch(expected, -1)
 
-	actualValidated = actual
-	expectedValidated = expected
+	if len(matches) == 0 {
+		return actual, expected, nil
+	}
 
-	// For each field with a dynamic value, validate and replace in both actual and expected
+	// Process each validator type
+	processedTypes := make(map[string]bool)
 	for _, match := range matches {
-		field := match[1]
-		validationType := match[2]
+		validationType := match[1]
 
-		validatorFunc, exists := dynamicValidators[validationType]
+		if processedTypes[validationType] {
+			continue
+		}
+
+		v, exists := dynamicValidators[validationType]
 		if !exists {
 			return "", "", fmt.Errorf("unknown validation type: %s", validationType)
 		}
 
-		var err error
-		actualValidated, expectedValidated, err = validatorFunc.Validate(field, actualValidated, expectedValidated)
-		if err != nil {
+		if err := v.Validate(actualJSON, expectedJSON, ""); err != nil {
 			return "", "", err
 		}
+
+		processedTypes[validationType] = true
 	}
 
-	return actualValidated, expectedValidated, nil
+	actualBytes, _ := json.Marshal(actualJSON)
+	expectedBytes, _ := json.Marshal(expectedJSON)
+
+	return string(actualBytes), string(expectedBytes), nil
 }
 
 // iHaveAHealthCheckIntervalOfSecond sets healthcheck interval and critical timeout
