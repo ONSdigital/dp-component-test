@@ -90,7 +90,7 @@ func ExampleHealthHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func dynamicValidationHandler(w http.ResponseWriter, _ *http.Request) {
+func dynamicValidationObjectHandler(w http.ResponseWriter, _ *http.Request) {
 	response := DynamicResponse{
 		Timestamp: time.Now(),
 		ID:        uuid.New().String(),
@@ -102,13 +102,39 @@ func dynamicValidationHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
+	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		log.Printf("failed to encode response: %v", err)
+	}
+}
+
+func dynamicValidationArrayHandler(w http.ResponseWriter, _ *http.Request) {
+	responses := []DynamicResponse{
+		{
+			Timestamp: time.Now(),
+			ID:        uuid.New().String(),
+			EmbeddedField: EmbeddedTimestamp{
+				InnerTimestamp: time.Now(),
+			},
+			URIPath: "/endpoint/" + uuid.New().String(),
+			URL:     fmt.Sprintf("http://localhost/endpoint/%s", uuid.New().String()),
+		},
+		{
+			Timestamp: time.Now(),
+			ID:        uuid.New().String(),
+			EmbeddedField: EmbeddedTimestamp{
+				InnerTimestamp: time.Now(),
+			},
+			URIPath: "/endpoint/" + uuid.New().String(),
+			URL:     fmt.Sprintf("http://localhost/endpoint/%s", uuid.New().String()),
+		},
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(responses); err != nil {
+		log.Printf("failed to encode responses: %v", err)
+	}
 }
 
 func newRouter() http.Handler {
@@ -117,7 +143,8 @@ func newRouter() http.Handler {
 	router.HandleFunc("/example1", ExampleHandler1).Methods("GET")
 	router.HandleFunc("/example2", ExampleHandler2).Methods("POST")
 	router.HandleFunc("/health", ExampleHealthHandler).Methods("GET")
-	router.HandleFunc("/dynamic/validation", dynamicValidationHandler).Methods("GET")
+	router.HandleFunc("/dynamic/validation/object", dynamicValidationObjectHandler).Methods("GET")
+	router.HandleFunc("/dynamic/validation/array", dynamicValidationArrayHandler).Methods("GET")
 
 	return router
 }
