@@ -43,8 +43,9 @@ Feature: Example feature
               ]
             }
           """
-    Scenario: Dynamic validation handler
-        When I GET "/dynamic/validation"
+
+    Scenario: Dynamic validation handler returns object
+        When I GET "/dynamic/validation/object"
         Then I should receive the following JSON response with status "200":
         """
         {
@@ -53,8 +54,64 @@ Feature: Example feature
           "embedded": {
             "inner_timestamp": "{{DYNAMIC_RECENT_TIMESTAMP}}"
           },
+          "items": [
+            {
+              "id": "{{DYNAMIC_UUID}}",
+              "last_updated": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+            },
+            {
+              "id": "{{DYNAMIC_UUID}}",
+              "last_updated": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+            }
+          ],
           "uri_path": "{{DYNAMIC_URI_PATH}}",
           "url": "{{DYNAMIC_URL}}"
         }
+        """
+
+    Scenario: Dynamic validation handler returns array
+        When I GET "/dynamic/validation/array"
+        Then I should receive the following JSON response with status "200":
+        """
+        [
+          {
+            "timestamp": "{{DYNAMIC_TIMESTAMP}}",
+            "id": "{{DYNAMIC_UUID}}",
+            "embedded": {
+              "inner_timestamp": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+            },
+            "items": [
+                {
+                  "id": "{{DYNAMIC_UUID}}",
+                  "last_updated": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+                },
+                {
+                  "id": "{{DYNAMIC_UUID}}",
+                  "last_updated": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+                }
+              ],
+            "uri_path": "{{DYNAMIC_URI_PATH}}",
+            "url": "{{DYNAMIC_URL}}"
+          },
+          {
+            "timestamp": "{{DYNAMIC_TIMESTAMP}}",
+            "id": "{{DYNAMIC_UUID}}",
+            "embedded": {
+              "inner_timestamp": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+            },
+            "items": [
+                {
+                  "id": "{{DYNAMIC_UUID}}",
+                  "last_updated": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+                },
+                {
+                  "id": "{{DYNAMIC_UUID}}",
+                  "last_updated": "{{DYNAMIC_RECENT_TIMESTAMP}}"
+                }
+              ],
+            "uri_path": "{{DYNAMIC_URI_PATH}}",
+            "url": "{{DYNAMIC_URL}}"
+          }
+        ]
         """
       
