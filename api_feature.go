@@ -312,14 +312,20 @@ func validateDynamicValues(actual, expected string) (actualValidated, expectedVa
 
 // validateAndReplace traverses actual and expected JSON structures, validating
 // dynamic placeholders and replacing them with normalized values.
+// This handles strings, objects, arrays, or any other type
 func validateAndReplace(actual, expected interface{}, path string) error {
 	switch exp := expected.(type) {
 	case map[string]interface{}:
 		return validateObject(actual, exp, path)
 	case []interface{}:
 		return validateArray(actual, exp, path)
+	case string:
+		return validateString(actual, exp, path)
+	case float64, bool, nil:
+		return nil
+	default:
+		return fmt.Errorf("unexpected type at %s: %T", path, expected)
 	}
-	return nil
 }
 
 // validateObject validates that actual is an object matching the structure of
@@ -346,7 +352,7 @@ func validateObject(actual interface{}, expected map[string]interface{}, path st
 }
 
 // validateArray validates that actual is an array with the same length and
-// structure as expected, validating each element.
+// structure as expected, validating each element and replacing dynamic values.
 func validateArray(actual interface{}, expected []interface{}, path string) error {
 	act, ok := actual.([]interface{})
 	if !ok {
@@ -360,11 +366,34 @@ func validateArray(actual interface{}, expected []interface{}, path string) erro
 
 	for i := range expected {
 		currentPath := buildPath(path, fmt.Sprintf("[%d]", i))
-		if err := validateAndReplace(act[i], expected[i], currentPath); err != nil {
-			return err
+
+		// Handle string elements with dynamic placeholders
+		if expStr, ok := expected[i].(string); ok && strings.HasPrefix(expStr, "{{DYNAMIC_") {
+			if err := validateDynamicValue(act[i], expStr, currentPath); err != nil {
+				return err
+			}
+
+			v := dynamicValidators[extractValidationType(expStr)]
+			act[i] = v.Placeholder
+			expected[i] = v.Placeholder
+		} else {
+			// Recurse for non-dynamic values
+			if err := validateAndReplace(act[i], expected[i], currentPath); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
+}
+
+// validateString validates a string value, which may be a dynamic placeholder
+// or a regular value.
+func validateString(actual interface{}, expected, path string) error {
+	if !strings.HasPrefix(expected, "{{DYNAMIC_") {
+		return nil
+	}
+
+	return validateDynamicValue(actual, expected, path)
 }
 
 // validateField validates a single field, either by checking dynamic placeholders
@@ -373,28 +402,44 @@ func validateField(act, exp map[string]interface{}, key string, actValue, expVal
 	// Check if it's a dynamic placeholder
 	expStr, ok := expValue.(string)
 	if ok && strings.HasPrefix(expStr, "{{DYNAMIC_") {
-		return validateDynamicField(act, exp, key, actValue, expStr, path)
+		if err := validateDynamicValue(actValue, expStr, path); err != nil {
+			return err
+		}
+
+		v := dynamicValidators[extractValidationType(expStr)]
+		act[key] = v.Placeholder
+		exp[key] = v.Placeholder
+		return nil
 	}
 
-	// Recurse into nested structures
-	if shouldRecurse(actValue, expValue) {
+	// Handle arrays with potential dynamic placeholders
+	if expArr, ok := expValue.([]interface{}); ok {
+		if err := validateArray(actValue, expArr, path); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// Handle nested objects
+	if shouldRecurse(expValue) {
 		return validateAndReplace(actValue, expValue, path)
 	}
+
 	return nil
 }
 
-// validateDynamicField validates a field with a dynamic placeholder against the
-// corresponding validator, and replaces both actual and expected values with
-// normalized placeholders if validation succeeds.
-func validateDynamicField(act, exp map[string]interface{}, key string, actValue interface{}, expStr, path string) error {
-	validationType := extractValidationType(expStr)
+// validateDynamicValue validates that a value matches its dynamic placeholder
+// validator. It checks that the actual value is a string and passes the
+// validator's validation function.
+func validateDynamicValue(actual interface{}, expected, path string) error {
+	validationType := extractValidationType(expected)
 
 	v, exists := dynamicValidators[validationType]
 	if !exists {
 		return fmt.Errorf("unknown validation type: %s", validationType)
 	}
 
-	actStr, ok := actValue.(string)
+	actStr, ok := actual.(string)
 	if !ok {
 		return fmt.Errorf("field at %s is not a string", path)
 	}
@@ -403,9 +448,6 @@ func validateDynamicField(act, exp map[string]interface{}, key string, actValue 
 		return fmt.Errorf("field at %s value %q is not valid", path, actStr)
 	}
 
-	// Replace with normalized placeholder
-	act[key] = v.Placeholder
-	exp[key] = v.Placeholder
 	return nil
 }
 
@@ -429,16 +471,13 @@ func extractValidationType(placeholder string) string {
 
 // shouldRecurse determines whether validation should recurse into nested
 // structures based on the expected value type.
-func shouldRecurse(actValue, expValue interface{}) bool {
-	if actValue == nil || expValue == nil {
+func shouldRecurse(expValue interface{}) bool {
+	if expValue == nil {
 		return false
 	}
 
-	switch expValue.(type) {
-	case map[string]interface{}, []interface{}:
-		return true
-	}
-	return false
+	_, ok := expValue.(map[string]interface{})
+	return ok
 }
 
 // iHaveAHealthCheckIntervalOfSecond sets healthcheck interval and critical timeout
