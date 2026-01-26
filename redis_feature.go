@@ -11,7 +11,7 @@ import (
 	testRedis "github.com/testcontainers/testcontainers-go/modules/redis"
 )
 
-// RedisFeature is a struct containing an in-memory redis database
+// RedisFeature is a struct containing a testcontainer redis database
 type RedisFeature struct {
 	Server *testRedis.RedisContainer
 	Client *redis.Client
@@ -21,7 +21,7 @@ type RedisOptions struct {
 	RedisVersion string
 }
 
-// NewRedisFeature creates a new in-memory redis database using the supplied options
+// NewRedisFeature creates a new testcontainer redis database using the supplied options
 func NewRedisFeature(opts RedisOptions) *RedisFeature {
 	ctx := context.Background()
 
@@ -50,12 +50,12 @@ func NewRedisFeature(opts RedisOptions) *RedisFeature {
 	}
 }
 
-// Reset drops all keys from the in memory server
+// Reset drops all keys from the testcontainer redis
 func (r *RedisFeature) Reset() error {
 	return r.Client.FlushAll(context.Background()).Err()
 }
 
-// Close stops the in-memory redis database
+// Close stops the testcontainer redis
 func (r *RedisFeature) Close() error {
 	return r.Server.Terminate(context.Background())
 }
