@@ -546,7 +546,8 @@ func (f *APIFeature) validateHealthCheck(checkResponse, expectedCheck *Check) {
 	assert.Equal(&f.ErrorFeature, expectedCheck.Name, checkResponse.Name)
 	assert.Equal(&f.ErrorFeature, expectedCheck.Status, checkResponse.Status)
 	assert.Equal(&f.ErrorFeature, expectedCheck.StatusCode, checkResponse.StatusCode)
-	assert.Equal(&f.ErrorFeature, expectedCheck.Message, checkResponse.Message)
+	// This is a contains to avoid dynamic content such as error details causing test failures
+	assert.Contains(&f.ErrorFeature, checkResponse.Message, expectedCheck.Message)
 	assert.True(&f.ErrorFeature, checkResponse.LastChecked.Before(maxExpectedHealthCheckTime.UTC()))
 	assert.True(&f.ErrorFeature, checkResponse.LastChecked.After(f.StartTime))
 
