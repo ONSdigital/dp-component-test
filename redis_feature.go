@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 
@@ -108,7 +109,8 @@ func (r *RedisFeature) redisIsHealthy() error {
 
 func (r *RedisFeature) redisStopsRunning() error {
 	if r.Server != nil {
-		return r.Server.Terminate(context.Background())
+		timeout := time.Second * 1
+		return r.Server.Stop(context.Background(), &timeout)
 	}
 	return nil
 }
