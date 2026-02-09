@@ -174,6 +174,7 @@ Currently, the tests using this are:
 
 - [mongo_feature](./mongo_feature.go)
 - [redis_feature](./redis_feature.go)
+- [kafka_feature](./kafka_feature.go)
 
 To use this with colima you will need to set the following env vars:
 
