@@ -15,7 +15,7 @@ Feature: Example feature
             }
             """
 
-    Scenario: event consumed causes event produced
+    Scenario: event consumed causes no event produced
         Given this "input" JSON event is queued, to be consumed:
             """
             {

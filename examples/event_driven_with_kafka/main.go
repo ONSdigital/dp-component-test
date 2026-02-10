@@ -123,7 +123,7 @@ func (h *Handler) Handle(ctx context.Context, _ int, msg kafka.Message) error {
 	id := inputEvent.Input
 	log.Info(ctx, "received input event from kafka consumer", log.Data{"id": id})
 
-	// special case to supress an output event being produced
+	// special case to suppress an output event being produced
 	if id == "no-output" {
 		log.Info(ctx, "no output was produced")
 		return nil

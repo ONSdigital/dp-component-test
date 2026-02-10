@@ -55,7 +55,7 @@ func NewKafkaFeature(opts *KafkaOptions) *KafkaFeature {
 	}
 }
 
-// GetBrokers returns the kafka brokers of the underlying testcontainers instance. Ie these are the addresses of the
+// GetBrokers returns the kafka brokers of the underlying testcontainers instance. I.e. these are the addresses of the
 // brokers which can be used for the app under test's kafka client
 func (kf *KafkaFeature) GetBrokers(ctx context.Context) []string {
 	brokers, err := kf.kafkaContainer.Brokers(ctx)
