@@ -3,14 +3,12 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"testing"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	"github.com/google/uuid"
 )
 
 type componentTestSuite struct {
@@ -20,22 +18,16 @@ type componentTestSuite struct {
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
 func (t *componentTestSuite) InitializeScenario(godogCtx *godog.ScenarioContext) {
-	var svc Service
+	component := NewMyAppComponent(t.Kafka)
 
 	godogCtx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
-		svc := &Service{
-			InputTopic:   fmt.Sprintf("input-%s", uuid.NewString()),
-			OutputTopic:  fmt.Sprintf("output-%s", uuid.NewString()),
-			KafkaBrokers: t.Kafka.GetBrokers(ctx),
-		}
-		ctx = t.Kafka.ContextWithTopicMap(ctx, "input", svc.InputTopic)
-		ctx = t.Kafka.ContextWithTopicMap(ctx, "output", svc.OutputTopic)
-		svc.Start(ctx)
+		component.Initialize(ctx)
+		ctx = component.ScenarioContext(ctx)
 		return ctx, nil
 	})
 
 	godogCtx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
-		svc.Close(ctx)
+		component.Close(ctx)
 		return ctx, nil
 	})
 	t.Kafka.RegisterSteps(godogCtx)
