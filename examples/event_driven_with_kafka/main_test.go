@@ -46,9 +46,10 @@ func (t *componentTestSuite) InitializeTestSuite(godogCtx *godog.TestSuiteContex
 func TestComponent(t *testing.T) {
 	if *componentFlag {
 		var opts = godog.Options{
-			Output: colors.Colored(os.Stdout),
-			Paths:  flag.Args(),
-			Format: "pretty",
+			Output:   colors.Colored(os.Stdout),
+			Paths:    flag.Args(),
+			Format:   "pretty",
+			TestingT: t,
 		}
 
 		ts := &componentTestSuite{}

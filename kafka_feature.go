@@ -8,6 +8,7 @@ import (
 	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v4"
+	"github.com/ONSdigital/dp-kafka/v4/avro"
 	"github.com/cucumber/godog"
 	tckafka "github.com/testcontainers/testcontainers-go/modules/kafka"
 )
@@ -16,6 +17,7 @@ import (
 type KafkaFeature struct {
 	kafkaContainer *tckafka.KafkaContainer
 	KafkaVersion   string
+	Converters     map[string]WireConverter
 }
 
 const defaultKafkaContainerName = "confluentinc/confluent-local:7.5.0"
@@ -25,6 +27,7 @@ const defaultKafkaVersion = "3.8.0"
 type KafkaOptions struct {
 	ContainerName string
 	KafkaVersion  string
+	Converters    map[string]WireConverter
 }
 
 // NewKafkaFeature creates a new feature with the supplied optional configuration options
@@ -52,6 +55,7 @@ func NewKafkaFeature(opts *KafkaOptions) *KafkaFeature {
 	return &KafkaFeature{
 		kafkaContainer: kafkaContainer,
 		KafkaVersion:   opts.KafkaVersion,
+		Converters:     opts.Converters,
 	}
 }
 
@@ -93,40 +97,49 @@ func (kf *KafkaFeature) ContextWithTopicMap(ctx context.Context, from, to string
 
 // RegisterSteps adds the kafka feature's steps to the godog ScenarioContext
 func (kf *KafkaFeature) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^this "([^"]*)" JSON event is queued, to be consumed:$`, kf.thisJSONEventIsQueued)
-	ctx.Step(`^this "([^"]*)" JSON event is produced:$`, kf.thisJSONEventIsProduced)
-	ctx.Step(`^no "([^"]*)" JSON event is produced within (\d+) seconds$`, kf.noJSONEventIsProducedInTime)
+	ctx.Step(`^this "([^"]*)" event is queued, to be consumed:$`, kf.thisEventIsQueued)
+	ctx.Step(`^this "([^"]*)" event is produced:$`, kf.thisEventIsProduced)
+	ctx.Step(`^no "([^"]*)" event is produced within (\d+) seconds$`, kf.noEventIsProducedInTime)
 }
 
-func (kf *KafkaFeature) thisJSONEventIsQueued(ctx context.Context, topic string, document *godog.DocString) error {
-	topic = kf.unmapTopic(ctx, topic)
+func (kf *KafkaFeature) thisEventIsQueued(ctx context.Context, topic string, document *godog.DocString) error {
+	converter, ok := kf.Converters[topic]
+	if !ok {
+		converter = compactJSON
+	}
+
+	unMappedTopic := kf.unmapTopic(ctx, topic)
 
 	// ensure document is valid json
-	if !json.Valid([]byte(document.Content)) {
-		return fmt.Errorf("not a valid json document")
+	wireMsg, err := converter([]byte(document.Content))
+	if err != nil {
+		return err
 	}
 
-	producer := kf.getProducer(ctx, topic)
-	return producer.SendBytes(ctx, []byte(document.Content))
+	producer := kf.getProducer(ctx, unMappedTopic)
+	return producer.SendBytes(ctx, wireMsg)
 }
 
-func (kf *KafkaFeature) thisJSONEventIsProduced(ctx context.Context, topic string, document *godog.DocString) error {
-	topic = kf.unmapTopic(ctx, topic)
-
-	// ensure expected document is valid json
-	buffer := bytes.NewBuffer([]byte{})
-	err := json.Compact(buffer, []byte(document.Content))
-	if err != nil {
-		return fmt.Errorf("not a valid json document: %w", err)
+func (kf *KafkaFeature) thisEventIsProduced(ctx context.Context, topic string, document *godog.DocString) error {
+	converter, ok := kf.Converters[topic]
+	if !ok {
+		converter = compactJSON
 	}
-	wantedDoc := buffer.Bytes()
+
+	unMappedTopic := kf.unmapTopic(ctx, topic)
+
+	// ensure expected document is valid json and compact it
+	wantedEvent, err := converter([]byte(document.Content))
+	if err != nil {
+		return err
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
 	done := make(chan []byte)
 
-	consumer := kf.getConsumer(ctx, topic)
+	consumer := kf.getConsumer(ctx, unMappedTopic)
 	handler := func(_ context.Context, _ int, msg kafka.Message) error {
 		done <- msg.GetData()
 		return nil
@@ -144,23 +157,18 @@ func (kf *KafkaFeature) thisJSONEventIsProduced(ctx context.Context, topic strin
 	// wait for done or timeout
 	select {
 	case msg := <-done:
-		msgBuffer := bytes.NewBuffer([]byte{})
-		err := json.Compact(msgBuffer, msg)
-		if err != nil {
-			return fmt.Errorf("not a valid json event: %w", err)
-		}
-		gotDoc := msgBuffer.Bytes()
-
-		if !bytes.Equal(gotDoc, wantedDoc) {
-			return fmt.Errorf("expected produced event to contain '%s', got '%s'", document.Content, string(msg))
+		if !bytes.Equal(msg, wantedEvent) {
+			return fmt.Errorf("expected produced event to contain '%s', got '%s'", wantedEvent, msg)
 		}
 		return nil
 	case <-ctx.Done():
 		return fmt.Errorf("no event was produced in time")
 	}
+
+	return nil
 }
 
-func (kf *KafkaFeature) noJSONEventIsProducedInTime(ctx context.Context, topic string, seconds int) error {
+func (kf *KafkaFeature) noEventIsProducedInTime(ctx context.Context, topic string, seconds int) error {
 	topic = kf.unmapTopic(ctx, topic)
 
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(seconds)*time.Second)
@@ -201,6 +209,34 @@ func (kf *KafkaFeature) unmapTopic(ctx context.Context, topic string) string {
 		}
 	}
 	return topic
+}
+
+// WireConverter represents a function that can take in a JSON representation and output an encoded message
+type WireConverter func([]byte) ([]byte, error)
+
+func compactJSON(data []byte) ([]byte, error) {
+	buffer := bytes.NewBuffer([]byte{})
+	err := json.Compact(buffer, data)
+	if err != nil {
+		return nil, fmt.Errorf("not a valid json document: %w", err)
+	}
+	return buffer.Bytes(), nil
+}
+
+// NewAvroConverter creates a [WireConverter] that encodes the model supplied using the supplied avro schema
+func NewAvroConverter[T any](model T, schema *avro.Schema) func([]byte) ([]byte, error) {
+	return func(jsonData []byte) ([]byte, error) {
+		var e T
+		err := json.Unmarshal(jsonData, &e)
+		if err != nil {
+			return nil, err
+		}
+		avroData, err := schema.Marshal(&e)
+		if err != nil {
+			return nil, err
+		}
+		return avroData, nil
+	}
 }
 
 func (kf *KafkaFeature) getProducer(ctx context.Context, topic string) *kafka.Producer {

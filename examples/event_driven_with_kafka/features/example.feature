@@ -1,13 +1,13 @@
 Feature: Example feature
 
     Scenario: event consumed causes event produced
-        Given this "input" JSON event is queued, to be consumed:
+        Given this "input" event is queued, to be consumed:
             """
             {
               "input":         "Hello"
             }
             """
-        Then this "output" JSON event is produced:
+        Then this "output" event is produced:
             """
             {
               "input":         "Hello",
@@ -16,10 +16,10 @@ Feature: Example feature
             """
 
     Scenario: event consumed causes no event produced
-        Given this "input" JSON event is queued, to be consumed:
+        Given this "input" event is queued, to be consumed:
             """
             {
               "input":         "no-output"
             }
             """
-        Then no "output" JSON event is produced within 5 seconds
+        Then no "output" event is produced within 5 seconds
