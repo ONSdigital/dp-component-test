@@ -30,12 +30,19 @@ func (t *componentTestSuite) InitializeScenario(godogCtx *godog.ScenarioContext)
 		component.Close(ctx)
 		return ctx, nil
 	})
+	component.RegisterSteps(godogCtx)
 	t.Kafka.RegisterSteps(godogCtx)
 }
 
 func (t *componentTestSuite) InitializeTestSuite(godogCtx *godog.TestSuiteContext) {
 	godogCtx.BeforeSuite(func() {
-		t.Kafka = componenttest.NewKafkaFeature(&componenttest.KafkaOptions{KafkaVersion: kafkaVersion})
+		t.Kafka = componenttest.NewKafkaFeature(&componenttest.KafkaOptions{
+			KafkaVersion: kafkaVersion,
+			Encoders: []componenttest.KafkaEncoderOption{
+				{Topic: "input", Encoding: "Avro", Encoder: componenttest.NewAvroEncoder[Input](InputEvent)},
+				{Topic: "output", Encoding: "Avro", Encoder: componenttest.NewAvroEncoder[Output](OutputEvent)},
+			},
+		})
 	})
 
 	godogCtx.AfterSuite(func() {

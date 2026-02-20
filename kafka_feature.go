@@ -17,17 +17,25 @@ import (
 type KafkaFeature struct {
 	kafkaContainer *tckafka.KafkaContainer
 	KafkaVersion   string
-	Converters     map[string]WireConverter
+	EventEncoders  map[string]map[string]EventEncoder
 }
 
 const defaultKafkaContainerName = "confluentinc/confluent-local:7.5.0"
 const defaultKafkaVersion = "3.8.0"
 
 // KafkaOptions are optional configuration options for the kafka feature initialisation
+// If no encoders are supplied for a topic then the default encoding of JSON is assumed for that topic
 type KafkaOptions struct {
 	ContainerName string
 	KafkaVersion  string
-	Converters    map[string]WireConverter
+	Encoders      []KafkaEncoderOption
+}
+
+// KafkaEncoderOption links an envent Encoder to a topic and encoding type
+type KafkaEncoderOption struct {
+	Topic    string
+	Encoding string // Eg, Avro
+	Encoder  EventEncoder
 }
 
 // NewKafkaFeature creates a new feature with the supplied optional configuration options
@@ -52,11 +60,18 @@ func NewKafkaFeature(opts *KafkaOptions) *KafkaFeature {
 		panic(err)
 	}
 
-	return &KafkaFeature{
+	kf := &KafkaFeature{
 		kafkaContainer: kafkaContainer,
 		KafkaVersion:   opts.KafkaVersion,
-		Converters:     opts.Converters,
+		EventEncoders:  make(map[string]map[string]EventEncoder),
 	}
+	for _, encoderOption := range opts.Encoders {
+		if kf.EventEncoders[encoderOption.Topic] == nil {
+			kf.EventEncoders[encoderOption.Topic] = make(map[string]EventEncoder)
+		}
+		kf.EventEncoders[encoderOption.Topic][encoderOption.Encoding] = encoderOption.Encoder
+	}
+	return kf
 }
 
 // GetBrokers returns the kafka brokers of the underlying testcontainers instance. I.e. these are the addresses of the
@@ -98,20 +113,26 @@ func (kf *KafkaFeature) ContextWithTopicMap(ctx context.Context, from, to string
 // RegisterSteps adds the kafka feature's steps to the godog ScenarioContext
 func (kf *KafkaFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^this "([^"]*)" event is queued, to be consumed:$`, kf.thisEventIsQueued)
+	ctx.Step(`^this "([^"]*)" ([^"]*) event is queued, to be consumed:$`, kf.thisEncodedEventIsQueued)
 	ctx.Step(`^this "([^"]*)" event is produced:$`, kf.thisEventIsProduced)
+	ctx.Step(`^this "([^"]*)" ([^"]*) event is produced:$`, kf.thisEncodedEventIsProduced)
 	ctx.Step(`^no "([^"]*)" event is produced within (\d+) seconds$`, kf.noEventIsProducedInTime)
 }
 
 func (kf *KafkaFeature) thisEventIsQueued(ctx context.Context, topic string, document *godog.DocString) error {
-	converter, ok := kf.Converters[topic]
+	return kf.thisEncodedEventIsQueued(ctx, topic, "JSON", document)
+}
+
+func (kf *KafkaFeature) thisEncodedEventIsQueued(ctx context.Context, topic, encoding string, document *godog.DocString) error {
+	encoder, ok := kf.EventEncoders[topic][encoding]
 	if !ok {
-		converter = compactJSON
+		encoder = compactJSON
 	}
 
 	unMappedTopic := kf.unmapTopic(ctx, topic)
 
-	// ensure document is valid json
-	wireMsg, err := converter([]byte(document.Content))
+	// encode message
+	wireMsg, err := encoder([]byte(document.Content))
 	if err != nil {
 		return err
 	}
@@ -121,15 +142,19 @@ func (kf *KafkaFeature) thisEventIsQueued(ctx context.Context, topic string, doc
 }
 
 func (kf *KafkaFeature) thisEventIsProduced(ctx context.Context, topic string, document *godog.DocString) error {
-	converter, ok := kf.Converters[topic]
+	return kf.thisEncodedEventIsProduced(ctx, topic, "JSON", document)
+}
+
+func (kf *KafkaFeature) thisEncodedEventIsProduced(ctx context.Context, topic, encoding string, document *godog.DocString) error {
+	encoder, ok := kf.EventEncoders[topic][encoding]
 	if !ok {
-		converter = compactJSON
+		encoder = compactJSON
 	}
 
 	unMappedTopic := kf.unmapTopic(ctx, topic)
 
-	// ensure expected document is valid json and compact it
-	wantedEvent, err := converter([]byte(document.Content))
+	// encode expected document
+	wantedEvent, err := encoder([]byte(document.Content))
 	if err != nil {
 		return err
 	}
@@ -164,8 +189,6 @@ func (kf *KafkaFeature) thisEventIsProduced(ctx context.Context, topic string, d
 	case <-ctx.Done():
 		return fmt.Errorf("no event was produced in time")
 	}
-
-	return nil
 }
 
 func (kf *KafkaFeature) noEventIsProducedInTime(ctx context.Context, topic string, seconds int) error {
@@ -211,8 +234,8 @@ func (kf *KafkaFeature) unmapTopic(ctx context.Context, topic string) string {
 	return topic
 }
 
-// WireConverter represents a function that can take in a JSON representation and output an encoded message
-type WireConverter func([]byte) ([]byte, error)
+// EventEncoder represents a function that can take in a JSON representation and output an encoded message
+type EventEncoder func([]byte) ([]byte, error)
 
 func compactJSON(data []byte) ([]byte, error) {
 	buffer := bytes.NewBuffer([]byte{})
@@ -223,8 +246,8 @@ func compactJSON(data []byte) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-// NewAvroConverter creates a [WireConverter] that encodes the model supplied using the supplied avro schema
-func NewAvroConverter[T any](model T, schema *avro.Schema) func([]byte) ([]byte, error) {
+// NewAvroEncoder creates a [EventEncoder] that encodes the model supplied using the supplied avro schema
+func NewAvroEncoder[T any](schema *avro.Schema) func([]byte) ([]byte, error) {
 	return func(jsonData []byte) ([]byte, error) {
 		var e T
 		err := json.Unmarshal(jsonData, &e)

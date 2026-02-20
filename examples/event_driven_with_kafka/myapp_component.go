@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
+	"github.com/cucumber/godog"
 	"github.com/google/uuid"
 )
 
@@ -22,6 +23,21 @@ func NewMyAppComponent(kafkaFeature *componenttest.KafkaFeature) *MyAppComponent
 	return c
 }
 
+func (c *MyAppComponent) RegisterSteps(ctx *godog.ScenarioContext) {
+	ctx.Step(`^the service is started with ([^"]*) configured`, c.theServiceStarts)
+}
+
+func (c *MyAppComponent) theServiceStarts(ctx context.Context, msgType string) error {
+	if msgType == "Avro" {
+		c.svc.UseAvro = true
+	} else {
+		c.svc.UseAvro = false
+	}
+
+	c.svc.Start(ctx)
+	return nil
+}
+
 // Initialize sets up the component for the current scenario with random kafka topics. It starts the underlying service
 // ready to consume and produce events
 func (c *MyAppComponent) Initialize(ctx context.Context) error {
@@ -30,7 +46,6 @@ func (c *MyAppComponent) Initialize(ctx context.Context) error {
 		OutputTopic:  fmt.Sprintf("output-%s", uuid.NewString()),
 		KafkaBrokers: c.kafkaFeature.GetBrokers(ctx),
 	}
-	c.svc.Start(ctx)
 	return nil
 }
 

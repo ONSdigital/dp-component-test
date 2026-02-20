@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	kafka "github.com/ONSdigital/dp-kafka/v4"
+	"github.com/ONSdigital/dp-kafka/v4/avro"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/google/uuid"
 )
@@ -17,19 +18,49 @@ const (
 
 // Input represents an input example event
 type Input struct {
-	Input string `json:"input"`
+	Input string `avro:"input" json:"input"`
+	Qty   int32  `avro:"qty" json:"qty"`
+}
+
+// InputEvent is an avro schema for input events
+var InputEvent = &avro.Schema{
+	Definition: `
+{
+  "type": "record",
+  "name": "input",
+  "fields": [
+    {"name": "input", "type": "string", "default": ""},
+    {"name": "qty", "type": "int", "default": 0}
+  ]
+}`,
+}
+
+// OutputEvent is an avro schema for output events
+var OutputEvent = &avro.Schema{
+	Definition: `
+{
+  "type": "record",
+  "name": "output",
+  "fields": [
+    {"name": "id", "type": "int", "default": 0},
+    {"name": "input", "type": "string", "default": ""},
+    {"name": "output", "type": "string", "default": ""}
+  ]
+}`,
 }
 
 // Output represents an output example event
 type Output struct {
-	Input  string `json:"input"`
-	Output string `json:"output"`
+	ID     int32  `avro:"id" json:"id"`
+	Input  string `avro:"input" json:"input"`
+	Output string `avro:"output" json:"output"`
 }
 
 // Service represents a service that consumes and produces example kafka events
 type Service struct {
 	InputTopic     string
 	OutputTopic    string
+	UseAvro        bool
 	inputConsumer  kafka.IConsumerGroup
 	outputProducer kafka.IProducer
 	KafkaBrokers   []string
@@ -45,6 +76,7 @@ func (s *Service) Start(ctx context.Context) {
 	// Register the handler
 	handler := &Handler{
 		OutputProducer: s.outputProducer,
+		UseAvro:        s.UseAvro,
 	}
 	if err := s.inputConsumer.RegisterHandler(ctx, handler.Handle); err != nil {
 		panic(err)
@@ -111,31 +143,43 @@ func getProducer(ctx context.Context, brokers []string, topic string) *kafka.Pro
 // Handler represents a kafka handler for the example app
 type Handler struct {
 	OutputProducer kafka.IProducer
+	UseAvro        bool
 }
 
 // Handle consumes an input event and produces an output event based on it unless the input id is `no-output`
 func (h *Handler) Handle(ctx context.Context, _ int, msg kafka.Message) error {
 	inputEvent := Input{}
-	if err := json.Unmarshal(msg.GetData(), &inputEvent); err != nil {
-		return err
-	}
 
-	id := inputEvent.Input
-	log.Info(ctx, "received input event from kafka consumer", log.Data{"id": id})
-
-	// special case to suppress an output event being produced
-	if id == "no-output" {
-		log.Info(ctx, "no output was produced")
-		return nil
+	if h.UseAvro {
+		if err := InputEvent.Unmarshal(msg.GetData(), &inputEvent); err != nil {
+			return err
+		}
+	} else {
+		if err := json.Unmarshal(msg.GetData(), &inputEvent); err != nil {
+			return err
+		}
 	}
+	input := inputEvent.Input
+	qty := int(inputEvent.Qty)
+	log.Info(ctx, "received input event from kafka consumer", log.Data{"input": input, "qty": qty})
 
-	outputEvent := Output{
-		Input:  inputEvent.Input,
-		Output: "World!",
-	}
-	err := h.OutputProducer.SendJSON(ctx, outputEvent)
-	if err != nil {
-		return err
+	for id := 0; id < qty; id++ {
+		outputEvent := Output{
+			ID:     int32(id),
+			Input:  inputEvent.Input,
+			Output: "World!",
+		}
+		if h.UseAvro {
+			err := h.OutputProducer.Send(ctx, OutputEvent, outputEvent)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := h.OutputProducer.SendJSON(ctx, outputEvent)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
