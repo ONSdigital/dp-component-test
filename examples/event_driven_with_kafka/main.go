@@ -160,12 +160,12 @@ func (h *Handler) Handle(ctx context.Context, _ int, msg kafka.Message) error {
 		}
 	}
 	input := inputEvent.Input
-	qty := int(inputEvent.Qty)
+	qty := inputEvent.Qty
 	log.Info(ctx, "received input event from kafka consumer", log.Data{"input": input, "qty": qty})
 
-	for id := 0; id < qty; id++ {
+	for id := int32(0); id < qty; id++ {
 		outputEvent := Output{
-			ID:     int32(id),
+			ID:     id,
 			Input:  inputEvent.Input,
 			Output: "World!",
 		}
@@ -211,11 +211,12 @@ func fireExampleEvent(ctx context.Context, s *Service) {
 	}
 	defer inputProducer.Close(ctx)
 
-	id := uuid.NewString()
+	input := uuid.NewString()
 	msg := Input{
-		Input: id,
+		Input: input,
+		Qty:   1,
 	}
-	log.Info(ctx, "sending example event", log.Data{"id": id})
+	log.Info(ctx, "sending example event", log.Data{"input": input})
 	err = inputProducer.SendJSON(ctx, msg)
 	if err != nil {
 		panic(err)
@@ -230,8 +231,8 @@ func fireExampleEvent(ctx context.Context, s *Service) {
 		if err != nil {
 			return err
 		}
-		if output.Input == id {
-			log.Info(ctx, "example output event consumed", log.Data{"id": output.Input})
+		if output.Input == input {
+			log.Info(ctx, "example output event consumed", log.Data{"input": output.Input})
 			done <- true
 		}
 		return nil
