@@ -5,11 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v4"
 	"github.com/ONSdigital/dp-kafka/v4/avro"
 	"github.com/cucumber/godog"
+	"github.com/google/uuid"
 	tckafka "github.com/testcontainers/testcontainers-go/modules/kafka"
 )
 
@@ -85,6 +87,13 @@ func (kf *KafkaFeature) GetBrokers(ctx context.Context) []string {
 	return brokers
 }
 
+// NewScenario initiates a new KafkaScenario with features scoped to the current schenario
+func (kf *KafkaFeature) NewScenario() *KafkaScenario {
+	return &KafkaScenario{
+		KafkaFeature: kf,
+	}
+}
+
 // Close stops the kafka testcontainer
 func (kf *KafkaFeature) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
@@ -93,43 +102,70 @@ func (kf *KafkaFeature) Close() error {
 	return kf.kafkaContainer.Terminate(ctx)
 }
 
-type topicMapKeyType string
+// KafkaScenario represents the kafka features scoped to the currently running scenario
+type KafkaScenario struct {
+	mu           sync.Mutex
+	KafkaFeature *KafkaFeature
+	topics       map[string]*kafkaScenarioTopic
+}
 
-var topicMapKey = topicMapKeyType("topicMapKey")
+type kafkaScenarioTopic struct {
+	mu               sync.Mutex
+	topic            string
+	mappedTopic      string
+	producer         *kafka.Producer
+	consumer         *kafka.ConsumerGroup
+	ConsumedMessages [][]byte
+}
 
-// ContextWithTopicMap adds a mapping from a named topic to a specific topic for the current context, this allows an app
-// component to define random topics per scenario but for the feature scenarios to reference them by easy names
-func (kf *KafkaFeature) ContextWithTopicMap(ctx context.Context, from, to string) context.Context {
-	var topicMap map[string]string
-	if ctxTopicMap := ctx.Value(topicMapKey); ctxTopicMap != nil {
-		topicMap = ctxTopicMap.(map[string]string)
-	} else {
-		topicMap = make(map[string]string)
-	}
-	topicMap[from] = to
-	return context.WithValue(ctx, topicMapKey, topicMap)
+// GetMappedTopic returns a topic that has been mapped in the current scenario. If this is the first time it has been
+// called it will create a new random mappping. Subsequent calls return the same value.
+func (ks *KafkaScenario) GetMappedTopic(topic string) string {
+	return ks.getScenarioTopic(topic).mappedTopic
 }
 
 // RegisterSteps adds the kafka feature's steps to the godog ScenarioContext
-func (kf *KafkaFeature) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^this "([^"]*)" event is queued, to be consumed:$`, kf.thisEventIsQueued)
-	ctx.Step(`^this "([^"]*)" ([^"]*) event is queued, to be consumed:$`, kf.thisEncodedEventIsQueued)
-	ctx.Step(`^this "([^"]*)" event is produced:$`, kf.thisEventIsProduced)
-	ctx.Step(`^this "([^"]*)" ([^"]*) event is produced:$`, kf.thisEncodedEventIsProduced)
-	ctx.Step(`^no "([^"]*)" event is produced within (\d+) seconds$`, kf.noEventIsProducedInTime)
+func (ks *KafkaScenario) RegisterSteps(ctx *godog.ScenarioContext) {
+	ctx.Step(`^this "([^"]*)" event is queued, to be consumed:$`, ks.thisEventIsQueued)
+	ctx.Step(`^this "([^"]*)" ([^"]*) event is queued, to be consumed:$`, ks.thisEncodedEventIsQueued)
+	ctx.Step(`^this "([^"]*)" event is produced:$`, ks.thisEventIsProduced)
+	ctx.Step(`^this "([^"]*)" ([^"]*) event is produced:$`, ks.thisEncodedEventIsProduced)
+	ctx.Step(`^no "([^"]*)" event is produced within (\d+) seconds$`, ks.noEventIsProducedInTime)
 }
 
-func (kf *KafkaFeature) thisEventIsQueued(ctx context.Context, topic string, document *godog.DocString) error {
-	return kf.thisEncodedEventIsQueued(ctx, topic, "JSON", document)
+// Close cleans up any consumers and producers being used by the current scenairo once finished with
+func (ks *KafkaScenario) Close(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
+
+	for _, topic := range ks.topics {
+		if producer := topic.producer; producer != nil {
+			if err := producer.Close(ctx); err != nil {
+				return err
+			}
+		}
+		if consumer := topic.consumer; consumer != nil {
+			if err := consumer.Close(ctx); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
-func (kf *KafkaFeature) thisEncodedEventIsQueued(ctx context.Context, topic, encoding string, document *godog.DocString) error {
-	encoder, ok := kf.EventEncoders[topic][encoding]
+func (ks *KafkaScenario) thisEventIsQueued(ctx context.Context, topic string, document *godog.DocString) error {
+	return ks.thisEncodedEventIsQueued(ctx, topic, "JSON", document)
+}
+
+func (ks *KafkaScenario) thisEncodedEventIsQueued(ctx context.Context, topic, encoding string, document *godog.DocString) error {
+	encoder, ok := ks.KafkaFeature.EventEncoders[topic][encoding]
 	if !ok {
 		encoder = compactJSON
 	}
-
-	unMappedTopic := kf.unmapTopic(ctx, topic)
 
 	// encode message
 	wireMsg, err := encoder([]byte(document.Content))
@@ -137,21 +173,25 @@ func (kf *KafkaFeature) thisEncodedEventIsQueued(ctx context.Context, topic, enc
 		return err
 	}
 
-	producer := kf.getProducer(ctx, unMappedTopic)
+	producer := ks.getProducer(ctx, topic)
 	return producer.SendBytes(ctx, wireMsg)
 }
 
-func (kf *KafkaFeature) thisEventIsProduced(ctx context.Context, topic string, document *godog.DocString) error {
-	return kf.thisEncodedEventIsProduced(ctx, topic, "JSON", document)
+func (ks *KafkaScenario) thisEventIsProduced(ctx context.Context, topic string, document *godog.DocString) error {
+	return ks.thisEncodedEventIsProduced(ctx, topic, "JSON", document)
 }
 
-func (kf *KafkaFeature) thisEncodedEventIsProduced(ctx context.Context, topic, encoding string, document *godog.DocString) error {
-	encoder, ok := kf.EventEncoders[topic][encoding]
+func (ks *KafkaScenario) thisEncodedEventIsProduced(ctx context.Context, topic, encoding string, document *godog.DocString) error {
+	encoder, ok := ks.KafkaFeature.EventEncoders[topic][encoding]
 	if !ok {
 		encoder = compactJSON
 	}
 
-	unMappedTopic := kf.unmapTopic(ctx, topic)
+	err := ks.startConsuming(ctx, topic)
+	if err != nil {
+		return err
+	}
+	scenarioTopic := ks.getScenarioTopic(topic)
 
 	// encode expected document
 	wantedEvent, err := encoder([]byte(document.Content))
@@ -162,76 +202,132 @@ func (kf *KafkaFeature) thisEncodedEventIsProduced(ctx context.Context, topic, e
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
-	done := make(chan []byte)
+	ticker := time.NewTicker(500 * time.Millisecond)
+	errChan := make(chan error)
 
-	consumer := kf.getConsumer(ctx, unMappedTopic)
-	handler := func(_ context.Context, _ int, msg kafka.Message) error {
-		done <- msg.GetData()
-		return nil
-	}
-	if err := consumer.RegisterHandler(ctx, handler); err != nil {
-		return err
-	}
-	defer consumer.Close(ctx)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				func() {
+					scenarioTopic.mu.Lock()
+					defer scenarioTopic.mu.Unlock()
 
-	// Start consuming
-	if err := consumer.Start(); err != nil {
-		return err
-	}
+					for _, msg := range scenarioTopic.ConsumedMessages {
+						if bytes.Equal(msg, wantedEvent) {
+							errChan <- nil
+							ticker.Stop()
+							return
+						}
+					}
+				}()
 
-	// wait for done or timeout
-	select {
-	case msg := <-done:
-		if !bytes.Equal(msg, wantedEvent) {
-			return fmt.Errorf("expected produced event to contain '%s', got '%s'", wantedEvent, msg)
+			case <-ctx.Done():
+				ticker.Stop()
+				scenarioTopic.mu.Lock()
+				received := bytes.Join(scenarioTopic.ConsumedMessages, []byte(","))
+				scenarioTopic.mu.Unlock()
+				errChan <- fmt.Errorf("no matching event was produced in time - actual [%s]", string(received))
+				return
+			}
 		}
-		return nil
-	case <-ctx.Done():
-		return fmt.Errorf("no event was produced in time")
-	}
+	}()
+
+	// wait for done or error
+	return <-errChan
 }
 
-func (kf *KafkaFeature) noEventIsProducedInTime(ctx context.Context, topic string, seconds int) error {
-	topic = kf.unmapTopic(ctx, topic)
+func (ks *KafkaScenario) noEventIsProducedInTime(ctx context.Context, topic string, seconds int) error {
+	err := ks.startConsuming(ctx, topic)
+	if err != nil {
+		return err
+	}
+	scenarioTopic := ks.getScenarioTopic(topic)
 
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(seconds)*time.Second)
 	defer cancel()
 
-	eventRecieved := make(chan bool)
+	ticker := time.NewTicker(500 * time.Millisecond)
+	errChan := make(chan error)
 
-	consumer := kf.getConsumer(ctx, topic)
-	handler := func(_ context.Context, _ int, _ kafka.Message) error {
-		eventRecieved <- true
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				if len(scenarioTopic.ConsumedMessages) > 0 {
+					scenarioTopic.mu.Lock()
+					received := bytes.Join(scenarioTopic.ConsumedMessages, []byte(","))
+					scenarioTopic.mu.Unlock()
+					errChan <- fmt.Errorf("unexpected event(s) produced in %d seconds - actual [%s]", seconds, string(received))
+					ticker.Stop()
+					return
+				}
+			case <-ctx.Done():
+				ticker.Stop()
+				errChan <- nil
+				return
+			}
+		}
+	}()
+
+	// wait for done or error
+	return <-errChan
+}
+
+func (ks *KafkaScenario) getScenarioTopic(topic string) *kafkaScenarioTopic {
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
+
+	if ks.topics == nil {
+		ks.topics = make(map[string]*kafkaScenarioTopic)
+	}
+	if _, ok := ks.topics[topic]; !ok {
+		ks.topics[topic] = &kafkaScenarioTopic{
+			topic:       topic,
+			mappedTopic: fmt.Sprintf("%s-%s", topic, uuid.NewString()),
+		}
+	}
+	return ks.topics[topic]
+}
+
+func (ks *KafkaScenario) getProducer(ctx context.Context, topic string) *kafka.Producer {
+	scenarioTopic := ks.getScenarioTopic(topic)
+	scenarioTopic.mu.Lock()
+	defer scenarioTopic.mu.Unlock()
+	if scenarioTopic.producer != nil {
+		return scenarioTopic.producer
+	}
+	producer := ks.KafkaFeature.getProducer(ctx, scenarioTopic.mappedTopic)
+	scenarioTopic.producer = producer
+	return producer
+}
+
+func (ks *KafkaScenario) startConsuming(ctx context.Context, topic string) error {
+	scenarioTopic := ks.getScenarioTopic(topic)
+	scenarioTopic.mu.Lock()
+	defer scenarioTopic.mu.Unlock()
+	if scenarioTopic.consumer != nil {
+		// already started - do nothing
+		return nil
+	}
+	consumer := ks.KafkaFeature.getConsumer(ctx, scenarioTopic.mappedTopic)
+	scenarioTopic.consumer = consumer
+
+	handler := func(_ context.Context, _ int, msg kafka.Message) error {
+		scenarioTopic.mu.Lock()
+		defer scenarioTopic.mu.Unlock()
+		scenarioTopic.ConsumedMessages = append(scenarioTopic.ConsumedMessages, msg.GetData())
 		return nil
 	}
 	if err := consumer.RegisterHandler(ctx, handler); err != nil {
 		return err
 	}
-	defer consumer.Close(ctx)
 
 	// Start consuming
 	if err := consumer.Start(); err != nil {
 		return err
 	}
-
-	// wait for eventRecieved or timeout
-	select {
-	case <-eventRecieved:
-		return fmt.Errorf("unexpected event produced in %d seconds", seconds)
-	case <-ctx.Done():
-		return nil
-	}
-}
-
-// unmap topic will check the context for any mapped topics and if so will see if a mapping has been defined for the
-// requested topic. If so it will use that instead.
-func (kf *KafkaFeature) unmapTopic(ctx context.Context, topic string) string {
-	if topicMap := ctx.Value(topicMapKey); topicMap != nil {
-		if v, ok := topicMap.(map[string]string)[topic]; ok {
-			topic = v
-		}
-	}
-	return topic
+	return nil
 }
 
 // EventEncoder represents a function that can take in a JSON representation and output an encoded message

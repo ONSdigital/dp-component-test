@@ -66,6 +66,7 @@ type Service struct {
 	KafkaBrokers   []string
 }
 
+// Starts the example service
 func (s *Service) Start(ctx context.Context) {
 	// Init consumer
 	s.inputConsumer = getConsumer(ctx, s.KafkaBrokers, s.InputTopic)
@@ -89,6 +90,7 @@ func (s *Service) Start(ctx context.Context) {
 	}
 }
 
+// Closes the example service
 func (s *Service) Close(ctx context.Context) {
 	if s.inputConsumer != nil {
 		err := s.inputConsumer.StopAndWait()
@@ -146,7 +148,8 @@ type Handler struct {
 	UseAvro        bool
 }
 
-// Handle consumes an input event and produces an output event based on it unless the input id is `no-output`
+// Handle consumes an input event and produces output event(s) based on it. The number of output events to be produced
+// corresponds to the `qty` field in the input event
 func (h *Handler) Handle(ctx context.Context, _ int, msg kafka.Message) error {
 	inputEvent := Input{}
 

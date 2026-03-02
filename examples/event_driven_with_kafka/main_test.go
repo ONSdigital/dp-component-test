@@ -18,20 +18,21 @@ type componentTestSuite struct {
 var componentFlag = flag.Bool("component", false, "perform component tests")
 
 func (t *componentTestSuite) InitializeScenario(godogCtx *godog.ScenarioContext) {
-	component := NewMyAppComponent(t.Kafka)
+	kafkaScenario := t.Kafka.NewScenario()
+	component := NewMyAppComponent(kafkaScenario)
 
 	godogCtx.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		component.Initialize(ctx)
-		ctx = component.ScenarioContext(ctx)
 		return ctx, nil
 	})
 
 	godogCtx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 		component.Close(ctx)
+		kafkaScenario.Close(ctx)
 		return ctx, nil
 	})
 	component.RegisterSteps(godogCtx)
-	t.Kafka.RegisterSteps(godogCtx)
+	kafkaScenario.RegisterSteps(godogCtx)
 }
 
 func (t *componentTestSuite) InitializeTestSuite(godogCtx *godog.TestSuiteContext) {

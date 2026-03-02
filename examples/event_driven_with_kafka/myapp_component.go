@@ -2,23 +2,21 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/cucumber/godog"
-	"github.com/google/uuid"
 )
 
 // MyAppComponent represents an example app under test
 type MyAppComponent struct {
-	svc          *Service
-	kafkaFeature *componenttest.KafkaFeature
+	svc           *Service
+	kafkaScenario *componenttest.KafkaScenario
 }
 
 // NewMyAppComponent creates a new component using the supplied kafka component
-func NewMyAppComponent(kafkaFeature *componenttest.KafkaFeature) *MyAppComponent {
+func NewMyAppComponent(kafkaScenario *componenttest.KafkaScenario) *MyAppComponent {
 	c := &MyAppComponent{
-		kafkaFeature: kafkaFeature,
+		kafkaScenario: kafkaScenario,
 	}
 	return c
 }
@@ -42,19 +40,11 @@ func (c *MyAppComponent) theServiceStarts(ctx context.Context, msgType string) e
 // ready to consume and produce events
 func (c *MyAppComponent) Initialize(ctx context.Context) error {
 	c.svc = &Service{
-		InputTopic:   fmt.Sprintf("input-%s", uuid.NewString()),
-		OutputTopic:  fmt.Sprintf("output-%s", uuid.NewString()),
-		KafkaBrokers: c.kafkaFeature.GetBrokers(ctx),
+		InputTopic:   c.kafkaScenario.GetMappedTopic("input"),
+		OutputTopic:  c.kafkaScenario.GetMappedTopic("output"),
+		KafkaBrokers: c.kafkaScenario.KafkaFeature.GetBrokers(ctx),
 	}
 	return nil
-}
-
-// ScenarioContext populates the supplied context with variable relating to the current scenario. Specifically it adds
-// mappings for the random topics so that scenarios can refer to them using friendly ids
-func (c *MyAppComponent) ScenarioContext(ctx context.Context) context.Context {
-	ctx = c.kafkaFeature.ContextWithTopicMap(ctx, "input", c.svc.InputTopic)
-	ctx = c.kafkaFeature.ContextWithTopicMap(ctx, "output", c.svc.OutputTopic)
-	return ctx
 }
 
 // Close closes the underlying service, stopping kafka consumers etc.
