@@ -32,6 +32,7 @@ func zebedeeValidateUser() (int, error) {
 	}
 	var permissions Permissions
 	config := NewConfig()
+	//nolint:gosec // taint risk of configured url accepted
 	response, err := http.Get(config.authorizationServiceURL + "/userInstancePermissions")
 	if err != nil {
 		return 500, err
@@ -90,6 +91,7 @@ func zebedeeValidateAuth() (int, error) {
 	}
 	var permissions Permissions
 	config := NewConfig()
+	//nolint:gosec // taint risk of configured url accepted
 	response, err := http.Get(config.authorizationServiceURL + "/serviceInstancePermissions")
 	if err != nil {
 		return 500, err
@@ -137,6 +139,7 @@ func validateIdentity() error {
 	}
 	var identity Identity
 	config := NewConfig()
+	//nolint:gosec // taint risk of configured url accepted
 	response, err := http.Get(config.authorizationServiceURL + "/identity")
 	if err != nil {
 		return err

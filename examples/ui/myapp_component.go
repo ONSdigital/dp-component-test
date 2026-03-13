@@ -72,6 +72,7 @@ func (c *MyAppComponent) Close() error {
 
 func (c *MyAppComponent) close(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, c.Config.GracefulShutdownTimeout)
+	defer cancel()
 	hasShutdownError := false
 
 	go func() {

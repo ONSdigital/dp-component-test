@@ -9,7 +9,6 @@ import (
 	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v4"
-	"github.com/ONSdigital/dp-kafka/v4/avro"
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
 	tckafka "github.com/testcontainers/testcontainers-go/modules/kafka"
@@ -342,8 +341,12 @@ func compactJSON(data []byte) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
+type marshaller interface {
+	Marshal(interface{}) ([]byte, error)
+}
+
 // NewAvroEncoder creates a [EventEncoder] that encodes the model supplied using the supplied avro schema
-func NewAvroEncoder[T any](schema *avro.Schema) func([]byte) ([]byte, error) {
+func NewAvroEncoder[T any](schema marshaller) func([]byte) ([]byte, error) {
 	return func(jsonData []byte) ([]byte, error) {
 		var e T
 		err := json.Unmarshal(jsonData, &e)
