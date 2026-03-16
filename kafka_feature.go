@@ -41,7 +41,7 @@ type KafkaEncoderOption struct {
 
 // NewKafkaFeature creates a new feature with the supplied optional configuration options
 func NewKafkaFeature(opts *KafkaOptions) *KafkaFeature {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	if opts == nil {
