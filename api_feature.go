@@ -482,14 +482,14 @@ func shouldRecurse(expValue interface{}) bool {
 
 // iHaveAHealthCheckIntervalOfSecond sets healthcheck interval and critical timeout
 func (f *APIFeature) iHaveAHealthCheckIntervalOfSecond(healthCheckInterval int) error {
-	f.HealthCheckInterval = time.Duration(healthCheckInterval)
+	f.HealthCheckInterval = time.Duration(healthCheckInterval) * time.Second
 
 	return f.StepError()
 }
 
 // theHealthChecksShouldHaveCompletedWithinSeconds sets the expected healthcheck response time
 func (f *APIFeature) theHealthChecksShouldHaveCompletedWithinSeconds(expectedResponseTime int) error {
-	f.ExpectedResponseTime = time.Duration(expectedResponseTime)
+	f.ExpectedResponseTime = time.Duration(expectedResponseTime) * time.Second
 
 	return f.StepError()
 }
@@ -519,16 +519,11 @@ func (f *APIFeature) iShouldReceiveTheFollowingHealthJSONResponse(expectedRespon
 }
 
 func (f *APIFeature) validateHealthCheckResponse(healthResponse, expectedResponse HealthCheckTest) {
-	fmt.Println("Health Response Body:")
-	fmt.Println(healthResponse)
-	fmt.Println("expectedResponse Body:")
-	fmt.Println(expectedResponse)
+	maxExpectedStartTime := f.StartTime.Add((f.HealthCheckInterval)).Add(1 * time.Second)
 
-	maxExpectedStartTime := f.StartTime.Add((f.HealthCheckInterval + 1) + time.Second)
-
-	assert.Equal(&f.ErrorFeature, expectedResponse.Status, healthResponse.Status)
-	assert.True(&f.ErrorFeature, healthResponse.StartTime.Before(maxExpectedStartTime.UTC()))
-	assert.Greater(&f.ErrorFeature, healthResponse.Uptime.Seconds(), float64(0))
+	assert.Equal(&f.ErrorFeature, expectedResponse.Status, healthResponse.Status, "health response status should match expected")
+	assert.True(&f.ErrorFeature, healthResponse.StartTime.Before(maxExpectedStartTime.UTC()), "health response start time should be before max expected start time")
+	assert.Greater(&f.ErrorFeature, healthResponse.Uptime.Seconds(), float64(0), "health response uptime should be greater than 0")
 
 	f.validateHealthVersion(healthResponse.Version, expectedResponse.Version, maxExpectedStartTime.UTC())
 
@@ -538,41 +533,50 @@ func (f *APIFeature) validateHealthCheckResponse(healthResponse, expectedRespons
 }
 
 func (f *APIFeature) validateHealthVersion(versionResponse, expectedVersion healthcheck.VersionInfo, maxExpectedStartTime time.Time) {
-	assert.True(&f.ErrorFeature, versionResponse.BuildTime.Before(maxExpectedStartTime))
-	assert.Equal(&f.ErrorFeature, expectedVersion.GitCommit, versionResponse.GitCommit)
-	assert.Equal(&f.ErrorFeature, expectedVersion.Language, versionResponse.Language)
-	assert.NotEmpty(&f.ErrorFeature, versionResponse.LanguageVersion)
-	assert.Equal(&f.ErrorFeature, expectedVersion.Version, versionResponse.Version)
+	assert.True(&f.ErrorFeature, versionResponse.BuildTime.Before(maxExpectedStartTime), "build time should be before max expected start time")
+	assert.Equal(&f.ErrorFeature, expectedVersion.GitCommit, versionResponse.GitCommit, "git commit should match expected")
+	assert.Equal(&f.ErrorFeature, expectedVersion.Language, versionResponse.Language, "language should match expected")
+	assert.NotEmpty(&f.ErrorFeature, versionResponse.LanguageVersion, "language version should not be empty")
+	assert.Equal(&f.ErrorFeature, expectedVersion.Version, versionResponse.Version, "version should match expected")
 }
 
 func (f *APIFeature) validateHealthCheck(checkResponse, expectedCheck *Check) {
-	maxExpectedHealthCheckTime := f.StartTime.Add(f.ExpectedResponseTime * time.Second)
+	maxExpectedHealthCheckTime := f.StartTime.Add(f.ExpectedResponseTime)
+	maxExpectedHealthCheckDiffSeconds := maxExpectedHealthCheckTime.Sub(f.StartTime).Seconds()
 
-	assert.Equal(&f.ErrorFeature, expectedCheck.Name, checkResponse.Name)
-	assert.Equal(&f.ErrorFeature, expectedCheck.Status, checkResponse.Status)
-	assert.Equal(&f.ErrorFeature, expectedCheck.StatusCode, checkResponse.StatusCode)
+	assert.Equal(&f.ErrorFeature, expectedCheck.Name, checkResponse.Name, "health check name should match expected")
+	assert.Equal(&f.ErrorFeature, expectedCheck.Status, checkResponse.Status, "health check status should match expected")
+	assert.Equal(&f.ErrorFeature, expectedCheck.StatusCode, checkResponse.StatusCode, "health check status code should match expected")
 	// This is a not empty to avoid dynamic content such as error details causing test failures
-	assert.NotEmpty(&f.ErrorFeature, checkResponse.Message)
-	assert.True(&f.ErrorFeature, checkResponse.LastChecked.Before(maxExpectedHealthCheckTime.UTC()))
-	assert.True(&f.ErrorFeature, checkResponse.LastChecked.After(f.StartTime))
+	assert.NotEmpty(&f.ErrorFeature, checkResponse.Message, "health check message should not be empty")
+	assert.True(&f.ErrorFeature, checkResponse.LastChecked.Before(maxExpectedHealthCheckTime.UTC()), "last checked should be before max expected health check time")
+	assert.True(&f.ErrorFeature, checkResponse.LastChecked.After(f.StartTime), "last checked should be after start time")
 
 	if expectedCheck.Status == healthcheck.StatusOK {
 		lastSuccess := checkResponse.LastSuccess
 
 		if lastSuccess != nil {
-			assert.True(&f.ErrorFeature, lastSuccess.Before(maxExpectedHealthCheckTime.UTC()))
-			assert.True(&f.ErrorFeature, lastSuccess.After(f.StartTime))
+			assert.True(&f.ErrorFeature, lastSuccess.Before(maxExpectedHealthCheckTime.UTC()), fmt.Sprintf("last success should complete within %vs", maxExpectedHealthCheckDiffSeconds))
+			assert.True(
+				&f.ErrorFeature,
+				lastSuccess.After(f.StartTime),
+				fmt.Sprintf("last success should complete within %vs - got %vs", maxExpectedHealthCheckDiffSeconds, lastSuccess.Sub(f.StartTime).Seconds()),
+			)
 		} else {
-			assert.Fail(&f.ErrorFeature, "last success should not be nil")
+			assert.Fail(&f.ErrorFeature, "if expected status is ok, last success should not be nil")
 		}
 	} else {
 		lastFailure := checkResponse.LastFailure
 
 		if lastFailure != nil {
-			assert.True(&f.ErrorFeature, lastFailure.Before(maxExpectedHealthCheckTime.UTC()))
-			assert.True(&f.ErrorFeature, lastFailure.After(f.StartTime))
+			assert.True(
+				&f.ErrorFeature,
+				lastFailure.Before(maxExpectedHealthCheckTime.UTC()),
+				fmt.Sprintf("last failure should complete within %vs - got %vs", maxExpectedHealthCheckDiffSeconds, lastFailure.Sub(f.StartTime).Seconds()),
+			)
+			assert.True(&f.ErrorFeature, lastFailure.After(f.StartTime), "last failure should be after start time")
 		} else {
-			assert.Fail(&f.ErrorFeature, "last failure should not be nil")
+			assert.Fail(&f.ErrorFeature, "if expected status is not ok, last failure should not be nil")
 		}
 	}
 }
