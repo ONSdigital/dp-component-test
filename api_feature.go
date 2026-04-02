@@ -36,6 +36,7 @@ type APIFeature struct {
 	StartTime            time.Time
 	HealthCheckInterval  time.Duration
 	ExpectedResponseTime time.Duration
+	JWTFeature           *JWTFeature
 }
 
 // HealthCheckTest represents a test healthcheck struct that mimics the real healthcheck struct
@@ -64,6 +65,7 @@ func NewAPIFeature(initialiser ServiceInitialiser) *APIFeature {
 		Initialiser:    initialiser,
 		requestHeaders: make(map[string]string),
 		StartTime:      time.Now(),
+		JWTFeature:     NewJWTFeature(),
 	}
 }
 
@@ -102,6 +104,7 @@ func (f *APIFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I use a service auth token "([^"]*)"$`, f.IUseAServiceAuthToken)
 	ctx.Step(`^I use an X Florence user token "([^"]*)"$`, f.IUseAnXFlorenceUserToken)
 	ctx.Step(`^I wait (\d+) seconds`, f.delayTimeBySeconds)
+	ctx.Step(`^I am a JWT user with email "([^"]*)" and group "([^"]*)"$`, f.IUseAJWTToken)
 }
 
 func (f *APIFeature) adminJWTToken() error {
@@ -126,6 +129,16 @@ func (f *APIFeature) IUseAServiceAuthToken(serviceAuthToken string) error {
 
 func (f *APIFeature) IUseAnXFlorenceUserToken(xFlorenceToken string) error {
 	err := f.ISetTheHeaderTo("X-Florence-Token", xFlorenceToken)
+	return err
+}
+
+func (f *APIFeature) IUseAJWTToken(email, groups string) error {
+	groupsArray := strings.Split(groups, ",")
+	token, err := f.JWTFeature.CreateJWT(email, groupsArray)
+	if err != nil {
+		return err
+	}
+	err = f.ISetTheHeaderTo("Authorization", "Bearer "+token)
 	return err
 }
 

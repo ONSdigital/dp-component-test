@@ -11,6 +11,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20250630014756-b7288190f53c
 	github.com/chromedp/chromedp v0.13.7
 	github.com/cucumber/godog v0.15.0
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/kelseyhightower/envconfig v1.4.0

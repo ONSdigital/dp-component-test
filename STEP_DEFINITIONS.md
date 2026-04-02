@@ -67,6 +67,7 @@ variables in the table above.
 | I should receive the following JSON response with status "CODE": \_BODY\_[^1]        | Assert that the response code is CODE and the body is json which matches BODY        | Then              |
 | I wait "SECONDS" seconds                                                             | Waits a given amount of seconds                                                      | Then              |
 | the document with "KEY" set to "VALUE" does not exist in the "COLLECTION" collection | Assert that a document with KEY set to VALUE does not exist in COLLECTION collection | Then              |
+| I am a JWT user with email "EMAIL" and group "COGNITO:GROUP"                         | et the request Authorization header to a JWT token with the provided email and group | Given             |
 
 [^1]: these steps can use the following dynamic values when these are not predictable:
 
