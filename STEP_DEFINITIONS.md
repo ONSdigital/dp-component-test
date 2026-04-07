@@ -45,29 +45,29 @@ variables in the table above.
 
 ### API Feature steps
 
-| Step                                                                                 | What it does                                                                         | Scenario Position |
-|--------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|-------------------|
-| the following document exists in the "COLLECTION" collection: \_BODY\_               | put document BODY in the COLLECTION collection                                       | Given             |
-| I set the "KEY" header to "VALUE"                                                    | set a HTTP header of the request to the value                                        | Given             |
-| I am an admin user                                                                   | set the request Authorization header to an admin JWT token                           | Given             |
-| I am a publisher user                                                                | set the request Authorization header to a publisher JWT token                        | Given             |
-| I am not authenticated                                                               | removes any Authorization header set in the request headers                          | Given             |
-| I GET "URL"                                                                          | make a GET request to the provided URL                                               | When              |
-| I DELETE "URL"                                                                       | make a DELETE request to the provided URL                                            | When              |
-| I PUT "URL" "BODY"                                                                   | make a PUT request to the provided URL with the given body                           | When              |
-| I PATCH "URL" "BODY"                                                                 | make a PATCH request to the provided URL with the given body                         | When              |
-| I POST "URL" "BODY"                                                                  | make a POST request to the provided URL with the given body                          | When              |
-| the HTTP status code should be "CODE"                                                | Assert that the response code from the request is CODE                               | Then              |
-| the response header "KEY" should be "VALUE"                                          | Assert that the response header KEY has value VALUE                                  | Then              |
-| I should recieve the following response \_BODY\_                                     | Assert that the response body matches BODY                                           | Then              |
-| I have a healthcheck interval of "SECONDS" seconds                                   | Set the healthcheck interval                                                         | Given             |
-| the health checks should have completed within "SECONDS" seconds                     | Set the expected time for health check completion                                    | When              |
-| I should receive the following health JSON response \_BODY\_                         | Assert that the health check response body matches BODY                              | Then              |
-| I should receive the following JSON response: \_BODY\_[^1]                           | Assert that the response body is JSON and that it matches BODY                       | Then              |
-| I should receive the following JSON response with status "CODE": \_BODY\_[^1]        | Assert that the response code is CODE and the body is json which matches BODY        | Then              |
-| I wait "SECONDS" seconds                                                             | Waits a given amount of seconds                                                      | Then              |
-| the document with "KEY" set to "VALUE" does not exist in the "COLLECTION" collection | Assert that a document with KEY set to VALUE does not exist in COLLECTION collection | Then              |
-| I am a JWT user with email "EMAIL" and group "COGNITO:GROUP"                         | et the request Authorization header to a JWT token with the provided email and group | Given             |
+| Step                                                                                 | What it does                                                                          | Scenario Position |
+|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|-------------------|
+| the following document exists in the "COLLECTION" collection: \_BODY\_               | put document BODY in the COLLECTION collection                                        | Given             |
+| I set the "KEY" header to "VALUE"                                                    | set a HTTP header of the request to the value                                         | Given             |
+| I am an admin user                                                                   | set the request Authorization header to an admin JWT token                            | Given             |
+| I am a publisher user                                                                | set the request Authorization header to a publisher JWT token                         | Given             |
+| I am not authenticated                                                               | removes any Authorization header set in the request headers                           | Given             |
+| I GET "URL"                                                                          | make a GET request to the provided URL                                                | When              |
+| I DELETE "URL"                                                                       | make a DELETE request to the provided URL                                             | When              |
+| I PUT "URL" "BODY"                                                                   | make a PUT request to the provided URL with the given body                            | When              |
+| I PATCH "URL" "BODY"                                                                 | make a PATCH request to the provided URL with the given body                          | When              |
+| I POST "URL" "BODY"                                                                  | make a POST request to the provided URL with the given body                           | When              |
+| the HTTP status code should be "CODE"                                                | Assert that the response code from the request is CODE                                | Then              |
+| the response header "KEY" should be "VALUE"                                          | Assert that the response header KEY has value VALUE                                   | Then              |
+| I should recieve the following response \_BODY\_                                     | Assert that the response body matches BODY                                            | Then              |
+| I have a healthcheck interval of "SECONDS" seconds                                   | Set the healthcheck interval                                                          | Given             |
+| the health checks should have completed within "SECONDS" seconds                     | Set the expected time for health check completion                                     | When              |
+| I should receive the following health JSON response \_BODY\_                         | Assert that the health check response body matches BODY                               | Then              |
+| I should receive the following JSON response: \_BODY\_[^1]                           | Assert that the response body is JSON and that it matches BODY                        | Then              |
+| I should receive the following JSON response with status "CODE": \_BODY\_[^1]        | Assert that the response code is CODE and the body is json which matches BODY         | Then              |
+| I wait "SECONDS" seconds                                                             | Waits a given amount of seconds                                                       | Then              |
+| the document with "KEY" set to "VALUE" does not exist in the "COLLECTION" collection | Assert that a document with KEY set to VALUE does not exist in COLLECTION collection  | Then              |
+| I am a JWT user with email "EMAIL" and group "COGNITO:GROUP"                         | Set the request Authorization header to a JWT token with the provided email and group | Given             |
 
 [^1]: these steps can use the following dynamic values when these are not predictable:
 
