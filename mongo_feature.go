@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // MongoFeature is a struct containing a mongo database in a container
@@ -81,6 +82,20 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(endpoint))
 	if err != nil {
 		panic(err)
+	}
+
+	if mongoOptions.ReplicaSetName != "" {
+		waitCtx, waitCancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer waitCancel()
+		for {
+			if err := client.Ping(waitCtx, readpref.Primary()); err == nil {
+				break
+			}
+			if waitCtx.Err() != nil {
+				panic("timed out waiting for MongoDB primary election")
+			}
+			time.Sleep(500 * time.Millisecond)
+		}
 	}
 
 	database := client.Database(mongoOptions.DatabaseName)
