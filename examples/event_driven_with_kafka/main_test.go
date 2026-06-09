@@ -40,7 +40,7 @@ func (t *componentTestSuite) InitializeTestSuite(godogCtx *godog.TestSuiteContex
 		t.Kafka = componenttest.NewKafkaFeature(&componenttest.KafkaOptions{
 			KafkaVersion: kafkaVersion,
 			Encoders: []componenttest.KafkaEncoderOption{
-				{Topic: "input", Encoding: "Avro", Encoder: componenttest.NewAvroEncoder[Input](InputEvent)},
+				{Topic: inputTopic, Encoding: "Avro", Encoder: componenttest.NewAvroEncoder[Input](InputEvent)},
 				{Topic: "output", Encoding: "Avro", Encoder: componenttest.NewAvroEncoder[Output](OutputEvent)},
 			},
 		})

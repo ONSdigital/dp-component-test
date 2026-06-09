@@ -14,6 +14,7 @@ import (
 const (
 	kafkaGroup   = "kafka-example"
 	kafkaVersion = "3.8.0"
+	inputTopic   = "input"
 )
 
 // Input represents an input example event
@@ -162,9 +163,9 @@ func (h *Handler) Handle(ctx context.Context, _ int, msg kafka.Message) error {
 			return err
 		}
 	}
-	input := inputEvent.Input
+	inputValue := inputEvent.Input
 	qty := inputEvent.Qty
-	log.Info(ctx, "received input event from kafka consumer", log.Data{"input": input, "qty": qty})
+	log.Info(ctx, "received input event from kafka consumer", log.Data{"input": inputValue, "qty": qty})
 
 	for id := int32(0); id < qty; id++ {
 		outputEvent := Output{
@@ -191,7 +192,7 @@ func (h *Handler) Handle(ctx context.Context, _ int, msg kafka.Message) error {
 // Run the example service against a real kakfa
 func main() {
 	service := &Service{
-		InputTopic:   fmt.Sprintf("input-%s", uuid.NewString()),
+		InputTopic:   fmt.Sprintf("%s-%s", inputTopic, uuid.NewString()),
 		OutputTopic:  fmt.Sprintf("output-%s", uuid.NewString()),
 		KafkaBrokers: []string{"localhost:9092", "localhost:9093", "localhost:9094"},
 	}
@@ -214,12 +215,12 @@ func fireExampleEvent(ctx context.Context, s *Service) {
 	}
 	defer inputProducer.Close(ctx)
 
-	input := uuid.NewString()
+	inputValue := uuid.NewString()
 	msg := Input{
-		Input: input,
+		Input: inputValue,
 		Qty:   1,
 	}
-	log.Info(ctx, "sending example event", log.Data{"input": input})
+	log.Info(ctx, "sending example event", log.Data{"input": inputValue})
 	err = inputProducer.SendJSON(ctx, msg)
 	if err != nil {
 		panic(err)
@@ -234,7 +235,7 @@ func fireExampleEvent(ctx context.Context, s *Service) {
 		if err != nil {
 			return err
 		}
-		if output.Input == input {
+		if output.Input == inputValue {
 			log.Info(ctx, "example output event consumed", log.Data{"input": output.Input})
 			done <- true
 		}
