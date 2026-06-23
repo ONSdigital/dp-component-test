@@ -18,9 +18,10 @@ import (
 
 // MongoFeature is a struct containing a mongo database in a container
 type MongoFeature struct {
-	Server   *testMongo.MongoDBContainer
-	Client   mongo.Client
-	Database *mongo.Database
+	Server           *testMongo.MongoDBContainer
+	Client           mongo.Client
+	Database         *mongo.Database
+	connectionString string
 }
 
 // MongoOptions contains a set of options required to create a new MongoFeature
@@ -101,17 +102,20 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	database := client.Database(mongoOptions.DatabaseName)
 
 	return &MongoFeature{
-		Server:   mongoContainer,
-		Client:   *client,
-		Database: database,
+		Server:           mongoContainer,
+		Client:           *client,
+		Database:         database,
+		connectionString: endpoint,
 	}
 }
 
 // GetConnectionString returns the MongoDB connection string for the container
 func (m *MongoFeature) GetConnectionString() (string, error) {
+	if m.connectionString != "" {
+		return m.connectionString, nil
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
 	return m.Server.ConnectionString(ctx)
 }
 
