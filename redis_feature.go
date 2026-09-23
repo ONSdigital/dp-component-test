@@ -64,9 +64,52 @@ func (r *RedisFeature) Close() error {
 func (r *RedisFeature) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the key "([^"]*)" is already set to a value of "([^"]*)" in the Redis store$`, r.theKeyIsAlreadySetToAValueOfInTheRedisStore)
 	ctx.Step(`^the key "([^"]*)" has a value of "([^"]*)" in the Redis store$`, r.theKeyHasAValueOfInTheRedisStore)
+	ctx.Step(`^the key "([^"]*)" has a value of a set of the following values in the Redis store$`, r.theKeyHasAValueOfASetOfValuesInTheRedisStore)
+	ctx.Step(`^the key "([^"]*)" is already set to a value of a set of the following values in the Redis store$`, r.theKeyIsAlreadySetToAValueOfASetOfValuesInTheRedisStore)
 	ctx.Step(`^redis contains no value for key "([^"]*)"$`, r.redisContainsNoValueFor)
 	ctx.Step(`^redis is healthy$`, r.redisIsHealthy)
 	ctx.Step(`^redis stops running$`, r.redisStopsRunning)
+}
+
+func (r *RedisFeature) theKeyHasAValueOfASetOfValuesInTheRedisStore(key string, table *godog.Table) error {
+	values := make([]interface{}, 0, len(table.Rows)-1)
+
+	for i := range table.Rows {
+		if i > 0 {
+			values = append(values, table.Rows[i].Cells[0].Value)
+		}
+	}
+
+	actual := r.Client.SMembers(context.Background(), key).Val()
+
+	if len(actual) != len(values) {
+		return fmt.Errorf("unexpected number of members for key %q: got %d, want %d", key, len(actual), len(values))
+	}
+	for _, v := range values {
+		found := false
+		for _, a := range actual {
+			if a == v {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("expected value %q for key %q not found in Redis set", v, key)
+		}
+	}
+	return nil
+}
+
+func (r *RedisFeature) theKeyIsAlreadySetToAValueOfASetOfValuesInTheRedisStore(key string, table *godog.Table) error {
+	values := make([]interface{}, 0, len(table.Rows)-1)
+
+	for i := range table.Rows {
+		if i > 0 {
+			values = append(values, table.Rows[i].Cells[0].Value)
+		}
+	}
+
+	return r.Client.SAdd(context.Background(), key, values...).Err()
 }
 
 func (r *RedisFeature) theKeyIsAlreadySetToAValueOfInTheRedisStore(key, value string) error {

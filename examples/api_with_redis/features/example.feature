@@ -11,6 +11,26 @@ Feature: Example feature
             }
             """
 
+    Scenario: Return multiple values when a key with a set value exists in redis
+        Given the key "fruits" is already set to a value of a set of the following values in the Redis store
+            | values |
+            | apple  |
+            | banana |
+            | cherry |
+        When I GET "/desserts/fruits"
+        Then I should receive the following JSON response with status "200":
+            """
+            {
+                "key": "fruits",
+                "value": ["apple", "banana", "cherry"]
+            }
+            """
+        And the key "fruits" has a value of a set of the following values in the Redis store
+            | values |
+            | apple  |
+            | banana |
+            | cherry |
+
     Scenario: Return a 404 when the key doesn't exist in redis
         When I GET "/desserts/jelly"
         Then the HTTP status code should be "404"

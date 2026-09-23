@@ -36,8 +36,8 @@ func Get() (*Config, error) {
 }
 
 type Data struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key   string      `json:"key"`
+	Value interface{} `json:"value"`
 }
 
 func NewConfig() *Config {
@@ -52,12 +52,34 @@ func ExampleHandler(w http.ResponseWriter, r *http.Request) {
 	config := NewConfig()
 	client := NewRedisClient(config.RedisURL)
 
-	result, err := client.Get(context.TODO(), key).Result()
+	ctx := context.Background()
+
+	valueType, err := client.Type(ctx, key).Result()
 	if err != nil {
 		w.WriteHeader(404)
 		fmt.Println(err.Error())
 		return
 	}
+
+	var result interface{}
+
+	if valueType == "set" {
+		result, err = client.SMembers(ctx, key).Result()
+		if err != nil {
+			w.WriteHeader(404)
+			fmt.Println(err.Error())
+			return
+		}
+	} else {
+		result, err = client.Get(ctx, key).Result()
+		if err != nil {
+			w.WriteHeader(404)
+			fmt.Println(err.Error())
+			return
+		}
+	}
+
+	fmt.Println("Result:", result)
 
 	resultBody := Data{
 		Key:   key,
@@ -77,7 +99,7 @@ func ExampleHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Add("Content-Type", "text/html")
 		response := fmt.Sprintf(`<value id="key">%s</value><value id="value">%s</value>`,
-			html.EscapeString(resultBody.Key), html.EscapeString(resultBody.Value))
+			html.EscapeString(resultBody.Key), html.EscapeString(resultBody.Value.(string)))
 		if _, err := w.Write([]byte(response)); err != nil {
 			log.Printf("failed to write HTML response: %v", err)
 		}
