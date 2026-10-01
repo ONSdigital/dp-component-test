@@ -8,8 +8,8 @@ require (
 	github.com/ONSdigital/dp-kafka/v4 v4.3.0
 	github.com/ONSdigital/dp-permissions-api v1.0.0
 	github.com/ONSdigital/log.go/v2 v2.5.0
-	github.com/chromedp/cdproto v0.0.0-20250630014756-b7288190f53c
-	github.com/chromedp/chromedp v0.13.7
+	github.com/chromedp/cdproto v0.0.0-20260321001828-e3e3800016bc
+	github.com/chromedp/chromedp v0.15.1
 	github.com/cucumber/godog v0.15.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
@@ -54,7 +54,7 @@ require (
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/go-avro/avro v0.0.0-20171219232920-444163702c11 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250626171732-1a886bd29d1b // indirect
+	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
