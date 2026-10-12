@@ -1,6 +1,6 @@
 module github.com/ONSdigital/dp-component-test
 
-go 1.26.0
+go 1.27.2
 
 require (
 	github.com/ONSdigital/dp-authorisation/v2 v2.32.2
