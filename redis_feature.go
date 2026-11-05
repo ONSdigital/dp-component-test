@@ -10,6 +10,9 @@ import (
 
 	"github.com/cucumber/godog"
 	testRedis "github.com/testcontainers/testcontainers-go/modules/redis"
+
+	// The podman import is to provide auto discovery of the podman provider
+	_ "github.com/testcontainers/testcontainers-go/modules/podman"
 )
 
 // RedisFeature is a struct containing a testcontainer redis database
@@ -26,7 +29,10 @@ type RedisOptions struct {
 func NewRedisFeature(opts RedisOptions) *RedisFeature {
 	ctx := context.Background()
 
-	s, err := testRedis.Run(ctx, fmt.Sprintf("redis:%s", opts.RedisVersion))
+	s, err := testRedis.Run(
+		ctx,
+		fmt.Sprintf("redis:%s", opts.RedisVersion),
+	)
 	if err != nil {
 		panic(err)
 	}

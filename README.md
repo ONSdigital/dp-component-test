@@ -176,9 +176,48 @@ Currently, the tests using this are:
 - [mongo_feature](./mongo_feature.go)
 - [redis_feature](./redis_feature.go)
 
+Set `TESTCONTAINERS_PROVIDER` to choose the provider for Redis, MongoDB, and Kafka:
+
+| Value                      | Behavior                                               |
+|----------------------------|--------------------------------------------------------|
+| Unset, empty               | Preserve Testcontainers' automatic provider detection  |
+| `docker`                   | Explicitly use Docker                                  |
+| `podman`                   | Explicitly use Podman and its default `podman` network |
+
+Other values cause feature initialisation to panic with a configuration error.
+Docker CI can leave the variable unset or explicitly set it to `docker`.
+Provider selection does not configure the API endpoint; `DOCKER_HOST` must still
+point at the appropriate runtime socket.
+
+### With colima
+
 To use this with colima you will need to set the following env vars:
 
 ```sh
 export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
 export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 ```
+
+### With podman
+
+For Podman on macOS, add the following to your `.zshrc`:
+
+```sh
+export TESTCONTAINERS_PROVIDER=podman
+```
+
+You will also need to run Podman in rootful mode:
+
+```sh
+  podman machine stop
+  podman machine set --rootful
+  podman machine start 
+```
+
+And setup a testcontainers properties file:
+
+```sh
+echo 'ryuk.container.privileged=true' >> ~/.testcontainers.properties
+```
+
+For further info, see the [Podman setup guidance](https://golang.testcontainers.org/system_requirements/using_podman/).

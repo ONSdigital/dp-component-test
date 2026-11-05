@@ -12,6 +12,9 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
 	tckafka "github.com/testcontainers/testcontainers-go/modules/kafka"
+
+	// The podman import is to provide auto discovery of the podman provider
+	_ "github.com/testcontainers/testcontainers-go/modules/podman"
 )
 
 // KafkaFeature represents a component test feature that tests kafka functionality via testcontainers

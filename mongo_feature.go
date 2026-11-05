@@ -13,6 +13,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	// The podman import is to provide auto discovery of the podman provider
+	_ "github.com/testcontainers/testcontainers-go/modules/podman"
 )
 
 // MongoFeature is a struct containing a mongo database in a container
@@ -49,15 +52,14 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	var (
-		mongoContainer *testMongo.MongoDBContainer
-		err            error
-	)
+	var mongoContainer *testMongo.MongoDBContainer
+	var err error
 
 	if mongoOptions.ReplicaSetName == "" {
 		mongoContainer, err = testMongo.Run(
 			ctx,
-			fmt.Sprintf("mongo:%s", mongoOptions.MongoVersion))
+			fmt.Sprintf("mongo:%s", mongoOptions.MongoVersion),
+		)
 	} else {
 		mongoContainer, err = testMongo.Run(
 			ctx,
