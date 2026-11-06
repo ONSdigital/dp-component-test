@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	kafka "github.com/ONSdigital/dp-kafka/v4"
-	"github.com/ONSdigital/dp-kafka/v4/avro"
+	kafka "github.com/ONSdigital/dp-kafka/v5"
+	"github.com/ONSdigital/dp-kafka/v5/avro"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/google/uuid"
 )

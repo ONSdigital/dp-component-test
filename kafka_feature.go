@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	kafka "github.com/ONSdigital/dp-kafka/v4"
+	kafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
 	tckafka "github.com/testcontainers/testcontainers-go/modules/kafka"
