@@ -11,6 +11,7 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v5"
 	"github.com/cucumber/godog"
 	"github.com/google/uuid"
+	tc "github.com/testcontainers/testcontainers-go"
 	tckafka "github.com/testcontainers/testcontainers-go/modules/kafka"
 )
 
@@ -56,7 +57,12 @@ func NewKafkaFeature(opts *KafkaOptions) *KafkaFeature {
 		opts.ContainerName = defaultKafkaContainerName
 	}
 
-	kafkaContainer, err := tckafka.Run(ctx, opts.ContainerName)
+	provider, err := containerProviderFromEnv()
+	if err != nil {
+		panic(err)
+	}
+
+	kafkaContainer, err := tckafka.Run(ctx, opts.ContainerName, tc.WithProvider(provider))
 	if err != nil {
 		panic(err)
 	}

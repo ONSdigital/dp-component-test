@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
+	tc "github.com/testcontainers/testcontainers-go"
 	testMongo "github.com/testcontainers/testcontainers-go/modules/mongodb"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -49,19 +50,23 @@ func NewMongoFeature(mongoOptions MongoOptions) *MongoFeature {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	var (
-		mongoContainer *testMongo.MongoDBContainer
-		err            error
-	)
+	provider, err := containerProviderFromEnv()
+	if err != nil {
+		panic(err)
+	}
+
+	var mongoContainer *testMongo.MongoDBContainer
 
 	if mongoOptions.ReplicaSetName == "" {
 		mongoContainer, err = testMongo.Run(
 			ctx,
-			fmt.Sprintf("mongo:%s", mongoOptions.MongoVersion))
+			fmt.Sprintf("mongo:%s", mongoOptions.MongoVersion),
+			tc.WithProvider(provider))
 	} else {
 		mongoContainer, err = testMongo.Run(
 			ctx,
 			fmt.Sprintf("mongo:%s", mongoOptions.MongoVersion),
+			tc.WithProvider(provider),
 			testMongo.WithReplicaSet(mongoOptions.ReplicaSetName))
 	}
 	if err != nil {

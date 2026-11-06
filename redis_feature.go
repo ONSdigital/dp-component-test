@@ -9,6 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/cucumber/godog"
+	tc "github.com/testcontainers/testcontainers-go"
 	testRedis "github.com/testcontainers/testcontainers-go/modules/redis"
 )
 
@@ -26,7 +27,16 @@ type RedisOptions struct {
 func NewRedisFeature(opts RedisOptions) *RedisFeature {
 	ctx := context.Background()
 
-	s, err := testRedis.Run(ctx, fmt.Sprintf("redis:%s", opts.RedisVersion))
+	provider, err := containerProviderFromEnv()
+	if err != nil {
+		panic(err)
+	}
+
+	s, err := testRedis.Run(
+		ctx,
+		fmt.Sprintf("redis:%s", opts.RedisVersion),
+		tc.WithProvider(provider),
+	)
 	if err != nil {
 		panic(err)
 	}
