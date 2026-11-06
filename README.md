@@ -176,9 +176,38 @@ Currently, the tests using this are:
 - [mongo_feature](./mongo_feature.go)
 - [redis_feature](./redis_feature.go)
 
-To use this with colima you will need to set the following env vars:
+### Colima
+
+To use this with Colima, add the following to your `.zshrc`:
 
 ```sh
 export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
 export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/var/run/docker.sock"
 ```
+
+For further info, see the [Colima setup guidance](https://golang.testcontainers.org/system_requirements/using_colima/)
+
+### Podman
+
+To use this with Podman on macOS, enable [Docker Socket Compatibility](https://podman-desktop.io/docs/migrating-from-docker/customizing-docker-compatibility#enable-docker-compatibility) in Podman Desktop and add the following to your `.zshrc`:
+
+```sh
+export DOCKER_HOST="unix:///var/run/docker.sock"
+```
+
+Set Podman to run in rootful mode:
+
+```sh
+podman machine stop
+podman machine set --rootful
+podman machine start
+```
+
+And setup a `~/.testcontainers.properties` file containing:
+
+```properties
+provider=podman
+ryuk.container.privileged=true
+```
+
+For further info, see the [Podman setup guidance](https://golang.testcontainers.org/system_requirements/using_podman/).
